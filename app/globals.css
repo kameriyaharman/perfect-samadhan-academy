@@ -8,18 +8,6 @@ body { background: #f4f5fa; color: #111a3d; font-family: Poppins, Hind, system-u
 .font-hindi, .hi { font-family: Hind, Poppins, sans-serif; }
 h1, h2, h3, .heading { font-family: Poppins, Hind, sans-serif; letter-spacing: -0.01em; }
 
-@media (pointer: fine) {
-  body.has-cursor, body.has-cursor a, body.has-cursor button, body.has-cursor [role="button"], body.has-cursor label, body.has-cursor select { cursor: none; }
-  body.has-cursor input, body.has-cursor textarea, body.has-cursor [contenteditable] { cursor: text; }
-}
-.cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; border-radius: 9999px; will-change: transform; }
-.cursor-dot { width: 8px; height: 8px; background: var(--saffron); margin: -4px 0 0 -4px; transition: opacity .2s, width .2s, height .2s, margin .2s; }
-.cursor-ring { width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 2px solid rgba(31,53,184,.55); transition: width .25s ease, height .25s ease, margin .25s ease, background .25s, border-color .25s, opacity .2s; }
-.cursor-ring.hover { width: 58px; height: 58px; margin: -29px 0 0 -29px; background: rgba(242,140,15,.12); border-color: rgba(242,140,15,.7); }
-.cursor-ring.down { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
-.cursor-ring.text, .cursor-dot.text { opacity: 0; }
-.cursor-ring.dark { border-color: rgba(255,255,255,.7); }
-
 .hero-bg { background: radial-gradient(1200px 400px at 85% -10%, rgba(64,96,255,.55), transparent 60%), linear-gradient(110deg, #0e1756 0%, #16237a 45%, #2a46d0 100%); }
 @layer components {
 .card { @apply bg-white rounded-2xl border border-line shadow-card; }
