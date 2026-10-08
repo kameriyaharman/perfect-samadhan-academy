@@ -14,13 +14,13 @@ export default async function Footer() {
   const social = [[s.facebook, Facebook], [s.youtube, Youtube], [s.instagram, Instagram], [s.telegram, Send]] as const;
   return (
     <footer className="bg-navy text-white no-print" data-dark>
-      <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr]">
-        <div>
+      <div className="mx-auto max-w-7xl px-4 md:px-8 py-12 grid gap-x-6 gap-y-10 grid-cols-2 md:grid-cols-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+        <div className="col-span-2 md:col-span-4 lg:col-span-1">
           <Link href="/" className="flex items-center gap-3">
             <img src="/logo.png" alt="" className="h-14 w-14" />
             <span>
-              <span className="hi block text-xl font-bold">{s.site_name || "परफेक्ट समाधान एकेडमी"}</span>
-              <span className="hi block text-sm text-gold">{s.tagline || "सफलता की उड़ान – परफेक्ट समाधान"}</span>
+              <span className="hi block whitespace-nowrap text-lg xl:text-xl font-bold">{s.site_name || "परफेक्ट समाधान एकेडमी"}</span>
+              <span className="hi block whitespace-nowrap text-xs xl:text-sm text-gold">{s.tagline || "सफलता की उड़ान – परफेक्ट समाधान"}</span>
             </span>
           </Link>
           <p className="mt-4 text-sm leading-6 text-white/70">{s.footer_about}</p>
@@ -34,7 +34,7 @@ export default async function Footer() {
           <div key={t}>
             <h4 className="mb-4 text-base font-bold">{t}</h4>
             <ul className="space-y-2.5">
-              {links.map(([l, h]) => <li key={h}><Link href={h} className="text-sm text-white/70 hover:text-gold transition">{l}</Link></li>)}
+              {links.map(([l, h]) => <li key={h}><Link href={h} className="whitespace-nowrap text-sm text-white/70 hover:text-gold transition">{l}</Link></li>)}
             </ul>
           </div>
         ))}

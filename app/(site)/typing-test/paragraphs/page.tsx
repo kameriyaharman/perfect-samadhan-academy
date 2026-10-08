@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Filter, FileText, PlayCircle } from "lucide-react";
+import { Filter, FileText, Keyboard, Languages, PlayCircle } from "lucide-react";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
@@ -49,8 +49,8 @@ export default async function Paragraphs({ searchParams }: { searchParams: { yea
                         <tr key={sess}>
                           <td className="font-bold">{sess}</td><td>Shift {shiftsOf(list)}</td>
                           <td><div className="flex gap-1.5">
-                            {hi && <Link href={`/typing-test/setup?lang=hindi&passage=${hi.id}`} className="btn-primary btn-sm"><span className="hi">अ</span> Hindi</Link>}
-                            {en && <Link href={`/typing-test/setup?lang=english&passage=${en.id}`} className="btn-soft btn-sm">Aa English</Link>}
+                            {hi && <Link href={`/typing-test/setup?lang=hindi&passage=${hi.id}`} className="btn-primary btn-sm"><Keyboard className="h-3.5 w-3.5" />Hindi</Link>}
+                            {en && <Link href={`/typing-test/setup?lang=english&passage=${en.id}`} className="btn-soft btn-sm"><Languages className="h-4 w-4" /><Languages className="h-3.5 w-3.5" />English</Link>}
                           </div></td>
                           <td>Inscript + Remington</td>
                           <td><span className={`chip ${year >= new Date().getFullYear() ? "bg-green-50 text-green-700" : "bg-brand-50 text-brand"}`}>{year >= new Date().getFullYear() ? "New" : year}</span></td>

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Info, ListChecks, RotateCcw, Trophy } from "lucide-react";
+import { ArrowRight, Info, ListChecks, RotateCcw, Trophy, PartyPopper, Keyboard } from "lucide-react";
 import KeyboardView from "./KeyboardView";
 import { engineBackspace, engineKey, findKey, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
 
@@ -27,7 +27,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
     const accuracy = Math.max(0, Math.round(((k - errs) / Math.max(1, k)) * 100));
     const wpm = Math.round((tokens.join(" ").length / 5) / (secs / 60));
     const r = await fetch("/api/lesson-progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lessonId: lesson.id, accuracy, wpm }) });
-    setSaved(r.ok ? "Progress save ho gaya ✓" : "Login karke progress save karein");
+    setSaved(r.ok ? "Progress save ho gaya" : "Login karke progress save karein");
   };
 
   const apply = (text: string, k: number) => {
@@ -86,11 +86,11 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
         {done ? (
           <div className="my-10 text-center">
             <Trophy className="mx-auto h-14 w-14 text-gold" />
-            <div className="mt-3 text-2xl font-bold text-navy">Lesson poora hua! 🎉</div>
+            <div className="mt-3 text-2xl font-bold text-navy"><span className="inline-flex items-center gap-2">Lesson poora hua! <PartyPopper className="h-6 w-6 text-saffron" /></span></div>
             <div className="mt-1 text-muted">Accuracy {accuracy}% · {saved}</div>
             <div className="mt-5 flex justify-center gap-3">
               <button onClick={reset} className="btn-ghost"><RotateCcw className="h-4 w-4" />Dobara</button>
-              {nextId ? <Link href={`/typing-test/learn/${nextId}`} className="btn-primary">Agla Lesson <ArrowRight className="h-4 w-4" /></Link> : <Link href="/typing-test/setup" className="btn-primary">Typing Test Dein <ArrowRight className="h-4 w-4" /></Link>}
+              {nextId ? <Link href={`/typing-test/learn/${nextId}`} className="btn-primary">Agla Lesson <ArrowRight className="h-4 w-4" /></Link> : <Link href="/typing-test/setup" className="btn-primary"><Keyboard className="h-4 w-4" />Typing Test Dein <ArrowRight className="h-4 w-4" /></Link>}
             </div>
           </div>
         ) : (

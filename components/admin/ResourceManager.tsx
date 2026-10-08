@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Edit3, ExternalLink, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit3, ExternalLink, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
 import type { Field, Resource } from "@/lib/resources";
 
 const PUBLIC: Record<string, (r: any) => string> = {
@@ -137,7 +137,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
               <span className="text-sm text-red-600">{err}</span>
-              <div className="flex gap-2"><button onClick={() => setEdit(null)} className="btn-ghost">Cancel</button><button onClick={save} disabled={saving} className="btn-primary">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save</button></div>
+              <div className="flex gap-2"><button onClick={() => setEdit(null)} className="btn-ghost"><X className="h-4 w-4" />Cancel</button><button onClick={save} disabled={saving} className="btn-primary">{saving && <Loader2 className="h-4 w-4 animate-spin" />}<Save className="h-4 w-4" />Save</button></div>
             </div>
           </div>
         </div>
@@ -169,7 +169,7 @@ function FieldInput({ f, value, onChange }: { f: Field; value: any; onChange: (v
       <div className="flex flex-col gap-2 sm:flex-row">
         <input className="input" value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="URL ya file upload karein" />
         <label className="btn-soft shrink-0 cursor-pointer !py-3">{up ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}Upload<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} /></label>
-        {value && <a href={value} target="_blank" className="btn-ghost shrink-0 !py-3">Open</a>}
+        {value && <a href={value} target="_blank" className="btn-ghost shrink-0 !py-3"><ExternalLink className="h-4 w-4" />Open</a>}
       </div>
     );
   }

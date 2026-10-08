@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, Clock, LogOut, Mail, Menu, Phone, Search, ShieldCheck, User, LayoutDashboard, X } from "lucide-react";
+import { LogIn, UserPlus, Bell, ChevronDown, Clock, LogOut, Mail, Menu, Phone, Search, ShieldCheck, User, LayoutDashboard, X } from "lucide-react";
 import Logo from "./Logo";
 import { initials } from "@/lib/utils";
 
@@ -26,7 +26,7 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
   const [qv, setQv] = useState("");
   useEffect(() => { setOpen(false); setMenu(false); setSearch(false); }, [path]);
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href) || (href === "/study-material" && /^\/(previous-papers|shortcut-keys|abbreviations)/.test(path)));
-  const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); router.refresh(); };
+  const logout = async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/"; };
   const tickerText = ticker.join("  ·  ");
 
   return (
@@ -47,17 +47,17 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
         </div>
       </div>
       <div className="border-b border-line bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 md:px-8 py-2.5">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 sm:px-4 md:px-8 py-2.5">
           <Logo />
-          <nav className="ml-auto hidden xl:flex items-center gap-1">
+          <nav className="ml-auto hidden xl:flex items-center gap-0.5 2xl:gap-1">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className={`relative whitespace-nowrap px-2.5 2xl:px-3 py-2 text-[15px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
+              <Link key={n.href} href={n.href} className={`relative whitespace-nowrap px-2 2xl:px-3 py-2 text-[14px] 2xl:text-[15px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
                 {n.label}
                 {active(n.href) && <span className="absolute left-3 right-3 -bottom-[13px] h-[3px] rounded-full bg-saffron" />}
               </Link>
             ))}
           </nav>
-          <div className="ml-auto xl:ml-4 flex items-center gap-2">
+          <div className="ml-auto xl:ml-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button onClick={() => setSearch(true)} aria-label="Search" className="grid h-10 w-10 place-items-center rounded-xl border border-line hover:border-brand hover:text-brand"><Search className="h-4 w-4" /></button>
             {user ? (
               <div className="relative">
@@ -79,8 +79,8 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
               </div>
             ) : (
               <>
-                <Link href="/login" className="hidden sm:inline-flex btn-ghost !py-2">Login</Link>
-                <Link href="/login?tab=register" className="hidden sm:inline-flex btn-primary !py-2">Free Register</Link>
+                <Link href="/login" className="hidden sm:inline-flex btn-ghost !px-4 !py-2"><LogIn className="h-4 w-4" />Login</Link>
+                <Link href="/login?tab=register" className="hidden sm:inline-flex btn-primary !px-4 !py-2"><UserPlus className="h-4 w-4" /><span className="xl:hidden 2xl:inline">Free </span>Register</Link>
               </>
             )}
             <button onClick={() => setOpen(true)} aria-label="Menu" className="xl:hidden grid h-10 w-10 place-items-center rounded-xl bg-brand text-white"><Menu className="h-5 w-5" /></button>
@@ -104,8 +104,8 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
             </nav>
             {!user && (
               <div className="mt-5 grid grid-cols-2 gap-2">
-                <Link href="/login" className="btn-ghost">Login</Link>
-                <Link href="/login?tab=register" className="btn-primary">Register</Link>
+                <Link href="/login" className="btn-ghost"><LogIn className="h-4 w-4" />Login</Link>
+                <Link href="/login?tab=register" className="btn-primary"><UserPlus className="h-4 w-4" />Register</Link>
               </div>
             )}
           </div>
@@ -118,7 +118,7 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
             <div className="flex items-center gap-2">
               <Search className="ml-2 h-5 w-5 text-muted" />
               <input autoFocus value={qv} onChange={(e) => setQv(e.target.value)} placeholder="Exam, notes, test ya topic search karein — jaise 'Excel', 'CPCT'" className="flex-1 bg-transparent px-2 py-3 text-base outline-none" />
-              <button className="btn-orange !py-2.5">Search</button>
+              <button className="btn-orange !py-2.5"><Search className="h-4 w-4" />Search</button>
             </div>
           </form>
         </div>

@@ -32,8 +32,8 @@ export default async function Abbr({ searchParams }: { searchParams: { q?: strin
             </div>
           )}
           <aside className="space-y-4">
-            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><PlayCircle className="h-5 w-5" />Abbreviation Test</h3><p className="mt-1 text-sm text-muted">10–20 sawal · Hindi/English</p><Link href="/mock-tests/keyword?q=full form" className="btn-primary mt-3 w-full">Test Dein</Link></div>
-            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><Download className="h-5 w-5" />PDF</h3><p className="mt-1 text-sm text-muted">{total}+ abbreviations ki printable list</p><a href="/abbreviations/print" className="btn-ghost mt-3 w-full">Download</a></div>
+            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><PlayCircle className="h-5 w-5" />Abbreviation Test</h3><p className="mt-1 text-sm text-muted">10–20 sawal · Hindi/English</p><Link href="/mock-tests/keyword?q=full form" className="btn-primary mt-3 w-full"><PlayCircle className="h-4 w-4" />Test Dein</Link></div>
+            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><Download className="h-5 w-5" />PDF</h3><p className="mt-1 text-sm text-muted">{total}+ abbreviations ki printable list</p><a href="/abbreviations/print" className="btn-ghost mt-3 w-full"><Download className="h-4 w-4" />Download</a></div>
           </aside>
         </div>
       </Container>

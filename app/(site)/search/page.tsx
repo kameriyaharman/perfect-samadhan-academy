@@ -1,3 +1,4 @@
+import { Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
@@ -26,7 +27,7 @@ export default async function Search({ searchParams }: { searchParams: { q?: str
   return (
     <>
       <PageHero crumbs={[{ label: "Search" }]} title="Search:" highlight={s || "…"} subtitle={`${total} results`} compact>
-        <form className="mt-5 flex max-w-2xl gap-2 rounded-2xl bg-white p-2"><input name="q" defaultValue={s} className="flex-1 px-3 text-ink outline-none" placeholder="Search…" /><button className="btn-orange">Search</button></form>
+        <form className="mt-5 flex max-w-2xl gap-2 rounded-2xl bg-white p-2"><input name="q" defaultValue={s} className="flex-1 px-3 text-ink outline-none" placeholder="Search…" /><button className="btn-orange"><SearchIcon className="h-4 w-4" />Search</button></form>
       </PageHero>
       <Container className="py-10">
         {!total ? <Empty text="Kuch nahi mila — doosra shabd try karein." /> : (

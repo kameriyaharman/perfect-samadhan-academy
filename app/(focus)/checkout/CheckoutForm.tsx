@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ClipboardCheck, CreditCard, Landmark, Loader2, Lock, QrCode, Receipt, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, CreditCard, Landmark, Loader2, Lock, QrCode, Receipt, ShieldCheck, Tag, Smartphone, MessageCircle } from "lucide-react";
 import { rupee } from "@/lib/utils";
 
 declare global { interface Window { Razorpay: any } }
@@ -52,8 +52,8 @@ export default function CheckoutForm({ item, it, mode, user, upi, whatsapp }: { 
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h1 className="mt-3 text-2xl font-bold">Order #{manual.orderId} create ho gaya</h1>
         <p className="mt-2 text-muted">{upi ? <>Kripya <b>{rupee(manual.amount)}</b> UPI ID <b className="text-ink">{upi}</b> par bhejein aur screenshot WhatsApp karein.</> : <>Hamari team aapse payment ke liye jald sampark karegi.</>} Payment confirm hote hi admin aapka access activate kar dega.</p>
-        {upi && <a href={`upi://pay?pa=${upi}&pn=Perfect%20Samadhan%20Academy&am=${manual.amount}&cu=INR&tn=Order%20${manual.orderId}`} className="btn-orange mt-5">UPI App se Pay Karein</a>}
-        {whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Order #${manual.orderId} — ${it.name} — ₹${manual.amount} payment screenshot`)}`} target="_blank" rel="noreferrer" className="btn-ghost mt-3 ml-2">WhatsApp Karein</a>}
+        {upi && <a href={`upi://pay?pa=${upi}&pn=Perfect%20Samadhan%20Academy&am=${manual.amount}&cu=INR&tn=Order%20${manual.orderId}`} className="btn-orange mt-5"><Smartphone className="h-4 w-4" />UPI App se Pay Karein</a>}
+        {whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Order #${manual.orderId} — ${it.name} — ₹${manual.amount} payment screenshot`)}`} target="_blank" rel="noreferrer" className="btn-ghost mt-3 ml-2"><MessageCircle className="h-4 w-4" />WhatsApp Karein</a>}
         <a href="/dashboard" className="mt-5 block text-sm text-brand underline">Dashboard par jaayein</a>
       </div>
     </div>
@@ -87,7 +87,7 @@ export default function CheckoutForm({ item, it, mode, user, upi, whatsapp }: { 
         {disc && <div className="flex justify-between py-2"><span>Coupon {disc.code}</span><b className="text-green-600">- {rupee(disc.discount)}</b></div>}
         <div className="flex justify-between py-2"><span>GST</span><span className="font-semibold text-muted">Included</span></div>
         <div className="mt-2 flex justify-between border-t border-line pt-4 text-xl"><b>Total</b><b>{rupee(total)}</b></div>
-        <div className="mt-5 flex gap-2"><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="input !py-2.5" /><button onClick={apply} className="btn-soft">Apply</button></div>
+        <div className="mt-5 flex gap-2"><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="input !py-2.5" /><button onClick={apply} className="btn-soft"><Tag className="h-4 w-4" />Apply</button></div>
         {cmsg && <p className="mt-2 text-sm text-red-600">{cmsg}</p>}
       </aside>
     </div>

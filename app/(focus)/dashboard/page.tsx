@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Award, BarChart3, Bell, BookMarked, ClipboardList, Clock, Flame, Gauge, GraduationCap, Home, Keyboard, LayoutDashboard, PlayCircle, Settings, Target, Trophy, ShieldCheck } from "lucide-react";
+import { Award, BarChart3, Bell, BookMarked, ClipboardList, Clock, Flame, Gauge, GraduationCap, Home, Keyboard, LayoutDashboard, PlayCircle, Settings, Target, Trophy, ShieldCheck, Hand, PartyPopper, TrendingUp } from "lucide-react";
 import { getUser, isPremium } from "@/lib/auth";
 import { q, one } from "@/lib/db";
 import { fmtDate, initials } from "@/lib/utils";
@@ -51,26 +51,26 @@ export default async function Dashboard({ searchParams }: { searchParams: { paid
       <main className="min-w-0 flex-1 p-4 md:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="hi text-3xl font-bold text-navy">नमस्ते {user.name.split(" ")[0]} 👋</h1>
+            <h1 className="hi text-2xl sm:text-3xl font-bold text-navy"><span className="flex items-center gap-2">नमस्ते {user.name.split(" ")[0]} <Hand className="h-7 w-7 text-saffron" /></span></h1>
             <p className="text-muted">{examDays && examDays > 0 ? <>{user.target_exam || "Exam"} me <b className="text-saffron">{examDays} din</b> baaki — </> : null}aaj ka goal: 1 mock + 15 min typing</p>
           </div>
           <div className="flex items-center gap-2"><Link href="/" className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-white lg:hidden"><Home className="h-4 w-4" /></Link><Link href="/notices" className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-white"><Bell className="h-4 w-4" /></Link><Link href="/account" className="grid h-11 w-11 place-items-center rounded-full bg-brand text-sm font-bold text-white ring-2 ring-saffron ring-offset-2">{initials(user.name)}</Link></div>
         </div>
-        {searchParams.paid && <div className="mt-4 rounded-xl bg-green-50 p-4 text-green-700">Payment safal raha — aapka premium access activate ho gaya! 🎉</div>}
+        {searchParams.paid && <div className="mt-4 rounded-xl bg-green-50 p-4 text-green-700"><span className="flex items-center gap-2"><PartyPopper className="h-5 w-5" />Payment safal raha — aapka premium access activate ho gaya!</span></div>}
         <div className="mt-4 flex gap-2 overflow-x-auto lg:hidden scrollbar-none">{nav.slice(1).map(([, l, h]) => <Link key={l} href={h} className="chip whitespace-nowrap bg-white border border-line py-2">{l}</Link>)}</div>
         <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <div className="rounded-2xl bg-navy p-5 text-white" data-dark><div className="flex items-center gap-1.5 text-sm text-white/70"><Gauge className="h-4 w-4" />Best Hindi Speed</div><div className="mt-1 text-3xl font-bold text-gold">{best?.h ?? 0} <span className="text-sm text-white/60">WPM</span></div>{best?.hd ? <div className="text-xs text-green-400">▲ {best.hd} is mahine</div> : null}</div>
-          <div className="card p-5"><div className="flex items-center gap-1.5 text-sm text-muted"><Keyboard className="h-4 w-4" />Best English Speed</div><div className="mt-1 text-3xl font-bold">{best?.e ?? 0} <span className="text-sm text-muted">WPM</span></div>{best?.ed ? <div className="text-xs text-green-600">▲ {best.ed} is mahine</div> : null}</div>
+          <div className="rounded-2xl bg-navy p-5 text-white" data-dark><div className="flex items-center gap-1.5 text-sm text-white/70"><Gauge className="h-4 w-4" />Best Hindi Speed</div><div className="mt-1 text-3xl font-bold text-gold">{best?.h ?? 0} <span className="text-sm text-white/60">WPM</span></div>{best?.hd ? <div className="flex items-center gap-1 text-xs text-green-400"><TrendingUp className="h-3.5 w-3.5" />{best.hd} is mahine</div> : null}</div>
+          <div className="card p-5"><div className="flex items-center gap-1.5 text-sm text-muted"><Keyboard className="h-4 w-4" />Best English Speed</div><div className="mt-1 text-3xl font-bold">{best?.e ?? 0} <span className="text-sm text-muted">WPM</span></div>{best?.ed ? <div className="flex items-center gap-1 text-xs text-green-600"><TrendingUp className="h-3.5 w-3.5" />{best.ed} is mahine</div> : null}</div>
           <div className="card p-5"><div className="flex items-center gap-1.5 text-sm text-muted"><ClipboardList className="h-4 w-4" />Avg Mock Score</div><div className="mt-1 text-3xl font-bold">{mock?.avg ?? 0} <span className="text-sm text-muted">/ {mock?.total || 75}</span></div><div className="text-xs text-muted">{mock?.n || 0} mocks diye</div></div>
           <div className="card p-5"><div className="flex items-center gap-1.5 text-sm text-muted"><Flame className="h-4 w-4" />Practice Streak</div><div className="mt-1 text-3xl font-bold">{streak} <span className="text-sm text-muted">din</span></div><div className="text-xs text-saffron">Roz practice karein!</div></div>
         </div>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.3fr_1fr]">
           <div className="card p-6">
-            <div className="mb-2 flex items-center justify-between"><h2 className="flex items-center gap-2 text-lg font-bold"><BarChart3 className="h-5 w-5" />Typing Speed Progress (Net WPM)</h2><span className="flex gap-3 text-xs"><span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-brand" />Hindi</span><span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-saffron" />English</span></span></div>
-            {hi.length + en.length >= 2 ? <LineChart series={[{ color: "#1f35b8", values: hi }, { color: "#f28c0f", values: en }]} labels={Array.from({ length: Math.max(hi.length, en.length) }, (_, i) => `W${i + 1}`)} /> : <div className="grid h-52 place-items-center rounded-xl bg-canvas text-center text-sm text-muted"><div>Kuch typing tests dein — yahan aapki progress dikhegi.<br /><Link href="/typing-test" className="btn-primary btn-sm mt-3">Typing Test Dein</Link></div></div>}
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h2 className="flex items-center gap-2 text-base sm:text-lg font-bold"><BarChart3 className="h-5 w-5" />Typing Speed Progress (Net WPM)</h2><span className="flex gap-3 text-xs"><span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-brand" />Hindi</span><span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-saffron" />English</span></span></div>
+            {hi.length + en.length >= 2 ? <LineChart series={[{ color: "#1f35b8", values: hi }, { color: "#f28c0f", values: en }]} labels={Array.from({ length: Math.max(hi.length, en.length) }, (_, i) => `W${i + 1}`)} /> : <div className="grid h-52 place-items-center rounded-xl bg-canvas text-center text-sm text-muted"><div>Kuch typing tests dein — yahan aapki progress dikhegi.<br /><Link href="/typing-test" className="btn-primary btn-sm mt-3"><Keyboard className="h-4 w-4" />Typing Test Dein</Link></div></div>}
           </div>
           <div className="card p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><Target className="h-5 w-5" />Weak Topics — inpar dhyan dein</h2>
+            <h2 className="mb-4 flex items-center gap-2 text-base sm:text-lg font-bold"><Target className="h-5 w-5" />Weak Topics — inpar dhyan dein</h2>
             {weak.length ? weak.map(([t, p]) => (
               <div key={t} className="mb-3"><div className="flex justify-between text-sm"><span>{t}</span><b className={p < 50 ? "text-red-500" : p < 75 ? "text-saffron" : "text-green-600"}>{p}%</b></div><div className="mt-1 h-2 rounded-full bg-canvas"><div className={`h-2 rounded-full ${p < 50 ? "bg-red-500" : p < 75 ? "bg-saffron" : "bg-green-600"}`} style={{ width: `${p}%` }} /></div></div>
             )) : <p className="text-sm text-muted">Mock tests dene ke baad yahan weak topics dikhenge.</p>}

@@ -34,7 +34,7 @@ export default async function Guide({ params }: { params: { slug: string } }) {
               <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-amber-800"><Target className="h-5 w-5" />Score Target</h3>
               {[["Passing", "38+"], ["Achha score", "50+"], ...typing.map((t) => [t[0], `${t[3]}+`])].map(([l, v]) => <div key={l} className="flex justify-between py-2"><span>{l}</span><b className="text-lg">{v}</b></div>)}
             </div>
-            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><Download className="h-5 w-5" />Guide PDF</h3><p className="mt-1 text-sm text-muted">Poori guide PDF me — free download</p><PrintButton className="btn-orange mt-3 w-full">Free Download</PrintButton></div>
+            <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><Download className="h-5 w-5" />Guide PDF</h3><p className="mt-1 text-sm text-muted">Poori guide PDF me — free download</p><PrintButton className="btn-orange mt-3 w-full"><Download className="h-4 w-4" />Free Download</PrintButton></div>
           </aside>
         </div>
       </Container>

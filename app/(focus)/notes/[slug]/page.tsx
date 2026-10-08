@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Download } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
 import { one } from "@/lib/db";
 import { lines } from "@/lib/utils";
 import PrintButton from "@/components/PrintButton";
@@ -10,7 +10,7 @@ export default async function Notes({ params }: { params: { slug: string } }) {
   return (
     <div className="min-h-screen bg-canvas py-6">
       <div className="mx-auto mb-4 flex max-w-3xl items-center justify-between px-4 no-print">
-        <a href={`/study-material/${m.slug}`} className="text-sm text-brand">← Wapas</a>
+        <a href={`/study-material/${m.slug}`} className="flex items-center gap-1 text-sm text-brand"><ArrowLeft className="h-4 w-4" />Wapas</a>
         <PrintButton className="btn-orange"><Download className="h-4 w-4" />Save as PDF</PrintButton>
       </div>
       <div className="print-area mx-auto max-w-3xl bg-white p-8 md:p-14 shadow-lift">

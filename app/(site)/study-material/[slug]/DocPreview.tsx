@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Download, FileText, Lock } from "lucide-react";
+import { Download, FileText, Lock, ZoomIn, ZoomOut } from "lucide-react";
 
 export default function DocPreview({ title, pages, html, contents, premium, slug }: { title: string; pages: number | null; html: string | null; contents: string[]; premium: boolean; slug: string }) {
   const [zoom, setZoom] = useState(100);
@@ -10,9 +10,9 @@ export default function DocPreview({ title, pages, html, contents, premium, slug
       <div className="flex items-center justify-between border-b border-line px-5 py-3 text-sm">
         <span className="flex items-center gap-2"><FileText className="h-4 w-4" />Page {pages ? `3 / ${pages}` : "1"} · Preview</span>
         <span className="flex items-center gap-1.5">
-          <button onClick={() => setZoom(Math.max(70, zoom - 10))} className="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 font-bold text-brand">-</button>
+          <button onClick={() => setZoom(Math.max(70, zoom - 10))} className="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 font-bold text-brand"><ZoomOut className="h-4 w-4" /></button>
           <span className="rounded-lg bg-brand-50 px-3 py-1.5 font-semibold text-brand">{zoom}%</span>
-          <button onClick={() => setZoom(Math.min(140, zoom + 10))} className="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 font-bold text-brand">+</button>
+          <button onClick={() => setZoom(Math.min(140, zoom + 10))} className="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 font-bold text-brand"><ZoomIn className="h-4 w-4" /></button>
         </span>
       </div>
       <div className="overflow-x-auto bg-[#eceef6] p-4 md:p-8">

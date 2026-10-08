@@ -1,4 +1,4 @@
-import { Download, Info } from "lucide-react";
+import { Download, Info, Clock } from "lucide-react";
 import { q } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { color } from "@/lib/utils";
@@ -23,7 +23,7 @@ export default async function Downloads() {
                 <p className="mt-1 text-[15px] text-muted">{d.description}</p>
                 <div className="mt-auto flex items-center justify-between pt-5">
                   <span className="text-sm text-muted">{d.size}</span>
-                  {d.file_url ? <a href={d.file_url} target={d.file_url.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="btn-primary"><Download className="h-4 w-4" />Download</a> : <span className="btn-soft opacity-70">Jald aa raha</span>}
+                  {d.file_url ? <a href={d.file_url} target={d.file_url.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="btn-primary"><Download className="h-4 w-4" />Download</a> : <span className="btn-soft opacity-70"><Clock className="h-4 w-4" />Jald aa raha</span>}
                 </div>
               </div>
             ))}

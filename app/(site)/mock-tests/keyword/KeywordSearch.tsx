@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ListOrdered, Loader2, Search } from "lucide-react";
+import { ListOrdered, Loader2, Search, Sparkles } from "lucide-react";
 
 const POPULAR = ["RAM", "Shortcut", "Excel", "Email", "Virus", "Networking", "Full Form", "BODMAS", "MP GK"];
 export default function KeywordSearch({ loggedIn, children, initial }: { loggedIn: boolean; children: React.ReactNode; initial?: string }) {
@@ -38,7 +38,7 @@ export default function KeywordSearch({ loggedIn, children, initial }: { loggedI
           </label>
           <select value={n} onChange={(e) => setN(+e.target.value)} className="input lg:w-44"><option value={10}>10 sawal</option><option value={20}>20 sawal</option><option value={30}>30 sawal</option></select>
           <select value={lang} onChange={(e) => setLang(e.target.value)} className="input lg:w-40"><option value="hi">हिंदी</option><option value="en">English</option></select>
-          <button onClick={make} disabled={busy || !res?.count} className="btn-primary !px-7 !py-3.5 text-base">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Test Banayein</button>
+          <button onClick={make} disabled={busy || !res?.count} className="btn-primary !px-7 !py-3.5 text-base">{busy && <Loader2 className="h-4 w-4 animate-spin" />}<Sparkles className="h-4 w-4" />Test Banayein</button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">Popular: {POPULAR.map((p) => <button key={p} onClick={() => setKw(p)} className="chip bg-brand-50 text-brand hover:bg-brand-100">{p}</button>)}</div>
         {err && <div className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{err}</div>}

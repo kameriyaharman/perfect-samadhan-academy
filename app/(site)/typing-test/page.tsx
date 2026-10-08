@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, FileText, Gauge, GraduationCap, Keyboard, ScanSearch, Trophy, Users, Award } from "lucide-react";
+import { ArrowRight, FileText, Gauge, GraduationCap, Keyboard, ScanSearch, Trophy, Users, Award, PlayCircle } from "lucide-react";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
@@ -53,7 +53,7 @@ export default async function TypingHub() {
                     <tr key={e.id}>
                       <td className="font-bold">{e.name}</td><td>{e.typing_language}</td><td>{e.typing_layout}</td><td>{e.typing_time}</td>
                       <td><span className="chip bg-green-50 text-green-700 py-1.5">{e.typing_speed}</span></td>
-                      <td className="text-right"><Link href={`/typing-test/setup?lang=${lang}&layout=${layout}&pattern=${pattern}&duration=${Math.min(15, mins)}`} className="btn-primary btn-sm">Start <ArrowRight className="h-3.5 w-3.5" /></Link></td>
+                      <td className="text-right"><Link href={`/typing-test/setup?lang=${lang}&layout=${layout}&pattern=${pattern}&duration=${Math.min(15, mins)}`} className="btn-primary btn-sm"><PlayCircle className="h-4 w-4" />Start <ArrowRight className="h-3.5 w-3.5" /></Link></td>
                     </tr>
                   );
                 })}

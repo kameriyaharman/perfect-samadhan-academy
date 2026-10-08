@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, ClipboardCheck, FileText, Lock, PieChart, Target, Users } from "lucide-react";
+import { Check, ClipboardCheck, FileText, Lock, PieChart, Target, Users, Clock, CheckCircle2, Unlock, Crown, Eye, RotateCcw, PlayCircle, ArrowRight, ShoppingCart } from "lucide-react";
 import { q, one } from "@/lib/db";
 import { getUser, isPremium } from "@/lib/auth";
 import { rupee, sections } from "@/lib/utils";
@@ -60,12 +60,12 @@ export default async function Series({ params, searchParams }: { params: { exam:
                           <td><div className="font-bold">{t.title}</div><div className="text-xs text-muted">{shortBreak(t.breakdown)}</div></td>
                           <td className="whitespace-nowrap">{t.qn} Q · {t.duration} min</td>
                           <td className="hi whitespace-nowrap">हिंदी / English</td>
-                          <td>{a?.status === "submitted" ? <span className="chip bg-green-50 text-green-700">Score {a.score}/{a.total}</span> : a ? <span className="chip bg-red-50 text-red-600">● In progress</span> : locked ? <span className="chip bg-orange-50 text-orange-600"><Lock className="h-3 w-3" />Premium</span> : <span className="chip bg-green-50 text-green-700">Free</span>}</td>
+                          <td>{a?.status === "submitted" ? <span className="chip bg-green-50 text-green-700"><CheckCircle2 className="h-3 w-3" />Score {a.score}/{a.total}</span> : a ? <span className="chip bg-red-50 text-red-600"><Clock className="h-3 w-3" />In progress</span> : locked ? <span className="chip bg-orange-50 text-orange-600"><Lock className="h-3 w-3" />Premium</span> : <span className="chip bg-green-50 text-green-700"><Unlock className="h-3 w-3" />Free</span>}</td>
                           <td className="whitespace-nowrap text-right">
-                            {a?.status === "submitted" ? (<div className="flex justify-end gap-1.5"><Link href={`/test/solutions/${a.id}`} className="btn-soft btn-sm">Solution</Link><Link href={`/test/${t.id}`} className="btn-soft btn-sm">Reattempt</Link></div>)
-                              : a ? <Link href={`/test/attempt/${a.id}`} className="btn-primary btn-sm">Resume</Link>
-                              : locked ? <Link href="/plans" className="btn-orange btn-sm !py-1.5">Unlock</Link>
-                              : <Link href={`/test/${t.id}`} className="btn-primary btn-sm">Start</Link>}
+                            {a?.status === "submitted" ? (<div className="flex justify-end gap-1.5"><Link href={`/test/solutions/${a.id}`} className="btn-soft btn-sm"><Eye className="h-3.5 w-3.5" />Solution</Link><Link href={`/test/${t.id}`} className="btn-soft btn-sm"><RotateCcw className="h-3.5 w-3.5" />Reattempt</Link></div>)
+                              : a ? <Link href={`/test/attempt/${a.id}`} className="btn-primary btn-sm"><PlayCircle className="h-3.5 w-3.5" />Resume</Link>
+                              : locked ? <Link href="/plans" className="btn-orange btn-sm !py-1.5"><Lock className="h-3.5 w-3.5" />Unlock</Link>
+                              : <Link href={`/test/${t.id}`} className="btn-primary btn-sm"><PlayCircle className="h-4 w-4" />Start<ArrowRight className="h-3.5 w-3.5" /></Link>}
                           </td>
                         </tr>
                       );
@@ -89,10 +89,10 @@ export default async function Series({ params, searchParams }: { params: { exam:
                 <h3 className="mt-3 text-2xl font-bold text-navy">{plan.name}</h3>
                 <div className="mt-2 flex items-end gap-2"><span className="text-4xl font-extrabold text-navy">{rupee(plan.price)}</span>{plan.mrp && <span className="pb-1 text-muted line-through">{rupee(plan.mrp)}</span>}</div>
                 <ul className="mt-4 space-y-2 text-sm">{plan.features.split("\n").filter((x: string) => x.startsWith("+")).map((x: string) => <li key={x} className="flex gap-2"><Check className="h-4 w-4 text-green-600" />{x.slice(1)}</li>)}<li className="flex gap-2"><Check className="h-4 w-4 text-green-600" />Validity: {Math.round(plan.validity_days / 365) >= 1 ? `${Math.round(plan.validity_days / 365)} saal` : `${plan.validity_days} din`}</li></ul>
-                <Link href={`/checkout?item=plan:${plan.slug}`} className="btn-primary mt-5 w-full">Abhi Kharidein</Link>
+                <Link href={`/checkout?item=plan:${plan.slug}`} className="btn-primary mt-5 w-full"><ShoppingCart className="h-4 w-4" />Abhi Kharidein</Link>
               </div>
             )}
-            {premium && <div className="rounded-2xl bg-green-50 p-5 text-sm text-green-800"><b>Premium active ✓</b><br />Sabhi tests unlocked hain.</div>}
+            {premium && <div className="rounded-2xl bg-green-50 p-5 text-sm text-green-800"><b className="flex items-center gap-1.5"><Crown className="h-4 w-4" />Premium active</b><br />Sabhi tests unlocked hain.</div>}
             {pattern.length > 0 && (
               <div className="card p-6">
                 <div className="mb-2 flex items-center gap-2 text-lg font-bold"><PieChart className="h-5 w-5" />{exam.code} Pattern</div>

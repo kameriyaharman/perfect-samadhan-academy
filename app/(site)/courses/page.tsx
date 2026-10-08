@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, MapPin, Users, Video } from "lucide-react";
+import { Clock, MapPin, Users, Video, GraduationCap, Info } from "lucide-react";
 import { q } from "@/lib/db";
 import { color, rupee } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
@@ -22,7 +22,7 @@ export default async function Courses() {
                 <div className="p-5">
                   <div className="flex flex-wrap gap-2">{c.badge && <span className="chip bg-orange-50 text-orange-600">{c.badge}</span>}<span className="chip bg-brand-50 text-brand">{c.mode}</span><span className="chip bg-brand-50 text-brand"><Clock className="h-3 w-3" />{c.duration}</span></div>
                   <div className="mt-3 flex items-end gap-2"><span className="text-3xl font-extrabold">{rupee(c.price)}</span>{c.mrp && <span className="pb-1 text-sm text-muted line-through">{rupee(c.mrp)}</span>}</div>
-                  <div className="mt-4 flex gap-2"><Link href={`/checkout?item=course:${c.slug}`} className="btn-primary flex-1">Enroll</Link><Link href={`/courses/${c.slug}`} className="btn-ghost">Details</Link></div>
+                  <div className="mt-4 flex gap-2"><Link href={`/checkout?item=course:${c.slug}`} className="btn-primary flex-1"><GraduationCap className="h-4 w-4" />Enroll</Link><Link href={`/courses/${c.slug}`} className="btn-ghost"><Info className="h-4 w-4" />Details</Link></div>
                 </div>
               </div>
             ))}

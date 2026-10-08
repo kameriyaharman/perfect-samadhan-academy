@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LogIn } from "lucide-react";
 import { getUser } from "@/lib/auth";
 import { initials } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ export default async function FocusBar({ crumbs, right }: { crumbs: { label: str
       <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 md:px-10 py-3">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <img src="/logo.png" alt="" className="h-9 w-9" />
-          <span className="hi hidden sm:block text-lg font-bold text-brand">परफेक्ट समाधान</span>
+          <span className="hi hidden sm:block whitespace-nowrap text-lg font-bold text-brand">परफेक्ट समाधान</span>
         </Link>
         <nav className="ml-2 md:ml-6 flex min-w-0 items-center gap-1.5 text-sm text-muted overflow-hidden">
           {crumbs.map((c, i) => (
@@ -28,7 +28,7 @@ export default async function FocusBar({ crumbs, right }: { crumbs: { label: str
               <span className="hidden md:block leading-tight"><span className="block text-sm font-bold">{user.name}</span><span className="block text-xs text-muted">{user.target_exam ? `${user.target_exam} Aspirant` : "Student"}</span></span>
             </Link>
           ) : (
-            <Link href="/login" className="btn-primary btn-sm">Login</Link>
+            <Link href="/login" className="btn-primary btn-sm"><LogIn className="h-4 w-4" />Login</Link>
           )}
         </div>
       </div>

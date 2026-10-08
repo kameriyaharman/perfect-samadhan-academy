@@ -106,7 +106,7 @@ export default async function Home() {
             <div>
               <span className="chip border border-gold/40 bg-gold/10 text-gold"><Keyboard className="h-3.5 w-3.5" />Typing Test Platform</span>
               <h2 className="hi mt-4 text-3xl md:text-[40px] font-bold leading-tight">हिंदी और English<br />टाइपिंग — <span className="text-gold">Real Exam जैसा</span></h2>
-              <ul className="mt-6 grid gap-3 text-sm text-white/85 sm:grid-cols-2">
+              <ul className="mt-6 grid gap-3 text-sm text-white/85 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {["Gross / Net WPM & accuracy", "Galti par live highlight", "2, 5, 10, 15 min tests", "On-screen keyboard guide", "CPCT / SSC / Court exam mode", "Result PDF + certificate"].map((f) => (
                   <li key={f} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-gold" />{f}</li>
                 ))}
@@ -165,7 +165,7 @@ export default async function Home() {
         <div className="card overflow-hidden self-start">
           <div className="flex items-center justify-between bg-saffron px-5 py-3.5 text-white">
             <span className="flex items-center gap-2 font-bold"><Bell className="h-4 w-4" />Notice Board & Important Dates</span>
-            <Link href="/notices" className="text-xs font-semibold">View all</Link>
+            <Link href="/notices" className="flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
           </div>
           <div className="divide-y divide-line">
             {notices.map((n: any) => {
@@ -215,7 +215,7 @@ export default async function Home() {
           <div className="rounded-2xl bg-navy p-5 text-white" data-dark>
             <div className="flex items-center gap-2 font-bold text-gold"><MessageCircle className="h-4 w-4" />WhatsApp Group Join karein</div>
             <p className="mt-1 text-sm text-white/75">Notice, admit card aur free PDF sabse pehle aapke phone par.</p>
-            <a href={s.whatsapp_group || "#"} target="_blank" rel="noreferrer" className="btn-orange btn-sm mt-3">Join Now</a>
+            <a href={s.whatsapp_group || "#"} target="_blank" rel="noreferrer" className="btn-orange btn-sm mt-3"><MessageCircle className="h-4 w-4" />Join Now</a>
           </div>
         </div>
       </Container>

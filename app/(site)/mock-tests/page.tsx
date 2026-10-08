@@ -18,7 +18,7 @@ export default async function MockTests() {
       <PageHero crumbs={[{ label: "Mock Tests" }]} title="ऑनलाइन" highlight="मॉक टेस्ट" subtitle="Real exam jaisa interface, Hindi/English dono me, instant result aur har question ka explanation."
         chips={[<><ClipboardCheck className="h-4 w-4" />{total}+ Mock Tests</>, <><Languages className="h-4 w-4" />Bilingual</>, <><BarChart3 className="h-4 w-4" />All-India Rank</>]} />
       <Container className="py-10">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[[ClipboardCheck, "Full Mock Test", "Poora paper, 75 min", "/mock-tests/cpct", "blue"], [Layers, "Subject-wise", "Computer, Maths, GK…", "/mock-tests/cpct?tab=subject", "orange"], [Target, "Topic-wise", "Ek chapter, chhote tests", "/mock-tests/topic-wise", "green"], [FileText, "PYQ Online Test", "Purane paper online", "/mock-tests/pyq", "red"]].map(([I, t, d, h, c]: any) => (
             <Link key={t} href={h} className="card flex items-center gap-4 p-5 transition hover:-translate-y-1 hover:shadow-lift">
               <span className={`grid h-12 w-12 place-items-center rounded-xl ${color(c).bg} ${color(c).text}`}><I className="h-5 w-5" /></span>
@@ -28,7 +28,7 @@ export default async function MockTests() {
         </div>
         <div className="mt-12">
           <SectionTitle eyebrow="Exam Chunein" title="परीक्षा के अनुसार मॉक टेस्ट" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {exams.map((e: any) => (
               <Link key={e.id} href={`/mock-tests/${e.slug}`} className="card group p-5 transition hover:-translate-y-1 hover:shadow-lift">
                 <div className="flex items-start justify-between">

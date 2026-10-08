@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Eye, Filter, Lock, PlayCircle, Search, Star } from "lucide-react";
+import { Check, Download, Eye, Filter, Lock, PlayCircle, Search, Star } from "lucide-react";
 import { q } from "@/lib/db";
 import { kfmt } from "@/lib/utils";
 import { Container, Empty } from "@/components/Section";
@@ -42,7 +42,7 @@ export default async function StudyMaterial({ searchParams: sp }: { searchParams
           <form action="/study-material" className="mt-6 flex max-w-3xl items-center gap-2 rounded-2xl bg-white p-2 shadow-lift">
             <Search className="ml-3 h-5 w-5 text-muted" />
             <input name="q" defaultValue={sp.q} placeholder='PDF ya topic search karein — jaise "Excel shortcut", "CPCT 2024 paper"' className="min-w-0 flex-1 bg-transparent px-2 py-2.5 text-ink outline-none" />
-            <button className="btn-orange">Search</button>
+            <button className="btn-orange"><Search className="h-4 w-4" />Search</button>
           </form>
         </Container>
       </section>
@@ -51,11 +51,11 @@ export default async function StudyMaterial({ searchParams: sp }: { searchParams
           <aside className="card self-start p-5">
             <div className="mb-3 flex items-center gap-2 text-lg font-bold"><Filter className="h-5 w-5" />Filter</div>
             <div className="text-xs font-bold uppercase tracking-wider text-muted">Type</div>
-            <div className="mt-2 space-y-2">{TYPES.map(([k, l]) => <Link key={k} href={link({ type: toggle(types, k) })} className="flex items-center gap-2 text-[15px]"><span className={`grid h-4 w-4 place-items-center rounded border ${types.includes(k) ? "border-brand bg-brand text-white" : "border-slate-400"}`}>{types.includes(k) && "✓"}</span>{l} <span className="text-muted">({counts.find((c: any) => c.type === k)?.n || 0})</span></Link>)}</div>
+            <div className="mt-2 space-y-2">{TYPES.map(([k, l]) => <Link key={k} href={link({ type: toggle(types, k) })} className="flex items-center gap-2 text-[15px]"><span className={`grid h-4 w-4 place-items-center rounded border ${types.includes(k) ? "border-brand bg-brand text-white" : "border-slate-400"}`}>{types.includes(k) && <Check className="h-3 w-3" strokeWidth={3} />}</span>{l} <span className="text-muted">({counts.find((c: any) => c.type === k)?.n || 0})</span></Link>)}</div>
             <div className="mt-5 text-xs font-bold uppercase tracking-wider text-muted">Exam</div>
             <div className="mt-2 flex flex-wrap gap-2">{EXAMS.map((e) => <Link key={e} href={link({ exam: sp.exam === e ? undefined : e })} className={`chip py-1.5 ${sp.exam === e ? "bg-brand text-white" : "bg-brand-50 text-brand"}`}>{e}</Link>)}</div>
             <div className="mt-5 text-xs font-bold uppercase tracking-wider text-muted">Subject</div>
-            <div className="mt-2 space-y-2">{SUBJECTS.map((s) => <Link key={s} href={link({ subject: toggle(subj, s) })} className="flex items-center gap-2 text-[15px]"><span className={`grid h-4 w-4 place-items-center rounded border text-[10px] ${subj.includes(s) ? "border-brand bg-brand text-white" : "border-slate-400"}`}>{subj.includes(s) && "✓"}</span>{s}</Link>)}</div>
+            <div className="mt-2 space-y-2">{SUBJECTS.map((s) => <Link key={s} href={link({ subject: toggle(subj, s) })} className="flex items-center gap-2 text-[15px]"><span className={`grid h-4 w-4 place-items-center rounded border text-[10px] ${subj.includes(s) ? "border-brand bg-brand text-white" : "border-slate-400"}`}>{subj.includes(s) && <Check className="h-3 w-3" strokeWidth={3} />}</span>{s}</Link>)}</div>
             <div className="mt-5 text-xs font-bold uppercase tracking-wider text-muted">Language</div>
             <div className="seg mt-2">{LANG.map(([k, l]) => <Link key={k} href={link({ lang: k || undefined })} className={(sp.lang || "") === k ? "on" : ""}>{l}</Link>)}</div>
             {Object.values(sp).some(Boolean) && <Link href="/study-material" className="mt-4 block text-center text-sm text-brand underline">Sab filters hatayein</Link>}

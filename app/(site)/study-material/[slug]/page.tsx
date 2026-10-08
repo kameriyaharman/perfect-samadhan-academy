@@ -60,7 +60,7 @@ export default async function Material({ params }: { params: { slug: string } })
               <div className="card p-6">
                 <h3 className="mb-2 flex items-center gap-2 text-lg font-bold"><PlayCircle className="h-5 w-5" />Related Test</h3>
                 <p className="text-sm text-muted">{related.title}</p>
-                <Link href={`/test/${related.id}`} className="btn-primary mt-3">Test Dein</Link>
+                <Link href={`/test/${related.id}`} className="btn-primary mt-3"><PlayCircle className="h-4 w-4" />Test Dein</Link>
               </div>
             )}
           </aside>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, Download, FileCheck2, Printer } from "lucide-react";
+import { BarChart3, Download, FileCheck2, Printer, MonitorPlay } from "lucide-react";
 import { q } from "@/lib/db";
 import { kfmt } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
@@ -27,7 +27,7 @@ export default async function Papers({ searchParams }: { searchParams: { exam?: 
                 <tr key={p.id}>
                   <td className="font-bold">{p.title}</td><td>{p.shifts}</td><td>{p.language}</td>
                   <td><span className="chip bg-green-50 text-green-700 py-1.5">Answer Key</span></td><td>{kfmt(p.downloads)}</td>
-                  <td className="whitespace-nowrap text-right"><a href={`/api/download/paper/${p.id}`} className="btn-primary btn-sm"><Download className="h-3.5 w-3.5" />PDF</a> <Link href={p.test_id ? `/test/${p.test_id}` : "/mock-tests/pyq"} className="btn-soft btn-sm">Online Test</Link></td>
+                  <td className="whitespace-nowrap text-right"><a href={`/api/download/paper/${p.id}`} className="btn-primary btn-sm"><Download className="h-3.5 w-3.5" />PDF</a> <Link href={p.test_id ? `/test/${p.test_id}` : "/mock-tests/pyq"} className="btn-soft btn-sm"><MonitorPlay className="h-4 w-4" />Online Test</Link></td>
                 </tr>
               ))}</tbody>
             </table>

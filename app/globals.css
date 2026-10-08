@@ -17,19 +17,20 @@ h1, h2, h3, .heading { font-family: Poppins, Hind, sans-serif; letter-spacing: -
 .btn-ghost { @apply btn bg-white border border-line text-ink hover:border-brand hover:text-brand px-5 py-2.5; }
 .btn-soft { @apply btn bg-brand-50 text-brand hover:bg-brand-100 px-4 py-2; }
 .btn-sm { @apply px-3 py-1.5 text-sm rounded-lg; }
-.chip { @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold; }
+.chip { @apply whitespace-nowrap shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold; }
 .input { @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-[15px] outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10; }
 .label { @apply block text-sm font-semibold text-ink mb-1.5; }
 .eyebrow { @apply text-xs font-bold tracking-[.18em] uppercase text-saffron; }
 .tab { @apply relative whitespace-nowrap px-4 py-3 text-[15px] font-semibold text-muted hover:text-brand transition; }
 .tab.active { @apply text-brand; }
 .tab.active::after { content: ""; @apply absolute left-0 right-0 -bottom-px h-[3px] rounded-full bg-saffron; }
-.seg { @apply flex rounded-xl bg-canvas p-1 gap-1; }
-.seg > button, .seg > a { @apply flex-1 rounded-lg px-3 py-2 text-sm font-semibold text-muted transition text-center; }
+.seg { @apply max-w-full flex rounded-xl bg-canvas p-1 gap-1 overflow-x-auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg > button, .seg > a { @apply whitespace-nowrap flex-1 shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-muted transition text-center; }
 .seg > .on { @apply bg-white text-brand shadow-card; }
 .table-x { @apply w-full text-left text-sm; }
-.table-x th { @apply px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted bg-white border-b border-line; }
-.table-x td { @apply px-4 py-3.5 border-b border-line align-middle; }
+.table-x th { @apply whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted bg-white border-b border-line; }
+.table-x td { @apply whitespace-nowrap px-4 py-3.5 border-b border-line align-middle; }
 .table-x tbody tr:nth-child(even) td { background: #fafbfe; }
 .table-x tbody tr:hover td { background: #f3f5fe; }
 }

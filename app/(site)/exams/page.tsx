@@ -23,7 +23,7 @@ export default async function Exams({ searchParams }: { searchParams: { c?: stri
           <div className="seg lg:w-[560px]">{CATS.map(([k, l]) => <Link key={k} href={k ? `/exams?c=${k}` : "/exams"} className={(searchParams.c || "") === k ? "on" : ""}>{l}</Link>)}</div>
         </div>
         {!rows.length ? <Empty /> : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {rows.map((e: any) => (
               <Link key={e.id} href={`/exams/${e.slug}`} className="card group p-5 transition hover:-translate-y-1 hover:shadow-lift">
                 <div className="flex items-start justify-between"><span className={`grid h-12 min-w-[48px] place-items-center rounded-xl px-2 text-[11px] font-extrabold ${color(e.color).bg} ${color(e.color).text}`}>{e.code}</span>{e.body && <span className="chip bg-brand-50 text-brand">{e.body}</span>}</div>

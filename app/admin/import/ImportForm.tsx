@@ -34,7 +34,7 @@ export default function ImportForm({ type: t0, testId: tid }: { type: "questions
           <label className="btn-soft cursor-pointer !py-3"><Upload className="h-4 w-4" />CSV file chunein<input type="file" accept=".csv,.txt,.tsv" className="hidden" onChange={(e) => e.target.files?.[0] && file(e.target.files[0])} /></label>
         </div>
         <textarea value={csv} onChange={(e) => setCsv(e.target.value)} rows={12} placeholder={TPL[type]} className="input mt-4 font-mono text-xs hi" />
-        <div className="mt-4 flex items-center gap-3"><button onClick={run} disabled={busy || !csv.trim()} className="btn-primary">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Import Karein</button>
+        <div className="mt-4 flex items-center gap-3"><button onClick={run} disabled={busy || !csv.trim()} className="btn-primary">{busy && <Loader2 className="h-4 w-4 animate-spin" />}<Upload className="h-4 w-4" />Import Karein</button>
           {res && (res.error ? <span className="text-red-600">{res.error}</span> : <span className="text-green-700">{res.imported} records import hue{res.errors?.length ? ` · ${res.errors.length} rows skip` : ""}</span>)}</div>
         {res?.errors?.length > 0 && <ul className="mt-3 list-disc pl-5 text-sm text-red-600">{res.errors.map((e: string) => <li key={e}>{e}</li>)}</ul>}
         <p className="mt-4 text-xs text-muted">Answer column me A/B/C/D likhein. English columns optional hain (khali chhodne par Hindi hi dikhega). Test ID dene par questions usi mock test me judenge.</p>

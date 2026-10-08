@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, Clock, GraduationCap, Hand, Languages, Keyboard } from "lucide-react";
+import { Check, Clock, GraduationCap, Hand, Languages, Keyboard, PlayCircle } from "lucide-react";
 import { q } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import PageHero from "@/components/PageHero";
@@ -28,7 +28,7 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
           {TABS.map(([k, l]) => <Link key={k} href={`/typing-test/learn?layout=${k}`} className={`tab hi ${layout === k ? "active" : ""}`}>{l}</Link>)}
         </div>
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-          <div className="grid gap-4 sm:grid-cols-2 self-start">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 self-start">
             {lessons.map((l: any, i: number) => {
               const acc = done.get(l.id);
               return (
@@ -39,7 +39,7 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
                     <span className="hi block truncate text-sm text-muted">{l.subtitle}</span>
                     <span className="mt-2 block h-1.5 rounded-full bg-canvas"><span className={`block h-1.5 rounded-full ${acc != null ? "bg-green-600" : "bg-brand/20"}`} style={{ width: acc != null ? `${Math.max(30, acc)}%` : "0%" }} /></span>
                   </span>
-                  {acc != null ? <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-green-600"><Check className="h-5 w-5" /></span> : <span className="btn-soft btn-sm">Start</span>}
+                  {acc != null ? <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-green-600"><Check className="h-5 w-5" /></span> : <span className="btn-soft btn-sm"><PlayCircle className="h-4 w-4" />Start</span>}
                 </Link>
               );
             })}

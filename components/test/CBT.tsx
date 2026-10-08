@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Grid3x3, Loader2, Star, Timer, X } from "lucide-react";
+import { ArrowRight, Grid3x3, Loader2, Star, Timer, X, ArrowLeft, Send, Eraser, CheckCircle2 } from "lucide-react";
 import { initials } from "@/lib/utils";
 
 type Q = { id: number; section: string; topic: string | null; hi: string; en: string | null; oh: string[]; oe: (string | null)[] };
@@ -99,7 +99,7 @@ export default function CBT({ attempt, questions, user }: { attempt: A; question
         <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-green-600" />Answered</span><span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-red-500" />Not answered</span>
         <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-violet-600" />Marked</span><span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full border border-line" />Not visited</span>
       </div>
-      <button onClick={() => setConfirm(true)} className="btn-orange mt-auto w-full !py-3">Submit Test</button>
+      <button onClick={() => setConfirm(true)} className="btn-orange mt-auto w-full !py-3"><Send className="h-4 w-4" />Submit Test</button>
     </div>
   );
 
@@ -146,10 +146,10 @@ export default function CBT({ attempt, questions, user }: { attempt: A; question
             })}
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-line pt-5">
-            <button onClick={clear} className="btn-ghost">Clear Response</button>
+            <button onClick={clear} className="btn-ghost"><Eraser className="h-4 w-4" />Clear Response</button>
             <button onClick={toggleMark} className="btn border border-violet-200 bg-white px-4 py-2.5 text-violet-700 hover:bg-violet-50"><Star className={`h-4 w-4 ${marked.has(q.id) ? "fill-violet-600" : ""}`} />{marked.has(q.id) ? "Unmark" : "Mark for Review"}</button>
             <div className="ml-auto flex gap-2">
-              <button onClick={() => go(idx - 1)} disabled={idx === 0} className="btn-ghost">Previous</button>
+              <button onClick={() => go(idx - 1)} disabled={idx === 0} className="btn-ghost"><ArrowLeft className="h-4 w-4" />Previous</button>
               <button onClick={saveNext} className="btn-primary">Save & Next <ArrowRight className="h-4 w-4" /></button>
             </div>
           </div>
@@ -177,8 +177,8 @@ export default function CBT({ attempt, questions, user }: { attempt: A; question
             </div>
             <p className="mt-3 text-sm text-muted">Submit ke baad uttar badle nahi ja sakte.</p>
             <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setConfirm(false)} className="btn-ghost">Wapas Jaayein</button>
-              <button onClick={submit} disabled={busy} className="btn-orange">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Haan, Submit</button>
+              <button onClick={() => setConfirm(false)} className="btn-ghost"><ArrowLeft className="h-4 w-4" />Wapas Jaayein</button>
+              <button onClick={submit} disabled={busy} className="btn-orange">{busy && <Loader2 className="h-4 w-4 animate-spin" />}<CheckCircle2 className="h-4 w-4" />Haan, Submit</button>
             </div>
           </div>
         </div>

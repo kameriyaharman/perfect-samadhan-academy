@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { COOKIE } from "@/lib/auth";
-export async function POST() {
-  cookies().delete(COOKIE);
-  return NextResponse.json({ ok: true });
+
+function clear(r: NextResponse) {
+  r.cookies.set(COOKIE, "", { path: "/", maxAge: 0, httpOnly: true, sameSite: "lax" });
+  return r;
 }
-export async function GET(req: Request) {
-  cookies().delete(COOKIE);
-  return NextResponse.redirect(new URL("/", req.url));
+export async function POST() {
+  return clear(NextResponse.json({ ok: true }));
+}
+export async function GET() {
+  return clear(new NextResponse(null, { status: 302, headers: { Location: "/", "Cache-Control": "no-store" } }));
 }

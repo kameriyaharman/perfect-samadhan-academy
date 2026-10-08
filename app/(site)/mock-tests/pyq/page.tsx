@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Download } from "lucide-react";
+import { CalendarDays, Download, MonitorPlay } from "lucide-react";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
@@ -21,17 +21,17 @@ export default async function Pyq({ searchParams }: { searchParams: { exam?: str
           {exams.map((e: any) => <Link key={e.slug} href={`/mock-tests/pyq?exam=${e.slug}`} className={`tab ${exam === e.slug ? "active" : ""}`}>{e.name.replace("MP ", "") === e.name ? e.name : e.name}</Link>)}
         </div>
         {!tests.length ? <Empty /> : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {Object.entries(byYear).sort((a, b) => Number(b[0]) - Number(a[0])).map(([y, list]) => (
               <div key={y} className="card p-5">
                 <h3 className="mb-2 flex items-center gap-2 text-lg font-bold"><CalendarDays className="h-5 w-5" />{cur?.code} {y}</h3>
                 {list.map((t) => {
                   const [ses, sh] = (t.session || t.title).split("·").map((s: string) => s.trim());
                   return (
-                    <div key={t.id} className="flex items-center justify-between gap-2 border-b border-line py-2.5 last:border-0">
-                      <span className="text-sm"><b>{ses}</b>{sh ? ` · ${sh}` : ""}</span>
+                    <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-line py-2.5 last:border-0">
+                      <span className="whitespace-nowrap text-sm"><b>{ses}</b>{sh ? ` · ${sh}` : ""}</span>
                       <span className="flex gap-1.5">
-                        <Link href={`/test/${t.id}`} className="btn-primary btn-sm">Online Test</Link>
+                        <Link href={`/test/${t.id}`} className="btn-primary btn-sm"><MonitorPlay className="h-4 w-4" />Online Test</Link>
                         <a href={t.pdf_url || `/previous-papers?exam=${encodeURIComponent(cur?.name || "")}`} className="btn-soft btn-sm"><Download className="h-3.5 w-3.5" />PDF</a>
                       </span>
                     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, BarChart3, CheckCircle2, Download, RotateCcw, ShieldCheck, XCircle, LogIn } from "lucide-react";
+import { Award, BarChart3, CheckCircle2, Download, RotateCcw, ShieldCheck, XCircle, LogIn, PartyPopper, TrendingUp, Target } from "lucide-react";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { fmtDate, fmtDateTime } from "@/lib/utils";
@@ -29,7 +29,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
         <div className="hero-bg relative overflow-hidden rounded-[24px] p-6 md:p-8 text-white" data-dark>
           <div className="absolute right-10 top-0 h-40 w-40 rounded-full bg-saffron/30 blur-3xl" />
           <span className={`chip ${r.qualified ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"} py-1.5`}>{r.qualified ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}{r.qualified ? "QUALIFIED" : "NOT QUALIFIED"} — {PATTERN_NAME[r.pattern] || r.pattern} {hindi ? "Hindi" : "English"} ({r.qualify_speed} NWPM)</span>
-          <h1 className="hi mt-4 text-4xl md:text-5xl font-bold">{r.qualified ? "शाबाश" : "अच्छा प्रयास"}{name ? ` ${name}` : ""}! {r.qualified ? "🎉" : "💪"}</h1>
+          <h1 className="hi mt-4 text-4xl md:text-5xl font-bold">{r.qualified ? "शाबाश" : "अच्छा प्रयास"}{name ? ` ${name}` : ""}! {r.qualified ? <PartyPopper className="inline h-10 w-10 text-gold" /> : <TrendingUp className="inline h-10 w-10 text-gold" />}</h1>
           <p className="mt-2 text-white/80">{hindi ? `Hindi ${r.layout}` : "English"} · {Math.round(r.duration / 60) || 1} min · {r.mode === "exam" ? "Exam" : "Practice"} Mode · {fmtDateTime(r.created_at)}</p>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[["Net Speed", Math.round(r.net_wpm), "WPM", "text-gold"], ["Gross Speed", Math.round(r.gross_wpm), "WPM", ""], ["Accuracy", `${r.accuracy}%`, `${r.typed_words - r.errors} / ${r.typed_words} words`, ""], ["Rank", `#${rank?.rank || 1}`, `of ${rank?.total || 1} today`, ""]].map(([l, v, s, c]) => (
@@ -69,7 +69,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
                 ))}</tbody>
               </table>
             </div>
-          ) : <div className="rounded-xl bg-green-50 p-6 text-center text-green-700">Ek bhi galti nahi — shandaar! 🎯</div>}
+          ) : <div className="rounded-xl bg-green-50 p-6 text-center text-green-700"><Target className="mx-auto mb-2 h-8 w-8" />Ek bhi galti nahi — shandaar!</div>}
         </div>
         <div className="card p-6">
           <h2 className="mb-3 flex items-center gap-2 text-lg font-bold"><Award className="h-5 w-5" />Certificate Preview</h2>
@@ -78,7 +78,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
             <div className="mt-3 text-xs font-bold tracking-[.2em] text-amber-700">CERTIFICATE OF TYPING SPEED</div>
             <div className="mt-2 text-3xl font-bold text-navy">{r.name === "Guest" ? "Aapka Naam" : r.name}</div>
             <p className="mt-2 text-sm text-muted">ne {hindi ? `Hindi (${r.layout})` : "English"} typing me <b className="text-ink">{Math.round(r.net_wpm)} Net WPM</b> aur <b className="text-ink">{r.accuracy}% accuracy</b> prapt ki.</p>
-            <div className="mt-4 flex items-center justify-between text-xs text-muted"><span>Cert ID: {r.cert_id}</span><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" />Verify online</span><span>{fmtDate(r.created_at)}</span></div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:justify-between text-xs text-muted"><span>Cert ID: {r.cert_id}</span><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" />Verify online</span><span>{fmtDate(r.created_at)}</span></div>
           </div>
           {r.name === "Guest" && isMine && (
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 p-4 text-sm">

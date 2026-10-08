@@ -84,7 +84,7 @@ export default async function Result({ params }: { params: { id: string } }) {
           <div className="flex flex-wrap gap-2 no-print">
             <Link href={`/test/solutions/${a.id}`} className="btn-ghost"><Eye className="h-4 w-4" />Solutions Dekhein</Link>
             <PrintButton className="btn-ghost"><Download className="h-4 w-4" />Result PDF</PrintButton>
-            <Link href={weak.length ? `/mock-tests/keyword?q=${encodeURIComponent(weak[0])}` : "/mock-tests"} className="btn-primary">Weak Topic Test</Link>
+            <Link href={weak.length ? `/mock-tests/keyword?q=${encodeURIComponent(weak[0])}` : "/mock-tests"} className="btn-primary"><Target className="h-4 w-4" />Weak Topic Test</Link>
           </div>
         </div>
       </Container>

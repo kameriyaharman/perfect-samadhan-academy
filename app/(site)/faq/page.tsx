@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HelpCircle, MessageCircle } from "lucide-react";
+import { HelpCircle, MessageCircle, Plus, Minus } from "lucide-react";
 import { q } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import PageHero from "@/components/PageHero";
@@ -20,7 +20,7 @@ export default async function Faq({ searchParams }: { searchParams: { c?: string
             <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line scrollbar-none">{cats.map((k) => <Link key={k} href={`/faq?c=${encodeURIComponent(k)}`} className={`tab ${k === c ? "active" : ""}`}>{k}</Link>)}</div>
             {!rows.length ? <Empty /> : <div className="space-y-3">{rows.map((f: any, i: number) => (
               <details key={f.id} open={i < 2} className="card group p-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold">{f.question}<span className="text-brand group-open:hidden">+</span><span className="hidden text-brand group-open:inline">−</span></summary>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold">{f.question}<span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand"><Plus className="h-4 w-4 group-open:hidden" /><Minus className="hidden h-4 w-4 group-open:block" /></span></summary>
                 <p className="mt-2 text-[15px] text-muted">{f.answer}</p>
               </details>
             ))}</div>}

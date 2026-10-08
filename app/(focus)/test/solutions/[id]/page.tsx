@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Grid3x3, Info } from "lucide-react";
+import { Grid3x3, Info, ArrowLeft } from "lucide-react";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { loadQuestions } from "@/lib/tests";
@@ -64,7 +64,7 @@ export default async function Solutions({ params, searchParams }: { params: { id
               {qs.map((x, i) => <a key={x.id} href={f === "all" ? `#q${i + 1}` : link({ f: "all" }) + `#q${i + 1}`} className={`grid h-10 place-items-center rounded-lg text-sm font-semibold ${pal[st(x)]}`}>{i + 1}</a>)}
             </div>
             <div className="mt-3 flex gap-4 text-xs text-muted"><span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-green-600" />Correct</span><span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-red-500" />Wrong</span><span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-slate-200" />Skipped</span></div>
-            <Link href={`/test/result/${a.id}`} className="btn-ghost mt-4 w-full">Result par wapas</Link>
+            <Link href={`/test/result/${a.id}`} className="btn-ghost mt-4 w-full"><ArrowLeft className="h-4 w-4" />Result par wapas</Link>
           </div>
         </aside>
       </div>

@@ -1,4 +1,4 @@
-import { BadgeCheck, Search, XCircle } from "lucide-react";
+import { BadgeCheck, Search, XCircle, ShieldCheck } from "lucide-react";
 import { one } from "@/lib/db";
 import { fmtDate } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
@@ -16,7 +16,7 @@ export default async function Verify({ searchParams }: { searchParams: { id?: st
         <div className="card mx-auto max-w-3xl p-6 md:p-8">
           <form className="flex gap-3">
             <label className="flex flex-1 items-center gap-2 rounded-xl border-2 border-brand/70 px-4"><Search className="h-4 w-4 text-muted" /><input name="id" defaultValue={id} placeholder="PSA-T-260624" className="w-full bg-transparent py-3 outline-none" /></label>
-            <button className="btn-primary !px-7">Verify</button>
+            <button className="btn-primary !px-7"><ShieldCheck className="h-4 w-4" />Verify</button>
           </form>
           {id && (r ? (
             <div className="mt-5 flex items-center gap-4 rounded-2xl border border-green-200 bg-green-50 p-5">

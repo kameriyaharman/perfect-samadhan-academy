@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award } from "lucide-react";
+import { Award, Keyboard } from "lucide-react";
 import { leaderboard } from "@/lib/queries";
 import { getUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
@@ -69,7 +69,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: { p?
                   {tenth && myIdx !== -1 && myIdx > 9 && <div className="mt-1 text-sm text-white/85">Top 10 me aane ke liye <b>+{tenth - rows[myIdx].best + 1} WPM</b> chahiye</div>}
                 </>
               ) : <div className="mt-1 text-sm text-white/85">Login karke test dein — aapka naam yahan aayega.</div>}
-              <Link href="/typing-test" className="btn-orange mt-4">Abhi Test Dein</Link>
+              <Link href="/typing-test" className="btn-orange mt-4"><Keyboard className="h-4 w-4" />Abhi Test Dein</Link>
             </div>
             <div className="card p-6">
               <div className="mb-2 flex items-center gap-2 text-lg font-bold"><Award className="h-5 w-5" />Weekly Rewards</div>

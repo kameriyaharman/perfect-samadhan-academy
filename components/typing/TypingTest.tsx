@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Gauge, Pause, Play, RotateCcw, Target, Volume2, VolumeX, Zap, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Gauge, Pause, Play, RotateCcw, Target, Volume2, VolumeX, Zap, AlertTriangle, Loader2, Check, X, MousePointer2, Send } from "lucide-react";
 import KeyboardView from "./KeyboardView";
 import { engineBackspace, engineKey, findKey, normalizeWord, type EngineState, type Layout } from "@/lib/keyboard";
 import { scoreTyping, splitWords } from "@/lib/typingScore";
@@ -189,9 +189,9 @@ export default function TypingTest(p: Props) {
       <div className="card mt-4 p-4 md:p-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm font-bold">{p.passage.title} · {p.lang === "hindi" ? `Hindi ${p.layoutName}` : "English"}</div>
-          {highlight && <div className="flex gap-2"><span className="chip bg-green-50 text-green-700">✓ Sahi</span><span className="chip bg-red-50 text-red-600">✗ Galat</span><span className="chip bg-orange-50 text-orange-600">Current</span></div>}
+          {highlight && <div className="flex gap-2"><span className="chip bg-green-50 text-green-700"><Check className="h-3 w-3" />Sahi</span><span className="chip bg-red-50 text-red-600"><X className="h-3 w-3" />Galat</span><span className="chip bg-orange-50 text-orange-600"><MousePointer2 className="h-3 w-3" />Current</span></div>}
         </div>
-        <div ref={passRef} className={`relative max-h-[170px] md:max-h-[190px] overflow-y-auto rounded-2xl border border-line bg-[#f8f9fd] p-4 md:p-5 select-none ${p.lang === "hindi" ? "hi text-[19px] md:text-[22px] leading-[2.1]" : "text-[17px] md:text-[20px] leading-[2.1]"}`} onCopy={(e) => e.preventDefault()}>
+        <div ref={passRef} className={`relative max-h-[172px] md:max-h-[184px] overflow-y-auto rounded-2xl border border-line bg-[#f8f9fd] p-4 md:p-5 select-none ${p.lang === "hindi" ? "hi text-[19px] md:text-[22px] leading-[2.1]" : "text-[17px] md:text-[20px] leading-[2.1]"}`} onCopy={(e) => e.preventDefault()}>
           {pw.map((w, i) => {
             let cls = "text-slate-400";
             if (highlight) {
@@ -225,7 +225,7 @@ export default function TypingTest(p: Props) {
           <button onClick={togglePause} disabled={!started} className="btn-ghost btn-sm !py-2.5">{paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}{paused ? "Resume" : "Pause"}</button>
           {p.mode === "practice" && <button onClick={() => setGuide(!guide)} className="btn-ghost btn-sm !py-2.5">{guide ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}Keyboard Guide: {guide ? "ON" : "OFF"}</button>}
           <button onClick={() => setSound(!sound)} className="btn-ghost btn-sm !py-2.5" aria-label="Sound">{sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</button>
-          <button onClick={submit} disabled={!started || submitting} className="btn-primary ml-auto !py-3">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}Submit Test <ArrowRight className="h-4 w-4" /></button>
+          <button onClick={submit} disabled={!started || submitting} className="btn-primary ml-auto !py-3">{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}<Send className="h-4 w-4" />Submit Test <ArrowRight className="h-4 w-4" /></button>
         </div>
       </div>
     </div>

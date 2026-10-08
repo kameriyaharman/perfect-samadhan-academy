@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, CreditCard, X } from "lucide-react";
+import { Check, CreditCard, ShoppingCart, UserPlus, X } from "lucide-react";
 import { q } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { rupee } from "@/lib/utils";
@@ -25,7 +25,7 @@ export default async function Plans() {
               <ul className="mt-5 space-y-2.5 text-[15px]">
                 {p.features.split("\n").filter(Boolean).map((f: string) => f.startsWith("-") ? <li key={f} className="flex gap-2 text-slate-400"><X className="mt-0.5 h-4 w-4 text-red-400" />{f.slice(1)}</li> : <li key={f} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 text-green-600" />{f.replace(/^\+/, "")}</li>)}
               </ul>
-              <Link href={p.price ? `/checkout?item=plan:${p.slug}` : "/login?tab=register"} className={`mt-auto pt-6`}><span className={`w-full ${p.popular ? "btn-primary" : "btn-ghost"}`}>{p.price ? "Buy Now" : "Free Register"}</span></Link>
+              <Link href={p.price ? `/checkout?item=plan:${p.slug}` : "/login?tab=register"} className={`mt-auto pt-6`}><span className={`w-full ${p.popular ? "btn-primary" : "btn-ghost"}`}>{p.price ? <><ShoppingCart className="h-4 w-4" />Buy Now</> : <><UserPlus className="h-4 w-4" />Free Register</>}</span></Link>
             </div>
           ))}
         </div>
