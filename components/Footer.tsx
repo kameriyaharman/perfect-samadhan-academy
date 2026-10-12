@@ -41,7 +41,7 @@ export default async function Footer() {
       </div>
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex flex-col gap-3 border-t border-white/10 py-6 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
-          <span>© {new Date().getFullYear()} Perfect Samadhan Academy. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Perfect Samadhan Academy. All rights reserved. · Developed by <a href="https://customesolution.com" target="_blank" rel="noopener" className="font-semibold text-white/80 underline-offset-2 hover:text-white hover:underline">CustomE Solution</a></span>
           <span className="flex flex-wrap gap-x-2 gap-y-1">
             <Link href="/page/privacy-policy" className="hover:text-white">Privacy Policy</Link>·
             <Link href="/page/terms" className="hover:text-white">Terms & Conditions</Link>·
