@@ -50,6 +50,22 @@ async function main() {
     }
   }
 
+  // Academy ke asli contact/social links — sirf tab lagenge jab setting abhi bhi demo/khaali ho (admin ke badlav overwrite nahi honge)
+  const REAL = {
+    youtube: "https://youtube.com/c/GsguruSk",
+    instagram: "https://instagram.com/perfectsamadhan",
+    facebook: "https://www.facebook.com/perfectsamadhanEdu/",
+    telegram: "https://t.me/gsgurusktest",
+    android_app: "https://play.google.com/store/apps/details?id=com.gjimkr.dldxgw",
+    whatsapp_group: "https://chat.whatsapp.com/IIek3iKzOrhFu4ymdFaLjA",
+    whatsapp: "917987149879",
+    phone: "+91 79871 49879",
+  };
+  const DEMO = ["", "#", "919999999999", "https://chat.whatsapp.com/", "+91 98XXX XXXXX"];
+  for (const [k, v] of Object.entries(REAL)) {
+    await client.query("INSERT INTO settings (key, value) VALUES ($1,$2) ON CONFLICT (key) DO UPDATE SET value=$2 WHERE settings.value = ANY($3)", [k, v, DEMO]);
+  }
+
   const c = await client.query("SELECT count(*)::int AS n FROM exams");
   if (c.rows[0].n === 0) {
     console.log("Seeding demo content...");

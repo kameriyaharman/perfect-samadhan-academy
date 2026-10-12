@@ -206,7 +206,7 @@ export default async function Home() {
             <h3 className="text-2xl font-bold text-navy">Mobile App bhi available</h3>
             <p className="mt-1 text-sm text-muted">Mock test aur typing practice ab phone par — offline PDF ke saath.</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href={s.android_app || "#"} className="btn-primary btn-sm"><Smartphone className="h-4 w-4" />Android App</a>
+              <a href={s.android_app || "#"} target="_blank" rel="noreferrer" className="btn-primary btn-sm"><Smartphone className="h-4 w-4" />Android App</a>
               <Link href="/downloads" className="btn-ghost btn-sm"><QrCode className="h-4 w-4" />QR Scan</Link>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default async function Home() {
           <Link href="/notices" className="rounded-2xl border border-line p-4 hover:border-brand"><div className="text-xs text-muted">Current Affairs</div><div className="text-2xl font-bold">Daily</div><div className="text-xs text-muted">Notices & updates</div></Link>
           <div className="rounded-2xl bg-navy p-5 text-white" data-dark>
             <div className="flex items-center gap-2 font-bold text-gold"><MessageCircle className="h-4 w-4" />WhatsApp Group Join karein</div>
-            <p className="mt-1 text-sm text-white/75">Notice, admit card aur free PDF sabse pehle aapke phone par.</p>
+            <p className="hi mt-1 text-sm text-white/75">परफेक्ट समाधान बुक डिपो — notice, admit card aur free PDF sabse pehle aapke phone par.</p>
             <a href={s.whatsapp_group || "#"} target="_blank" rel="noreferrer" className="btn-orange btn-sm mt-3"><MessageCircle className="h-4 w-4" />Join Now</a>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default async function Home() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Link href="/login?tab=register" className="btn-primary"><Users className="h-4 w-4" />Free Register</Link>
-              <a href={s.android_app || "/downloads"} className="btn bg-white px-5 py-2.5 text-navy"><Smartphone className="h-4 w-4" />Download App</a>
+              <a href={s.android_app || "/downloads"} target="_blank" rel="noreferrer" className="btn bg-white px-5 py-2.5 text-navy"><Smartphone className="h-4 w-4" />Download App</a>
             </div>
           </div>
         </Container>
