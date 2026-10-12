@@ -52,7 +52,7 @@ export default async function Paragraphs({ searchParams }: { searchParams: { yea
                             {hi && <Link href={`/typing-test/setup?lang=hindi&passage=${hi.id}`} className="btn-primary btn-sm"><Keyboard className="h-3.5 w-3.5" />Hindi</Link>}
                             {en && <Link href={`/typing-test/setup?lang=english&passage=${en.id}`} className="btn-soft btn-sm"><Languages className="h-4 w-4" /><Languages className="h-3.5 w-3.5" />English</Link>}
                           </div></td>
-                          <td>Inscript + Remington</td>
+                          <td>Remington + Inscript</td>
                           <td><span className={`chip ${year >= new Date().getFullYear() ? "bg-green-50 text-green-700" : "bg-brand-50 text-brand"}`}>{year >= new Date().getFullYear() ? "New" : year}</span></td>
                         </tr>
                       );

@@ -24,7 +24,7 @@ export default async function Home() {
   ]);
   const stats = [s.stat_1, s.stat_2, s.stat_3, s.stat_4].filter(Boolean).map((x) => x.split("|"));
   const quick = [
-    { icon: Keyboard, t: "Hindi Typing", d: "Inscript · Remington · Krutidev", href: "/typing-test/setup?lang=hindi", c: "orange" },
+    { icon: Keyboard, t: "Hindi Typing", d: "Remington Gail Mangal · Krutidev · Inscript", href: "/typing-test/setup?lang=hindi", c: "orange" },
     { icon: Languages, t: "English Typing", d: "Exam & practice mode", href: "/typing-test/setup?lang=english", c: "blue" },
     { icon: ClipboardCheck, t: "Mock Tests", d: "Full · Subject · Topic", href: "/mock-tests", c: "green" },
     { icon: FileText, t: "PYQ Papers", d: "2015–2026 with answers", href: "/previous-papers", c: "red" },
@@ -119,7 +119,7 @@ export default async function Home() {
                   <div className="hi text-4xl font-bold text-gold">अ</div>
                   <div className="mt-2 font-bold">Hindi Typing</div>
                   <div className="text-xs text-white/70">Unicode based, Mangal font — sarkari exam pattern</div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">{["Inscript", "Remington Gail", "Remington CBI", "Krutidev"].map((x) => <span key={x} className="chip bg-white/10 text-white/85 font-medium">{x}</span>)}</div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">{["Remington Gail Mangal", "Remington CBI", "Krutidev", "Inscript"].map((x) => <span key={x} className="chip bg-white/10 text-white/85 font-medium">{x}</span>)}</div>
                 </Link>
                 <Link href="/typing-test/setup?lang=english" className="rounded-2xl border border-white/15 bg-white/5 p-5 transition hover:bg-white/10">
                   <div className="text-4xl font-bold text-gold">Aa</div>

@@ -11,7 +11,7 @@ export default async function Start({ searchParams: sp }: { searchParams: Record
   let passage = sp.passage ? await one("SELECT * FROM passages WHERE id=$1 AND active", [Number(sp.passage) || 0]) : null;
   if (!passage) passage = await one("SELECT * FROM passages WHERE active AND language=$1 ORDER BY random() LIMIT 1", [lang]);
   if (!passage) redirect("/typing-test");
-  const layout = (lang === "english" ? "english" : ["inscript", "remington", "system"].includes(sp.layout) ? sp.layout : "inscript") as any;
+  const layout = (lang === "english" ? "english" : ["inscript", "remington", "system"].includes(sp.layout) ? sp.layout : "remington") as any;
   const layoutName = LAYOUT_NAME[sp.layoutName || layout] || LAYOUT_NAME[layout];
   const duration = Math.min(30, Math.max(1, Number(sp.duration) || 10));
   const pattern = PATTERN_NAME[sp.pattern] ? sp.pattern : "cpct";

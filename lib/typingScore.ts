@@ -38,4 +38,4 @@ export function qualifySpeed(pattern: string, lang: string) {
   return lang === "hindi" ? 20 : 30;
 }
 export const PATTERN_NAME: Record<string, string> = { cpct: "CPCT", ssc: "SSC DEST", highcourt: "High Court", practice: "Practice" };
-export const LAYOUT_NAME: Record<string, string> = { inscript: "Inscript", remington: "Remington Gail", "remington-cbi": "Remington CBI", krutidev: "Krutidev", system: "Unicode (System)", english: "English" };
+export const LAYOUT_NAME: Record<string, string> = { inscript: "Inscript", remington: "Remington Gail Mangal", "remington-cbi": "Remington CBI", krutidev: "Krutidev", system: "Unicode (System)", english: "English" };

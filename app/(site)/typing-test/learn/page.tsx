@@ -8,7 +8,7 @@ import KeyboardView from "@/components/typing/KeyboardView";
 import { FINGER_COLOR, FINGER_NAME } from "@/lib/keyboard";
 
 export const metadata = { title: "Typing Seekhein — Lessons" };
-const TABS = [["remington", "हिंदी — Remington Gail"], ["inscript", "हिंदी — Inscript"], ["english", "English"]];
+const TABS = [["remington", "हिंदी — Remington Gail Mangal"], ["inscript", "हिंदी — Inscript"], ["english", "English"]];
 const NUM = ["bg-green-50 text-green-700", "bg-brand-50 text-brand", "bg-orange-50 text-orange-600", "bg-violet-50 text-violet-700"];
 
 export default async function Learn({ searchParams }: { searchParams: { layout?: string } }) {
@@ -22,7 +22,7 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
     <>
       <PageHero crumbs={[{ label: "Typing Test", href: "/typing-test" }, { label: "Learn Typing" }]} title="टाइपिंग सीखें —" highlight="शुरुआत से"
         subtitle={`Kabhi typing nahi ki? Koi baat nahi. ${lessons.length} aasaan lessons me sahi finger placement ke saath Hindi aur English typing seekhein.`}
-        chips={[<><GraduationCap className="h-4 w-4" />{lessons.length} Lessons</>, <><Clock className="h-4 w-4" />Roz 20 min</>, <><Languages className="h-4 w-4" />Hindi Remington Gail · Inscript · English</>]} />
+        chips={[<><GraduationCap className="h-4 w-4" />{lessons.length} Lessons</>, <><Clock className="h-4 w-4" />Roz 20 min</>, <><Languages className="h-4 w-4" />Hindi Remington Gail Mangal · Inscript · English</>]} />
       <Container className="py-10">
         <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line scrollbar-none">
           {TABS.map(([k, l]) => <Link key={k} href={`/typing-test/learn?layout=${k}`} className={`tab hi ${layout === k ? "active" : ""}`}>{l}</Link>)}

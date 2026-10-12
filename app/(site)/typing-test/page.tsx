@@ -13,7 +13,7 @@ export default async function TypingHub() {
   ]);
   const st = stats[0] || { today: 0, passages: 0 };
   const cards = [
-    { k: "अ", c: "bg-saffron", t: "Hindi Typing Test", d: "Unicode (Mangal) — Inscript, Remington Gail, Remington CBI, Krutidev", chips: ["Inscript", "Remington Gail", "Krutidev", "CPCT Pattern"], href: "/typing-test/setup?lang=hindi", btn: "Hindi Test Shuru Karein" },
+    { k: "अ", c: "bg-saffron", t: "Hindi Typing Test", d: "Unicode (Mangal) — Remington Gail Mangal, Remington CBI, Krutidev, Inscript", chips: ["Remington Gail Mangal", "CPCT Pattern", "Krutidev", "Inscript"], href: "/typing-test/setup?lang=hindi", btn: "Hindi Test Shuru Karein" },
     { k: "Aa", c: "bg-brand", t: "English Typing Test", d: "QWERTY layout — easy se exam level tak paragraphs, numbers aur punctuation", chips: ["Easy", "Medium", "Exam Level", "SSC DEST"], href: "/typing-test/setup?lang=english", btn: "English Test Shuru Karein" },
     { k: "", c: "bg-green-600", t: "Typing Seekhein", d: "Zero se shuru — home row, upper row, lower row, finger placement lessons", chips: ["Lessons", "Finger Guide", "Beginner"], href: "/typing-test/learn", btn: "Lessons Dekhein", icon: true },
   ];
@@ -47,7 +47,7 @@ export default async function TypingHub() {
                 {exams.map((e: any) => {
                   const lang = /hindi/i.test(e.typing_language || "") && !/english/i.test(e.typing_language || "") ? "hindi" : /^english/i.test(e.typing_language || "") ? "english" : "hindi";
                   const pattern = e.slug === "high-court" ? "highcourt" : e.slug.startsWith("ssc") || e.slug.startsWith("railway") ? "ssc" : "cpct";
-                  const layout = /remington|krutidev/i.test(e.typing_layout || "") && !/inscript/i.test(e.typing_layout || "") ? "remington" : "inscript";
+                  const layout = /remington|krutidev/i.test(e.typing_layout || "") || !/inscript/i.test(e.typing_layout || "") ? "remington" : "inscript";
                   const mins = parseInt(e.typing_time) || 10;
                   return (
                     <tr key={e.id}>

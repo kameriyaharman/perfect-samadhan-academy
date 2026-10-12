@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Gauge, Pause, Play, RotateCcw, Target, Volume2, VolumeX, Zap, AlertTriangle, Loader2, Check, X, MousePointer2, Send } from "lucide-react";
 import KeyboardView from "./KeyboardView";
-import { engineBackspace, engineKey, findKey, normalizeWord, type EngineState, type Layout } from "@/lib/keyboard";
+import { altCodeChar, engineBackspace, engineInsert, engineKey, findKey, normalizeWord, type EngineState, type Layout } from "@/lib/keyboard";
 import { scoreTyping, splitWords } from "@/lib/typingScore";
 
 type Props = {
@@ -40,6 +40,7 @@ export default function TypingTest(p: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const passRef = useRef<HTMLDivElement>(null);
   const finished = useRef(false);
+  const altDigits = useRef<string | null>(null); // Alt + number code buffer
   const highlight = p.pattern !== "highcourt";
 
   const pw = useMemo(() => splitWords(p.passage.text), [p.passage.text]);
@@ -118,7 +119,14 @@ export default function TypingTest(p: Props) {
     if (e.key === "Tab") { e.preventDefault(); return; }
     setPressed(e.code); setTimeout(() => setPressed(null), 120);
     if (p.layout === "inscript" || p.layout === "remington") {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Alt + number codes (Alt+0151 —, Alt+063 ?, Alt+2384 ॐ …) — numpad ya upar wali number keys dono chalengi
+      if (e.key === "Alt") { e.preventDefault(); if (!e.repeat) altDigits.current = ""; return; }
+      if (e.altKey && !e.metaKey) {
+        const d = /^(?:Numpad|Digit)(\d)$/.exec(e.code);
+        if (d && altDigits.current !== null) { e.preventDefault(); altDigits.current += d[1]; return; }
+        e.preventDefault(); return;
+      }
+      if (e.ctrlKey || e.metaKey) return;
       if (!e.code || e.key === "Unidentified" || e.key === "Process") return; // mobile IME: let onChange handle
       if (e.code === "Backspace") { e.preventDefault(); begin(); setSt((s) => engineBackspace(s)); setKeys((k) => k + 1); if (sound) click(300); return; }
       const next = engineKey(p.layout, st, e.code, e.shiftKey);
@@ -128,6 +136,15 @@ export default function TypingTest(p: Props) {
       return;
     }
     if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter") { begin(); setKeys((k) => k + 1); if (sound) click(); }
+  };
+  const onKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Alt" || altDigits.current === null) return;
+    e.preventDefault();
+    const digits = altDigits.current; altDigits.current = null;
+    if (paused || submitting || !digits) return;
+    const ch = altCodeChar(digits);
+    if (!ch) return;
+    begin(); setSt((s) => engineInsert(p.layout, s, ch)); setKeys((k) => k + 1); if (sound) click();
   };
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (paused || submitting) return;
@@ -204,7 +221,7 @@ export default function TypingTest(p: Props) {
 
         <div className="relative mt-4">
           <textarea
-            ref={inputRef} value={typed + (st.pendingI ? "" : "")} onKeyDown={onKeyDown} onChange={onChange}
+            ref={inputRef} value={typed + (st.pendingI ? "" : "")} onKeyDown={onKeyDown} onKeyUp={onKeyUp} onChange={onChange}
             onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}
             autoFocus spellCheck={false} autoCorrect="off" autoCapitalize="off" autoComplete="off" disabled={submitting}
             placeholder={started ? "" : p.lang === "hindi" ? (p.layout === "system" ? "Yahan apne Hindi keyboard se type karna shuru karein…" : "Yahan click karke type karna shuru karein (English keyboard se — Hindi apne aap banegi)…") : "Click here and start typing…"}

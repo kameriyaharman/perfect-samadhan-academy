@@ -22,7 +22,7 @@ export default function HeroTyping() {
       </div>
       <div className="rounded-3xl bg-white p-5 text-ink shadow-[0_30px_60px_rgba(6,12,60,.35)]">
         <div className="mb-3 flex items-center justify-between">
-          <span className="flex items-center gap-2 text-sm font-bold"><span className="h-2 w-2 rounded-sm bg-brand" />Hindi Typing · Inscript</span>
+          <span className="flex items-center gap-2 text-sm font-bold"><span className="h-2 w-2 rounded-sm bg-brand" />Hindi Typing · Remington Gail Mangal</span>
           <span className="chip bg-red-50 text-red-600"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />LIVE</span>
         </div>
         <div className="hi min-h-[96px] rounded-2xl bg-brand-50/70 p-4 text-[17px] leading-8">
