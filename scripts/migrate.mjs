@@ -34,6 +34,22 @@ async function main() {
     console.log("Admin created:", adminMobile);
   }
 
+  // One-time admin reset: set ADMIN_RESET_MOBILE + ADMIN_RESET_PASSWORD, deploy, then clear both variables.
+  const rMobile = (process.env.ADMIN_RESET_MOBILE || "").replace(/\D/g, "").slice(-10);
+  const rPass = process.env.ADMIN_RESET_PASSWORD || "";
+  if (rMobile.length === 10 && rPass.length >= 8) {
+    const hash = await bcrypt.hash(rPass, 10);
+    const a = await client.query("SELECT id FROM users WHERE role='admin' ORDER BY id LIMIT 1");
+    if (a.rows.length) {
+      const taken = await client.query("SELECT id FROM users WHERE mobile=$1 AND id<>$2", [rMobile, a.rows[0].id]);
+      if (taken.rows.length) console.log("Admin reset skipped: mobile already used by another account");
+      else { await client.query("UPDATE users SET mobile=$1, password=$2, blocked=false WHERE id=$3", [rMobile, hash, a.rows[0].id]); console.log("Admin login reset:", rMobile); }
+    } else {
+      await client.query("INSERT INTO users (name, mobile, password, role) VALUES ('Admin',$1,$2,'admin') ON CONFLICT (mobile) DO UPDATE SET role='admin', password=$2", [rMobile, hash]);
+      console.log("Admin login reset:", rMobile);
+    }
+  }
+
   const c = await client.query("SELECT count(*)::int AS n FROM exams");
   if (c.rows[0].n === 0) {
     console.log("Seeding demo content...");
