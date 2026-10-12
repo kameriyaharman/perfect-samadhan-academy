@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info, ListChecks, RotateCcw, Trophy, PartyPopper, Keyboard } from "lucide-react";
 import KeyboardView from "./KeyboardView";
-import { engineBackspace, engineKey, findKey, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
+import { engineBackspace, engineKey, findKey, isTypingPrefix, remingtonNextIsI, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
 
 const STEPS = ["Akshar pehchaan", "Ek-ek key", "Akshar jodi", "Shabd", "Mini test"];
 export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number; number: number; title: string; subtitle: string | null; content: string; layout: string }; nextId: number | null }) {
@@ -19,7 +19,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   const cur = tokens[idx] || "";
-  const wrong = st.text && !cur.startsWith(st.text);
+  const wrong = st.text && !isTypingPrefix(cur, st.text, layout);
 
   const finish = async (errs: number, k: number) => {
     setDone(true);
@@ -37,7 +37,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
       if (ni >= tokens.length) { setIdx(ni); finish(errors, k); } else setIdx(ni);
       return;
     }
-    if (text && !cur.startsWith(text)) setErrors((e) => e + 1);
+    if (text && !isTypingPrefix(cur, text, layout)) setErrors((e) => e + 1);
   };
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -59,8 +59,9 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
   };
 
   const nextCh = wrong ? null : (() => {
+    if (layout === "remington" && st.text.endsWith("्") && !cur.startsWith(st.text)) return "ा";
     const rest = Array.from(cur.slice(st.text.length));
-    if (layout === "remington" && !st.pendingI && rest[1] === "ि") return "ि";
+    if (layout === "remington" && !st.pendingI && remingtonNextIsI(rest)) return "ि";
     return rest[0];
   })();
   const target = wrong ? { code: "Backspace", shift: false } : nextCh ? findKey(layout, nextCh) : null;

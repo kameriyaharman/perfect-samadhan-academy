@@ -78,14 +78,23 @@ const CONSONANT = /[\u0915-\u0939\u0958-\u095F]/;
 const isCons = (c: string) => CONSONANT.test(c);
 const isMatra = (c: string) => MATRA.includes(c);
 
-export type EngineState = { text: string; pendingI: boolean };
+export type EngineState = { text: string; pendingI: boolean; iAt?: number };
 
 /** Apply one typed Remington key output to the buffer, handling typewriter-order rules. */
 export function remingtonApply(st: EngineState, out: string): EngineState {
+  const r = remingtonRaw(st, out);
+  // ि pending ho to uski jagah (jahan ि dabaya tha) yaad rakhein — screen par wahi dikhegi
+  if (r.pendingI) return { ...r, iAt: out === "ि" && !st.pendingI ? st.text.length : st.iAt ?? st.text.length };
+  return { text: r.text, pendingI: false };
+}
+
+function remingtonRaw(st: EngineState, out: string): EngineState {
   let { text, pendingI } = st;
   if (out === "ि") return { text, pendingI: true };
-  // half letter + ा  => full letter (e.g. श् + ा = श)
-  if (out === "ा" && text.endsWith("्") && isCons(text.slice(-2, -1))) return { text: text.slice(0, -1), pendingI };
+  // half letter + ा  => full letter (e.g. श् + ा = श); pending ि ho to ab lag jayegi (शि, थि, भि, खि …)
+  if (out === "ा" && text.endsWith("्") && isCons(text.slice(-2, -1))) {
+    return pendingI ? { text: text.slice(0, -1) + "ि", pendingI: false } : { text: text.slice(0, -1), pendingI };
+  }
   // vowel / matra combos
   const last = text.slice(-1);
   if (out === "े" && last === "ा") return { text: text.slice(0, -1) + "ो", pendingI };
@@ -158,10 +167,38 @@ export function altCodeChar(digits: string): string | null {
 }
 
 export function engineBackspace(st: EngineState): EngineState {
-  if (st.pendingI) return { ...st, pendingI: false };
+  if (st.pendingI) {
+    const at = st.iAt ?? st.text.length;
+    if (st.text.length <= at) return { text: st.text, pendingI: false };
+    // ि ke baad type kiya aadha akshar hatao, ि pending rahe
+    const cut = st.text.endsWith("्") && st.text.length - 2 >= at ? 2 : 1;
+    return { text: st.text.slice(0, -cut), pendingI: true, iAt: at };
+  }
   const arr = Array.from(st.text);
   arr.pop();
   return { text: arr.join(""), pendingI: false };
+}
+
+/** Text as it should appear on screen (pending ि shown where it was typed, like a typewriter) */
+export function displayText(st: EngineState): string {
+  if (!st.pendingI) return st.text;
+  const at = Math.min(st.iAt ?? st.text.length, st.text.length);
+  return st.text.slice(0, at) + "ि" + st.text.slice(at);
+}
+
+/** Is `partial` a valid in-progress prefix of `exp`? Remington me aadha akshar (श्) + ा = श hota hai, isliye श् bhi sahi maana jayega */
+export function isTypingPrefix(exp: string, partial: string, layout: Layout): boolean {
+  if (exp.startsWith(partial)) return true;
+  return layout === "remington" && partial.endsWith("्") && exp.startsWith(partial.slice(0, -1));
+}
+
+/** Remington: agla syllable chhoti ि wala hai (कि, स्थि, क्षि …) to pehle ि dabani hai */
+export function remingtonNextIsI(rest: string[]): boolean {
+  let i = 0;
+  if (!isCons(rest[0] || "")) return false;
+  while (rest[i + 1] === "्" && isCons(rest[i + 2] || "")) i += 2;
+  if (rest[i + 1] === "़") i++;
+  return rest[i + 1] === "ि";
 }
 
 /** Find which key (and shift) produces a character, for on-screen guidance */

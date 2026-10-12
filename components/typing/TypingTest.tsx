@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Gauge, Pause, Play, RotateCcw, Target, Volume2, VolumeX, Zap, AlertTriangle, Loader2, Check, X, MousePointer2, Send } from "lucide-react";
 import KeyboardView from "./KeyboardView";
-import { altCodeChar, engineBackspace, engineInsert, engineKey, findKey, normalizeWord, type EngineState, type Layout } from "@/lib/keyboard";
+import { altCodeChar, displayText, engineBackspace, engineInsert, engineKey, findKey, isTypingPrefix, normalizeWord, remingtonNextIsI, type EngineState, type Layout } from "@/lib/keyboard";
 import { scoreTyping, splitWords } from "@/lib/typingScore";
 
 type Props = {
@@ -170,14 +170,15 @@ export default function TypingTest(p: Props) {
     const exp = pw[curIdx];
     if (exp === undefined) return null;
     let ch: string;
-    if (partial && !exp.startsWith(partial)) return { code: "Backspace", shift: false };
+    if (partial && !isTypingPrefix(exp, partial, p.layout)) return { code: "Backspace", shift: false };
     if (partial === exp) ch = " ";
     else {
       const rest = Array.from(exp.slice(partial.length));
       ch = rest[0];
       if (p.layout === "remington") {
-        if (st.pendingI && rest[0]) ch = rest[0];
-        else if (rest[1] === "ि" && /[क-ह]/.test(rest[0])) ch = "ि";
+        if (partial.endsWith("्") && !exp.startsWith(partial)) ch = "ा"; // aadha akshar poora karna hai (श् + ा = श)
+        else if (st.pendingI && rest[0]) ch = rest[0];
+        else if (remingtonNextIsI(rest)) ch = "ि";
       }
     }
     return findKey(p.layout, ch);
@@ -213,7 +214,7 @@ export default function TypingTest(p: Props) {
             let cls = "text-slate-400";
             if (highlight) {
               if (i < doneCount) cls = normalizeWord(w) === normalizeWord(tw[i] || "") ? "text-green-600" : "text-red-500 wavy bg-red-50 rounded";
-              else if (i === curIdx) cls = partial && !w.startsWith(partial) ? "bg-red-100 text-red-700 rounded px-0.5" : "bg-orange-100 text-ink rounded px-0.5";
+              else if (i === curIdx) cls = partial && !isTypingPrefix(w, partial, p.layout) ? "bg-red-100 text-red-700 rounded px-0.5" : "bg-orange-100 text-ink rounded px-0.5";
             } else cls = "text-ink";
             return <span key={i} data-cur={i === curIdx ? "1" : "0"} className={cls}>{w}{" "}</span>;
           })}
@@ -221,7 +222,7 @@ export default function TypingTest(p: Props) {
 
         <div className="relative mt-4">
           <textarea
-            ref={inputRef} value={typed + (st.pendingI ? "" : "")} onKeyDown={onKeyDown} onKeyUp={onKeyUp} onChange={onChange}
+            ref={inputRef} value={displayText(st)} onKeyDown={onKeyDown} onKeyUp={onKeyUp} onChange={onChange}
             onPaste={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} onContextMenu={(e) => e.preventDefault()}
             autoFocus spellCheck={false} autoCorrect="off" autoCapitalize="off" autoComplete="off" disabled={submitting}
             placeholder={started ? "" : p.lang === "hindi" ? (p.layout === "system" ? "Yahan apne Hindi keyboard se type karna shuru karein…" : "Yahan click karke type karna shuru karein (English keyboard se — Hindi apne aap banegi)…") : "Click here and start typing…"}
