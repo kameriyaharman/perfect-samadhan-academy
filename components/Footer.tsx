@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
-import { Facebook, Youtube, Instagram, Send } from "lucide-react";
+import { Facebook, Youtube, Instagram, Send, Play } from "lucide-react";
+
+const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.gjimkr.dldxgw";
 
 const COLS: [string, [string, string][]][] = [
   ["Typing Test", [["Hindi Typing Test", "/typing-test/setup?lang=hindi"], ["English Typing Test", "/typing-test/setup?lang=english"], ["Learn Typing", "/typing-test/learn"], ["CPCT Typing Paragraphs", "/typing-test/paragraphs"], ["Leaderboard", "/typing-test/leaderboard"]]],
@@ -29,6 +31,11 @@ export default async function Footer() {
               <a key={i} href={href || "#"} target="_blank" rel="noreferrer" className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 hover:bg-saffron transition"><I className="h-4 w-4" /></a>
             ))}
           </div>
+          <a href={s.android_app && s.android_app !== "#" ? s.android_app : PLAY_STORE} target="_blank" rel="noreferrer" aria-label="Get it on Google Play"
+            className="mt-4 inline-flex items-center gap-3 rounded-xl border border-white/25 bg-black px-4 py-2 transition hover:border-gold">
+            <Play className="h-6 w-6 fill-white" />
+            <span className="leading-tight"><span className="block text-[10px] uppercase tracking-wide text-white/70">Get it on</span><span className="block text-[17px] font-semibold">Google Play</span></span>
+          </a>
         </div>
         {COLS.map(([t, links]) => (
           <div key={t}>
