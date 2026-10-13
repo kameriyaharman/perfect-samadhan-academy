@@ -97,17 +97,21 @@ export default function TypingTest(p: Props) {
   // auto-submit when the full passage is typed
   useEffect(() => { if (started && doneCount >= pw.length && pw.length > 0) submit(); }, [doneCount, pw.length, started, submit]);
 
-  // keep current word visible
+  // keep current word visible: jab current word aakhri dikhne wali line par pahunche (ya user ne scroll karke
+  // use chhupa diya ho), passage ko is tarah scroll karo ki current line upar se doosri line ho.
   useEffect(() => {
-    const el = passRef.current?.querySelector<HTMLElement>("[data-cur='1']");
-    if (el && passRef.current) {
-      const box = passRef.current;
-      const top = el.offsetTop - box.offsetTop;
-      if (top > box.scrollTop + box.clientHeight - 60 || top < box.scrollTop) box.scrollTo({ top: Math.max(0, top - 50), behavior: "smooth" });
+    const box = passRef.current;
+    const el = box?.querySelector<HTMLElement>("[data-cur='1']");
+    if (box && el) {
+      const line = parseFloat(getComputedStyle(box).lineHeight) || 40;
+      const pad = parseFloat(getComputedStyle(box).paddingTop) || 0;
+      const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop; // word ki position box ke content me
+      const viewTop = box.scrollTop, viewBottom = box.scrollTop + box.clientHeight;
+      if (top + line > viewBottom - pad || top < viewTop) box.scrollTo({ top: Math.max(0, top - line - pad), behavior: "smooth" });
     }
     const ta = inputRef.current;
     if (ta) ta.scrollTop = ta.scrollHeight;
-  }, [typed]);
+  }, [curIdx, typed]);
 
   const begin = () => {
     if (!started) { setStarted(true); runAt.current = Date.now(); }
