@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Edit3, ExternalLink, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
 import type { Field, Resource } from "@/lib/resources";
+import { parseCSV, sampleCSV } from "@/lib/csv";
 
 const PUBLIC: Record<string, (r: any) => string> = {
   exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, posts: (r) => `/blog/${r.slug}`,
@@ -32,6 +33,8 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const [edit, setEdit] = useState<Record<string, any> | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [importing, setImporting] = useState(false);
+  const canImport = !r.noCreate && !r.readonly;
   const per = 25;
   const listFields = r.fields.filter((f) => f.list);
 
@@ -74,9 +77,9 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           <h1 className="text-2xl md:text-3xl font-bold text-navy">{r.label}</h1>
           <p className="text-sm text-muted">{total} records{filters.test_id ? ` · Test #${filters.test_id}` : ""}</p>
         </div>
-        <div className="flex gap-2">
-          {r.key === "questions" && <Link href={`/admin/import?type=questions${filters.test_id ? `&testId=${filters.test_id}` : ""}`} className="btn-ghost"><FileUp className="h-4 w-4" />CSV Import</Link>}
-          {r.key === "passages" && <Link href="/admin/import?type=passages" className="btn-ghost"><FileUp className="h-4 w-4" />CSV Import</Link>}
+        <div className="flex flex-wrap gap-2">
+          {canImport && <button onClick={() => downloadSample(r)} className="btn-ghost" title="Is section ka sample CSV (Excel me khulega)"><Download className="h-4 w-4" />Sample CSV</button>}
+          {canImport && <button onClick={() => setImporting(true)} className="btn-soft"><FileUp className="h-4 w-4" />Import CSV</button>}
           {!r.noCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" />Add New</button>}
         </div>
       </div>
@@ -115,6 +118,8 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
         <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="btn-ghost btn-sm"><ChevronLeft className="h-4 w-4" /></button>
         <button disabled={page >= pages} onClick={() => setPage(page + 1)} className="btn-ghost btn-sm"><ChevronRight className="h-4 w-4" /></button>
       </div>
+
+      {importing && <ImportModal r={r} testId={filters.test_id || ""} onClose={() => setImporting(false)} onDone={load} />}
 
       {edit && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -174,4 +179,90 @@ function FieldInput({ f, value, onChange }: { f: Field; value: any; onChange: (v
     );
   }
   return <input className={`input ${hi ? "hi" : ""}`} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />;
+}
+
+function downloadSample(r: Resource) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([sampleCSV(r)], { type: "text/csv;charset=utf-8" }));
+  a.download = `${r.key}-sample.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function ImportModal({ r, testId: tid, onClose, onDone }: { r: Resource; testId: string; onClose: () => void; onDone: () => void }) {
+  const [file, setFile] = useState<{ name: string; text: string; rows: number } | null>(null);
+  const [testId, setTestId] = useState(tid);
+  const [busy, setBusy] = useState(false);
+  const [drag, setDrag] = useState(false);
+  const [res, setRes] = useState<any>(null);
+  const pick = async (f?: File) => {
+    if (!f) return;
+    const text = await f.text();
+    setRes(null); setFile({ name: f.name, text, rows: Math.max(0, parseCSV(text).length - 1) });
+  };
+  const run = async () => {
+    if (!file) return;
+    setBusy(true); setRes(null);
+    const x = await fetch(`/api/admin/${r.key}/import`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ csv: file.text, testId }) });
+    const j = await x.json().catch(() => ({ error: "Server error" }));
+    setBusy(false); setRes(j);
+    if (x.ok && (j.created || j.updated)) onDone();
+  };
+  const required = r.fields.filter((f) => f.required).map((f) => f.name);
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-4">
+      <div className="absolute inset-0 bg-navy/40" onClick={busy ? undefined : onClose} />
+      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl reveal">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold">Import CSV — {r.label}</h2>
+          <button onClick={onClose} disabled={busy} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-canvas"><X className="h-5 w-5" /></button>
+        </div>
+
+        <ol className="mt-4 space-y-4 text-sm">
+          <li className="flex gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-white">1</span>
+            <div className="flex-1">
+              <p>Sample CSV download karein, Excel me data bharein aur <b>"CSV UTF-8"</b> me save karein.</p>
+              <button onClick={() => downloadSample(r)} className="btn-ghost btn-sm mt-2"><Download className="h-4 w-4" />{r.key}-sample.csv</button>
+              {required.length > 0 && <p className="mt-2 text-xs text-muted">Zaroori columns: <b>{required.join(", ")}</b>. Baaki khali chhod sakte hain.</p>}
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-white">2</span>
+            <div className="flex-1">
+              <label
+                onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
+                onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files?.[0]); }}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${drag ? "border-brand bg-brand-50" : "border-line hover:border-brand"}`}>
+                <FileSpreadsheet className="h-7 w-7 text-brand" />
+                {file ? <><b className="break-all">{file.name}</b><span className="text-xs text-muted">{file.rows} rows mili · badalne ke liye click karein</span></>
+                  : <><b>CSV file yahan chhodein ya click karein</b><span className="text-xs text-muted">.csv file</span></>}
+                <input type="file" accept=".csv,.tsv,.txt,text/csv" className="hidden" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+              </label>
+              {r.key === "questions" && (
+                <div className="mt-3"><label className="label">Mock Test ID (optional — sab questions isi test me judenge)</label>
+                  <input value={testId} onChange={(e) => setTestId(e.target.value)} placeholder="e.g. 12" className="input" inputMode="numeric" /></div>
+              )}
+            </div>
+          </li>
+        </ol>
+
+        {res && (
+          <div className={`mt-4 rounded-xl p-3 text-sm ${res.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>
+            {res.error ? res.error : <>
+              <p className="flex items-center gap-1.5 font-semibold"><CheckCircle2 className="h-4 w-4" />{res.created} naye record jude{res.updated ? ` · ${res.updated} update hue` : ""}{res.skipped ? ` · ${res.skipped} rows skip` : ""}</p>
+              {res.unknown?.length > 0 && <p className="mt-1 text-xs text-amber-700">Yeh columns pehchane nahi gaye (ignore kiye): {res.unknown.join(", ")}</p>}
+              {res.errors?.length > 0 && <ul className="mt-2 max-h-40 list-disc overflow-y-auto pl-5 text-xs text-red-600">{res.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}</ul>}
+            </>}
+          </div>
+        )}
+
+        <p className="mt-4 text-xs text-muted">Tip: CSV me <b>id</b> column bharne par wo record update hoga; khali chhodne par naya record banega. Yes/No columns me yes ya no likhein.</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} disabled={busy} className="btn-ghost">{res && !res.error ? "Done" : "Cancel"}</button>
+          <button onClick={run} disabled={busy || !file || !file.rows} className="btn-primary">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}Import {file?.rows ? `${file.rows} rows` : ""}</button>
+        </div>
+      </div>
+    </div>
+  );
 }
