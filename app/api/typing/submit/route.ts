@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { qualifySpeed, scoreTyping } from "@/lib/typingScore";
+import { qualifySpeed, scoreTyping, splitWords } from "@/lib/typingScore";
 
 export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
@@ -12,7 +12,9 @@ export async function POST(req: Request) {
   const lang = b.lang === "english" ? "english" : "hindi";
   const seconds = Math.max(60, Math.min(3600, Number(b.seconds) || 60));
   const typed = String(b.typed || "").slice(0, 20000);
-  const s = scoreTyping(passage.text, typed, seconds, lang, true);
+  const limit = [100, 150, 200, 250, 300].includes(Number(b.limit)) ? Number(b.limit) : 0;
+  const text = limit ? splitWords(passage.text).slice(0, limit).join(" ") : passage.text;
+  const s = scoreTyping(text, typed, seconds, lang, true);
   const pattern = String(b.pattern || "cpct").slice(0, 20);
   const qs = qualifySpeed(pattern, lang);
   const per = Array.isArray(b.perMinute) ? b.perMinute.slice(0, 60).map((x: any) => Math.max(0, Number(x) || 0)) : [];

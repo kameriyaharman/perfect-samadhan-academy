@@ -229,6 +229,48 @@ export function findKey(layout: Layout, ch: string): { code: string; shift: bool
   return null;
 }
 
+const KEY_LABEL: Record<string, string> = {};
+for (const row of ROWS) for (const k of row) KEY_LABEL[k.code] = k.label.length === 1 ? k.label : k.label;
+
+/** Hint mode: ek akshar (grapheme) ke liye kaun si keys dabani hain — jaise "क्षि" → ["F (ि)", "Shift+[ (क्ष्)", "K (ा)"] */
+export function keyHint(layout: Layout, cluster: string): string[] {
+  const out: string[] = [];
+  const name = (r: { code: string; shift: boolean }) => (r.shift ? "Shift + " : "") + (KEY_LABEL[r.code] || r.code);
+  let chars = Array.from(cluster);
+  if (layout === "remington" && chars.includes("ि")) {
+    // typewriter order: ि pehle
+    out.push("F (ि)");
+    chars = chars.filter((c) => c !== "ि");
+  }
+  const map = layoutMap(layout);
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (map && layout === "remington") {
+      if (c === "्" && chars[i + 1] === "र") { out.push("Z (्र)"); i++; continue; }
+      // conjunct as a single key (क्ष्, त्र, द्ध, रू …)
+      let done = false;
+      for (const len of [3, 2]) {
+        const two = chars.slice(i, i + len).join("");
+        if (Array.from(two).length !== len) continue;
+        const hit = Object.entries(map).find(([, [n, s]]) => (n.length > 1 && (n === two || n === two + "्")) || (s.length > 1 && (s === two || s === two + "्")));
+        if (!hit) continue;
+        const [code, [n, s]] = hit;
+        const shift = !(n === two || n === two + "्");
+        out.push(name({ code, shift }) + ` (${two})`);
+        if ((shift ? s : n) === two + "्") out.push("K (ा)");
+        i += len - 1; done = true; break;
+      }
+      if (done) continue;
+    }
+    const r = findKey(layout, c);
+    if (!r) { out.push(`${c}: Alt code`); continue; }
+    const val = map ? (r.shift ? map[r.code]?.[1] : map[r.code]?.[0]) : c;
+    out.push(name(r) + ` (${c})`);
+    if (layout === "remington" && val && val === c + "्") out.push("K (ा)");
+  }
+  return out;
+}
+
 const DEV_DIGITS = "०१२३४५६७८९";
 export function normalizeWord(w: string) {
   return w
