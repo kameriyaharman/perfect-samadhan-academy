@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { applyCoupon, grantOrder, resolveItem } from "@/lib/orders";
+import { getRazorpay } from "@/lib/payments";
 
 export async function POST(req: Request) {
   const user = await getUser();
@@ -20,8 +21,9 @@ export async function POST(req: Request) {
     await grantOrder(o.id);
     return NextResponse.json({ orderId: o.id, paid: true });
   }
-  const key = process.env.RAZORPAY_KEY_ID, secret = process.env.RAZORPAY_KEY_SECRET;
-  if (key && secret) {
+  const rz = await getRazorpay();
+  if (rz) {
+    const { key, secret } = rz;
     const r = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: "Basic " + Buffer.from(`${key}:${secret}`).toString("base64") },
       body: JSON.stringify({ amount: amount * 100, currency: "INR", receipt: `psa_${o.id}` }),

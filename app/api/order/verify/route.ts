@@ -10,7 +10,9 @@ export async function POST(req: Request) {
   const b = await req.json();
   const o = await one("SELECT * FROM orders WHERE id=$1 AND user_id=$2", [Number(b.orderId), user.id]);
   if (!o) return NextResponse.json({ error: "Order nahi mila" }, { status: 404 });
-  const secret = process.env.RAZORPAY_KEY_SECRET || "";
+  // verify ke liye toggle off ho tab bhi secret chahiye (pending payments), isliye seedha settings/env se
+  const row = await one<{ value: string }>("SELECT value FROM settings WHERE key='razorpay_key_secret'").catch(() => null);
+  const secret = (row?.value || process.env.RAZORPAY_KEY_SECRET || "").trim();
   const sig = crypto.createHmac("sha256", secret).update(`${o.gateway_order_id}|${b.razorpay_payment_id}`).digest("hex");
   if (!secret || sig !== b.razorpay_signature) {
     await one("UPDATE orders SET status='failed' WHERE id=$1 RETURNING id", [o.id]);

@@ -334,7 +334,9 @@ export function getResource(key: string) {
   return RESOURCES.find((r) => r.key === key) || null;
 }
 
-export const SETTING_GROUPS: { title: string; keys: [string, string, ("text" | "textarea")?][] }[] = [
+export type SettingType = "text" | "textarea" | "secret" | "toggle";
+export const SETTING_GROUPS: { title: string; note?: string; keys: [string, string, SettingType?][] }[] = [
+  { title: "Payment (Razorpay)", note: "Razorpay Dashboard → Account & Settings → API Keys se Key ID aur Key Secret yahan dalein. Test keys (rzp_test_…) se pehle check karein, phir Live keys (rzp_live_…) dalein. Secret save hone ke baad dobara nahi dikhega.", keys: [["razorpay_enabled", "Online payment (Razorpay) chalu", "toggle"], ["razorpay_key_id", "Razorpay Key ID (rzp_live_… / rzp_test_…)"], ["razorpay_key_secret", "Razorpay Key Secret", "secret"]] },
   { title: "Contact & Brand", keys: [["site_name", "Site name (Hindi)"], ["site_name_en", "Site name (English)"], ["tagline", "Tagline"], ["phone", "Phone"], ["whatsapp", "WhatsApp number (with 91, digits only)"], ["whatsapp_group", "WhatsApp group link"], ["email", "Email"], ["hours", "Hours (top bar)"], ["hours_full", "Hours (contact page)"], ["address", "Address", "textarea"], ["map_embed", "Google Map embed URL (src of iframe)", "textarea"], ["upi_id", "UPI ID for manual payment (optional)"]] },
   { title: "Social & App", keys: [["facebook", "Facebook URL"], ["youtube", "YouTube URL"], ["instagram", "Instagram URL"], ["telegram", "Telegram URL"], ["android_app", "Android app URL"]] },
   { title: "Home page", keys: [["hero_badge", "Hero badge"], ["hero_title_1", "Hero title line 1"], ["hero_title_2", "Hero title line 2 (white)"], ["hero_title_3", "Hero title line 2 (orange)"], ["hero_subtitle", "Hero subtitle", "textarea"], ["stat_1", "Stat 1 (value|label)"], ["stat_2", "Stat 2"], ["stat_3", "Stat 3"], ["stat_4", "Stat 4"], ["cta_title", "Bottom CTA title"], ["cta_subtitle", "Bottom CTA subtitle"], ["footer_about", "Footer about", "textarea"]] },
