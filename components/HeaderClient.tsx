@@ -49,11 +49,11 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
       <div className="border-b border-line bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 sm:px-4 md:px-8 py-2.5">
           <Logo />
-          <nav className="ml-auto hidden xl:flex items-center gap-0.5 2xl:gap-1">
+          <nav className="ml-auto hidden shrink-0 xl:flex items-center">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className={`relative whitespace-nowrap px-2 2xl:px-3 py-2 text-[14px] 2xl:text-[15px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
+              <Link key={n.href} href={n.href} className={`relative whitespace-nowrap px-1.5 py-2 text-[14px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
                 {n.label}
-                {active(n.href) && <span className="absolute left-3 right-3 -bottom-[13px] h-[3px] rounded-full bg-saffron" />}
+                {active(n.href) && <span className="absolute left-1.5 right-1.5 -bottom-[13px] h-[3px] rounded-full bg-saffron" />}
               </Link>
             ))}
           </nav>
@@ -80,7 +80,7 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
             ) : (
               <>
                 <Link href="/login" className="hidden sm:inline-flex btn-ghost !px-4 !py-2"><LogIn className="h-4 w-4" />Login</Link>
-                <Link href="/login?tab=register" className="hidden sm:inline-flex btn-primary !px-4 !py-2"><UserPlus className="h-4 w-4" /><span className="xl:hidden 2xl:inline">Free </span>Register</Link>
+                <Link href="/login?tab=register" className="hidden sm:inline-flex btn-primary !px-4 !py-2"><UserPlus className="h-4 w-4" /><span className="xl:hidden">Free </span>Register</Link>
               </>
             )}
             <button onClick={() => setOpen(true)} aria-label="Menu" className="xl:hidden grid h-10 w-10 place-items-center rounded-xl bg-brand text-white"><Menu className="h-5 w-5" /></button>
