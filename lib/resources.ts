@@ -103,7 +103,7 @@ export const RESOURCES: Resource[] = [
     fields: [
       { name: "title", label: "Title", required: true, list: true },
       { name: "language", label: "Language", type: "select", options: ["hindi", "english"], list: true },
-      { name: "level", label: "Level", type: "select", options: ["easy", "medium", "exam"], list: true },
+      { name: "level", label: "Level", type: "select", options: ["easy", "medium", "hard", "exam"], list: true },
       { name: "exam", label: "Exam (CPCT etc. — for paragraphs page)", list: true },
       { name: "year", label: "Year", type: "number" }, { name: "session", label: "Session (e.g. Nov 2025)" }, { name: "shift", label: "Shift" },
       { name: "text", label: "Passage text (Hindi in Unicode/Mangal)", type: "textarea", required: true, full: true, rows: 8 },
