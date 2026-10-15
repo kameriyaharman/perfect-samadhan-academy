@@ -3,12 +3,14 @@ import { ArrowRight, FileText, Gauge, GraduationCap, Keyboard, ScanSearch, Troph
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
+import { getPatterns } from "@/lib/patterns";
+import ExamLinks from "./ExamLinks";
 
 export const metadata = { title: "Hindi & English Typing Test" };
 
 export default async function TypingHub() {
-  const [exams, stats] = await Promise.all([
-    q(`SELECT * FROM exams WHERE active AND show_in_typing ORDER BY sort`),
+  const [patterns, stats] = await Promise.all([
+    getPatterns(),
     q(`SELECT (SELECT count(*)::int FROM typing_results WHERE created_at > now()-interval '1 day') AS today, (SELECT count(*)::int FROM passages WHERE active) AS passages`),
   ]);
   const st = stats[0] || { today: 0, passages: 0 };
@@ -40,26 +42,7 @@ export default async function TypingHub() {
 
         <div className="mt-14">
           <SectionTitle eyebrow="Exam-wise Typing" title="अपनी परीक्षा के हिसाब से टेस्ट दें" />
-          <div className="card overflow-x-auto">
-            <table className="table-x min-w-[760px]">
-              <thead><tr><th>Exam</th><th>Language</th><th>Layout</th><th>Time</th><th>Qualifying Speed</th><th></th></tr></thead>
-              <tbody>
-                {exams.map((e: any) => {
-                  const lang = /hindi/i.test(e.typing_language || "") && !/english/i.test(e.typing_language || "") ? "hindi" : /^english/i.test(e.typing_language || "") ? "english" : "hindi";
-                  const pattern = e.slug === "high-court" ? "highcourt" : e.slug.startsWith("ssc") || e.slug.startsWith("railway") ? "ssc" : "cpct";
-                  const layout = /remington|krutidev/i.test(e.typing_layout || "") || !/inscript/i.test(e.typing_layout || "") ? "remington" : "inscript";
-                  const mins = parseInt(e.typing_time) || 10;
-                  return (
-                    <tr key={e.id}>
-                      <td className="font-bold">{e.name}</td><td>{e.typing_language}</td><td>{e.typing_layout}</td><td>{e.typing_time}</td>
-                      <td><span className="chip bg-green-50 text-green-700 py-1.5">{e.typing_speed}</span></td>
-                      <td className="text-right"><Link href={`/typing-test/setup?lang=${lang}&layout=${layout}&pattern=${pattern}&duration=${Math.min(15, mins)}`} className="btn-primary btn-sm"><PlayCircle className="h-4 w-4" />Start <ArrowRight className="h-3.5 w-3.5" /></Link></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ExamLinks patterns={patterns.map((p) => ({ slug: p.slug, name: p.name, category: p.category, language: p.language, duration: p.duration, hindi_speed: p.hindi_speed, english_speed: p.english_speed, description: p.description }))} />
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -5,6 +5,7 @@ import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { fmtDate, fmtDateTime } from "@/lib/utils";
 import { PATTERN_NAME } from "@/lib/typingScore";
+import { getPattern } from "@/lib/patterns";
 import LineChart from "@/components/charts/LineChart";
 import PrintButton from "@/components/PrintButton";
 import { Container } from "@/components/Section";
@@ -16,6 +17,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
   if (!r) notFound();
   const user = await getUser();
   const rank = await one(`SELECT (SELECT count(*)::int FROM typing_results WHERE language=$1 AND created_at > now()-interval '1 day' AND net_wpm > $2) + 1 AS rank, (SELECT count(*)::int FROM typing_results WHERE language=$1 AND created_at > now()-interval '1 day') AS total`, [r.language, r.net_wpm]);
+  const patName = (await getPattern(r.pattern))?.name || PATTERN_NAME[r.pattern] || r.pattern;
   const per: number[] = JSON.parse(r.per_minute || "[]");
   const mistakes: { expected: string; typed: string; type: string }[] = JSON.parse(r.mistakes || "[]");
   const name = r.name === "Guest" ? "" : r.name.split(" ")[0];
@@ -28,7 +30,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <div className="hero-bg relative overflow-hidden rounded-[24px] p-6 md:p-8 text-white" data-dark>
           <div className="absolute right-10 top-0 h-40 w-40 rounded-full bg-saffron/30 blur-3xl" />
-          <span className={`chip ${r.qualified ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"} py-1.5`}>{r.qualified ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}{r.qualified ? "QUALIFIED" : "NOT QUALIFIED"} — {PATTERN_NAME[r.pattern] || r.pattern} {hindi ? "Hindi" : "English"} ({r.qualify_speed} NWPM)</span>
+          <span className={`chip ${r.qualified ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"} py-1.5`}>{r.qualified ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}{r.qualified ? "QUALIFIED" : "NOT QUALIFIED"} — {patName} {hindi ? "Hindi" : "English"} ({r.qualify_speed} NWPM)</span>
           <h1 className="hi mt-4 text-4xl md:text-5xl font-bold">{r.qualified ? "शाबाश" : "अच्छा प्रयास"}{name ? ` ${name}` : ""}! {r.qualified ? <PartyPopper className="inline h-10 w-10 text-gold" /> : <TrendingUp className="inline h-10 w-10 text-gold" />}</h1>
           <p className="mt-2 text-white/80">{hindi ? `Hindi ${r.layout}` : "English"} · {Math.round(r.duration / 60) || 1} min · {r.mode === "exam" ? "Exam" : "Practice"} Mode · {fmtDateTime(r.created_at)}</p>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -49,7 +51,7 @@ export default async function Result({ params }: { params: { cert: string } }) {
         <div className="card p-6">
           <h2 className="mb-3 flex items-center gap-2 text-lg font-bold"><BarChart3 className="h-5 w-5" />Speed — har minute</h2>
           {per.length >= 2 ? (
-            <LineChart series={[{ color: "#1f35b8", values: per }]} labels={per.map((_, i) => String(i + 1))} refLine={r.qualify_speed} refLabel={`${PATTERN_NAME[r.pattern] || ""} min ${r.qualify_speed}`} />
+            <LineChart series={[{ color: "#1f35b8", values: per }]} labels={per.map((_, i) => String(i + 1))} refLine={r.qualify_speed} refLabel={`${patName} min ${r.qualify_speed}`} />
           ) : <div className="grid h-48 place-items-center rounded-xl bg-canvas text-sm text-muted">Minute-wise chart 2+ minute ke test me dikhega.</div>}
           <p className="mt-3 text-sm text-muted">
             {worst >= 0 ? <>Minute {worst + 1} par speed sabse kam rahi ({per[worst]} WPM). {hindi ? <>Wahan <b className="hi">संयुक्ताक्षर</b> aur matraon ka alag abhyas karein.</> : "Wahan lambe shabd ya punctuation ka abhyas karein."}</> : `Total ${r.typed_words} shabd type kiye, ${r.errors} galtiyan.`}

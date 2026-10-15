@@ -143,6 +143,24 @@ CREATE TABLE IF NOT EXISTS typing_results (
   qualify_speed INT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS typing_patterns (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Other',
+  language TEXT NOT NULL DEFAULT 'both',
+  hindi_layout TEXT NOT NULL DEFAULT 'any',
+  duration INT DEFAULT 10,
+  backspace TEXT NOT NULL DEFAULT 'full',
+  highlight TEXT NOT NULL DEFAULT 'error',
+  hindi_speed INT DEFAULT 25,
+  english_speed INT DEFAULT 30,
+  words INT DEFAULT 0,
+  lock_rules BOOLEAN NOT NULL DEFAULT false,
+  description TEXT,
+  sort INT DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
 CREATE TABLE IF NOT EXISTS lessons (
   id SERIAL PRIMARY KEY,
   layout TEXT NOT NULL,

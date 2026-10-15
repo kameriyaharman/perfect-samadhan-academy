@@ -21,6 +21,7 @@ type Props = {
   passages: PassageLite[];
   userName: string | null;
   lang: "hindi" | "english"; layout: Layout; layoutName: string; pattern: string; duration: number; mode: "practice" | "exam"; limit: number;
+  rules?: { name: string; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none"; locked: boolean; qualify: number };
 };
 type BsMode = "full" | "word" | "prev" | "off";
 type HlMode = "word" | "error" | "none";
@@ -72,10 +73,15 @@ export default function TypingTest(p: Props) {
   const sp = useSearchParams();
 
   // ---------- preferences ----------
-  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: "full", highlight: p.pattern === "highcourt" ? "none" : "error", guide: false, sound: false, font: 22 };
+  // backspace/highlight hamesha exam pattern (admin) ke hisaab se shuru; baaki tools student ki pasand se yaad rehte hain
+  const R = p.rules || { name: "", backspace: "full" as BsMode, highlight: (p.pattern === "highcourt" ? "none" : "error") as HlMode, locked: false, qualify: 0 };
+  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: R.backspace, highlight: R.highlight, guide: false, sound: false, font: 22 };
   const [prefs, setPrefs] = useState<Prefs>(defaults);
-  useEffect(() => { const s = store.get<Partial<Prefs>>(PREFS_KEY); if (s) setPrefs((d) => ({ ...d, ...s, highlight: p.pattern === "highcourt" ? "none" : s.highlight || d.highlight })); }, []); // eslint-disable-line
-  const setPref = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((o) => { const n = { ...o, [k]: v }; store.set(PREFS_KEY, n); return n; });
+  useEffect(() => { const s = store.get<Partial<Prefs>>(PREFS_KEY); if (s) setPrefs((d) => ({ ...d, ...s, backspace: R.backspace, highlight: R.highlight })); }, []); // eslint-disable-line
+  const setPref = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((o) => {
+    if (R.locked && (k === "backspace" || k === "highlight")) return o;
+    const n = { ...o, [k]: v }; store.set(PREFS_KEY, n); return n;
+  });
 
   // ---------- passage (server ya "My passages") ----------
   const [custom, setCustom] = useState<MyPassage | null>(null);
@@ -448,7 +454,9 @@ export default function TypingTest(p: Props) {
               <div className="w-full max-w-[400px] rounded-xl bg-white p-6 text-center text-ink shadow-2xl">
                 <div className={`text-xl font-bold ${hiFont}`}>{layoutLabel}</div>
                 <p className="mt-2 text-[15px] text-muted">Click Start when you are ready, the timer begins on your first keystroke.</p>
-                <div className={`mt-3 text-sm font-semibold text-brand ${hiFont}`}>{title} · {pw.length} words · {duration} min</div>
+                {R.name && <div className="mt-3 inline-block rounded-full bg-saffron-50 px-3 py-1 text-xs font-bold text-saffron-600">{R.name} pattern{R.qualify ? ` · Qualify: ${R.qualify} NWPM` : ""}</div>}
+                <div className={`mt-2 text-sm font-semibold text-brand ${hiFont}`}>{title} · {pw.length} words · {duration} min</div>
+                {prefs.backspace !== "full" && <div className="mt-1 text-xs text-muted">{prefs.backspace === "off" ? "Is test me Backspace band hai." : prefs.backspace === "word" ? "Backspace sirf current word me chalega." : "Backspace current aur pichle word tak chalega."}</div>}
                 <button onClick={startTest} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#1f4fb5] py-3 text-[15px] font-semibold text-white hover:bg-[#1a43a0]"><Play className="h-4 w-4" />Start Test</button>
               </div>
             </div>
@@ -524,9 +532,10 @@ export default function TypingTest(p: Props) {
                 <Toggle icon={<Keyboard className="h-5 w-5" />} t="Keyboard Guide" d="Agli key on-screen keyboard par dikhe" on={prefs.guide} set={(v) => setPref("guide", v)} night={n} disabled={p.layout === "system"} />
                 <Toggle icon={<Volume2 className="h-5 w-5" />} t="Key Sound" d="Har keystroke par halki click" on={prefs.sound} set={(v) => setPref("sound", v)} night={n} />
               </div>
-              <Group icon={<Delete className="h-5 w-5" />} t="Backspace Options" value={prefs.backspace} set={(v) => setPref("backspace", v as BsMode)}
+              {R.locked && <p className="mt-4 rounded-md bg-amber-50 p-2.5 text-xs text-amber-800">{R.name} exam pattern me Backspace aur Highlight admin ne fix kiye hain — inhe badla nahi ja sakta.</p>}
+              <Group disabled={R.locked} icon={<Delete className="h-5 w-5" />} t="Backspace Options" value={prefs.backspace} set={(v) => setPref("backspace", v as BsMode)}
                 opts={[["full", "Full Backspace"], ["word", "One Word Backspace"], ["prev", "Current + Previous Word"], ["off", "Deactivate Backspace"]]} />
-              <Group icon={<Highlighter className="h-5 w-5" />} t="Highlight Options" value={prefs.highlight} set={(v) => setPref("highlight", v as HlMode)}
+              <Group disabled={R.locked} icon={<Highlighter className="h-5 w-5" />} t="Highlight Options" value={prefs.highlight} set={(v) => setPref("highlight", v as HlMode)}
                 opts={[["word", "Word Highlight"], ["error", "Word + Error Highlight"], ["none", "No Highlight"]]} />
             </div>
             <div className="m-3 flex gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-[12.5px] text-amber-800"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />Ye tools sirf study aids hain. Actual exam me ye options available nahi honge.</div>
@@ -569,14 +578,14 @@ function Toggle({ icon, t, d, on, set, night, disabled }: { icon: React.ReactNod
   );
 }
 
-function Group({ icon, t, value, set, opts }: { icon: React.ReactNode; t: string; value: string; set: (v: string) => void; opts: [string, string][] }) {
+function Group({ icon, t, value, set, opts, disabled }: { icon: React.ReactNode; t: string; value: string; set: (v: string) => void; opts: [string, string][]; disabled?: boolean }) {
   return (
-    <div className="mt-4 px-2">
+    <div className={`mt-4 px-2 ${disabled ? "pointer-events-none opacity-50" : ""}`}>
       <div className="mb-1.5 flex items-center gap-3 text-[14.5px] font-semibold"><span className="opacity-60">{icon}</span>{t}</div>
       <div className="space-y-1 pl-8">
         {opts.map(([v, l]) => (
           <label key={v} className="flex cursor-pointer items-center gap-2.5 py-1 text-[14px]">
-            <input type="radio" checked={value === v} onChange={() => set(v)} className="h-4 w-4 accent-[#1f4fb5]" />{l}
+            <input type="radio" disabled={disabled} checked={value === v} onChange={() => set(v)} className="h-4 w-4 accent-[#1f4fb5]" />{l}
           </label>
         ))}
       </div>

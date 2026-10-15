@@ -66,6 +66,20 @@ async function main() {
     await client.query("INSERT INTO settings (key, value) VALUES ($1,$2) ON CONFLICT (key) DO UPDATE SET value=$2 WHERE settings.value = ANY($3)", [k, v, DEMO]);
   }
 
+  // Typing exam patterns — pehli baar default 4 pattern; uske baad admin "Typing Exam Patterns" se add/edit karega
+  const tp = await client.query("SELECT count(*)::int AS n FROM typing_patterns");
+  if (tp.rows[0].n === 0) {
+    const P = [
+      ["CPCT", "cpct", "MP State", "both", "remington", 15, "full", "error", 20, 30, "MP CPCT — Hindi Remington Gail Mangal / English", 1],
+      ["SSC DEST (CHSL / CGL)", "ssc", "SSC", "both", "remington", 15, "full", "error", 30, 35, "SSC CHSL/CGL Data Entry Skill Test pattern", 2],
+      ["High Court", "highcourt", "Court", "both", "remington", 10, "full", "none", 25, 30, "Court typing test — bina highlight", 3],
+      ["Free Practice", "practice", "Practice", "both", "any", 5, "full", "error", 20, 30, "Apni speed par practice — koi bhi samay", 4],
+    ];
+    for (const r of P) await client.query(
+      "INSERT INTO typing_patterns (name,slug,category,language,hindi_layout,duration,backspace,highlight,hindi_speed,english_speed,description,sort) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT (slug) DO NOTHING", r);
+    console.log("Typing patterns seeded");
+  }
+
   const c = await client.query("SELECT count(*)::int AS n FROM exams");
   if (c.rows[0].n === 0) {
     console.log("Seeding demo content...");

@@ -32,7 +32,9 @@ export default async function Series({ params, searchParams }: { params: { exam:
   ]);
   const cnt = (k: string) => counts.find((c: any) => c.kind === k)?.n || 0;
   const pages = Math.ceil(cnt(tab) / PER);
-  const attempts = user && tests.length ? await q(`SELECT DISTINCT ON (test_id) test_id, id, status, score, total FROM attempts WHERE user_id=$1 AND test_id = ANY($2::int[]) ORDER BY test_id, id DESC`, [user.id, tests.map((t: any) => t.id)]) : [];
+  const attempts = user && tests.length ? await q(`SELECT DISTINCT ON (test_id) test_id, id, status, score, total, started_at, duration FROM attempts WHERE user_id=$1 AND test_id = ANY($2::int[])
+      AND (status <> 'in_progress' OR started_at + (duration || ' minutes')::interval > now() + interval '1 minute') ORDER BY test_id, id DESC`, [user.id, tests.map((t: any) => t.id)]) : [];
+  // time khatam ho chuke adhoore attempts "Resume" nahi dikhate — Start dabane par wo band hokar naya test shuru hota hai
   const att = new Map(attempts.map((a: any) => [a.test_id, a]));
   const pattern = sections(exam.syllabus).filter((s) => !/typing/i.test(s.title));
   const shortBreak = (b: string | null) => (b || "").replace("Reading Comprehension", "RC").replace("General Awareness", "GK");

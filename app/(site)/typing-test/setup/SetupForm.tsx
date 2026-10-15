@@ -18,7 +18,7 @@ const SPECIAL_KEYS: [string, string][] = [
   ["Shift + 6", "‘"], ["Shift + 7", "’"], ["Shift + 8", "द्ध"], ["Shift + 9", "त्र"], ["Shift + 0", "ऋ"], ["Only -", "; अर्ध विराम"],
   ["Shift + -", ". (म.प्र.)"], ["Only ]", ", comma"], ["Shift + ]", "द्व"], ["Only \\", "("], ["Shift + \\", ")"],
   ["Only =", "ृ (कृपा, दृ, हृ)"], ["Shift + =", "् आधा अक्षर (फ्य, सद्भाव)"], ["ट + Z", "ट्र (राष्ट्र)"], ["य + Shift + Z", "र्य (कार्य, इकाई)"],
-  ["उ + Shift + Q", "ऊ"], ["का + Shift + A", "काँ (कांच)"],
+  ["उ + Shift + Q", "ऊ"], ["Shift + A", "ा (K jaisa — अ + Shift+A = आ)"], ["Alt + 2305", "ँ चंद्रबिंदु (काँच)"],
   ["Alt + 063", "?"], ["Alt + 033", "!"], ["Alt + 037", "%"], ["Alt + 061", "="], ["Alt + 35", "#"], ["Alt + 36", "$"], ["Alt + 42", "*"], ["Alt + 64", "@"],
   ["Alt + 91", "["], ["Alt + 92", "\\"], ["Alt + 93", "]"], ["Alt + 95", "_"], ["Alt + 0123", "{"], ["Alt + 0125", "}"],
   ["Alt + 0145", "‘"], ["Alt + 0146", "’"], ["Alt + 0147", "“"], ["Alt + 0148", "”"], ["Alt + 0150", "– हाइफ़न"], ["Alt + 0151", "—"],
@@ -28,19 +28,19 @@ const SPECIAL_KEYS: [string, string][] = [
   ["Alt + 2406", "० (म०प्र०)"], ["Alt + 2416", "॰ (डॉ॰ ई॰)"],
 ];
 const EN_LAYOUTS = [{ v: "english", t: "QWERTY (Standard)", d: "Sabhi exams" }];
-const PATTERNS = [
-  { v: "cpct", t: "CPCT", d: "Backspace allowed · 15 min", dur: 15 },
-  { v: "ssc", t: "SSC DEST", d: "Backspace allowed · 15 min", dur: 15 },
-  { v: "highcourt", t: "High Court", d: "No highlight · 10 min", dur: 10 },
-  { v: "practice", t: "Free Practice", d: "Highlight + guide · koi bhi samay", dur: 5 },
-];
+type Pat = { slug: string; name: string; category: string; language: string; hindi_layout: string; duration: number; backspace: string; highlight: string; hindi_speed: number; english_speed: number; description: string | null };
+const BS_TXT: Record<string, string> = { full: "Backspace allowed", word: "Backspace sirf current word", prev: "Backspace current + pichla word", off: "Backspace band" };
 
-export default function SetupForm({ initial, passages }: { initial: Record<string, string | undefined>; passages: P[] }) {
+export default function SetupForm({ initial, passages, patterns }: { initial: Record<string, string | undefined>; passages: P[]; patterns: Pat[] }) {
   const r = useRouter();
   const [lang, setLang] = useState<"hindi" | "english">((initial.lang as any) || "hindi");
-  const [layout, setLayout] = useState(initial.layout || (lang === "hindi" ? "remington" : "english"));
-  const [pattern, setPattern] = useState(initial.pattern || "cpct");
-  const [duration, setDuration] = useState(Number(initial.duration) || 10);
+  const initPat = patterns.find((x) => x.slug === initial.pattern);
+  const [layout, setLayout] = useState(initial.layout || (lang === "hindi" ? (initPat && initPat.hindi_layout !== "any" ? initPat.hindi_layout : "remington") : "english"));
+  const [pattern, setPattern] = useState(initial.pattern || patterns[0]?.slug || "cpct");
+  const pats = patterns.filter((x) => x.language === "both" || x.language === lang);
+  const curPat = patterns.find((x) => x.slug === pattern);
+  const [showAll, setShowAll] = useState(false);
+  const [duration, setDuration] = useState(Number(initial.duration) || patterns.find((x) => x.slug === initial.pattern)?.duration || 10);
   const [pmode, setPmode] = useState<"random" | "exam" | "choose">(initial.passage ? "choose" : "random");
   const [passage, setPassage] = useState<string>(initial.passage || "");
   const [mode, setMode] = useState<"practice" | "exam">("exam");
@@ -48,8 +48,14 @@ export default function SetupForm({ initial, passages }: { initial: Record<strin
 
   useEffect(() => {
     if (lang === "english" && layout !== "english") setLayout("english");
-    if (lang === "hindi" && layout === "english") setLayout("remington");
+    if (lang === "hindi" && layout === "english") setLayout(curPat && curPat.hindi_layout !== "any" ? curPat.hindi_layout : "remington");
+    if (curPat && curPat.language !== "both" && curPat.language !== lang) { const f = pats[0]; if (f) pickPattern(f); }
   }, [lang]); // eslint-disable-line
+  const pickPattern = (x: Pat) => {
+    setPattern(x.slug); setDuration(x.duration);
+    if (x.slug === "practice") setMode("practice");
+    if (lang === "hindi" && x.hindi_layout !== "any") setLayout(x.hindi_layout);
+  };
   useEffect(() => {
     if (/Android|iPhone|iPad/i.test(navigator.userAgent) && lang === "hindi" && !initial.layout) setLayout("system");
   }, []); // eslint-disable-line
@@ -101,12 +107,15 @@ export default function SetupForm({ initial, passages }: { initial: Record<strin
             <div>
               <H n={3} t="Exam Pattern" />
               <div className="space-y-2.5">
-                {PATTERNS.map((p) => <Radio key={p.v} on={pattern === p.v} t={p.t} d={p.d} onClick={() => { setPattern(p.v); setDuration(p.dur); if (p.v === "practice") setMode("practice"); }} />)}
+                {(showAll ? pats : pats.slice(0, 6).concat(pats.slice(6).filter((x) => x.slug === pattern))).map((x) => (
+                  <Radio key={x.slug} on={pattern === x.slug} t={x.name} d={`${x.category} · ${BS_TXT[x.backspace] || ""} · ${x.duration} min · ${lang === "english" ? x.english_speed : x.hindi_speed} NWPM`} onClick={() => pickPattern(x)} />
+                ))}
+                {pats.length > 6 && <button type="button" onClick={() => setShowAll(!showAll)} className="text-sm font-semibold text-brand">{showAll ? "Kam dikhayein" : `+ ${pats.length - 6} aur exam patterns`}</button>}
               </div>
             </div>
             <div>
               <H n={4} t="Duration" />
-              <div className="seg">{[2, 5, 10, 15].map((d) => <button key={d} className={duration === d ? "on" : ""} onClick={() => setDuration(d)}>{d} min</button>)}</div>
+              <div className="seg">{Array.from(new Set([2, 5, 10, 15, 30, duration])).sort((a, b) => a - b).map((d) => <button key={d} className={duration === d ? "on" : ""} onClick={() => setDuration(d)}>{d} min</button>)}</div>
             </div>
             <div>
               <H n={5} t="Passage" />

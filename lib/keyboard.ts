@@ -43,13 +43,13 @@ export const INSCRIPT: Record<string, [string, string]> = {
 };
 
 // Remington Gail Mangal (CPCT / MP govt exams) — characters typed in typewriter order.
-// Academy chart: Shift+~ द्य, Shift+1 ।, Shift+3 ः, \ (, Shift+\ ), Shift+A ँ, उ+Shift+Q ऊ; baaki Alt codes se.
+// Academy chart: Shift+~ द्य, Shift+1 ।, Shift+3 ः, \ (, Shift+\ ), Shift+A ा (K jaisa), उ+Shift+Q ऊ; ँ aur baaki Alt codes se.
 export const REMINGTON: Record<string, [string, string]> = {
   Backquote: ["़", "द्य"], Digit1: ["1", "।"], Digit2: ["2", "/"], Digit3: ["3", "ः"], Digit4: ["4", "*"], Digit5: ["5", "-"],
   Digit6: ["6", "‘"], Digit7: ["7", "’"], Digit8: ["8", "द्ध"], Digit9: ["9", "त्र"], Digit0: ["0", "ऋ"], Minus: [";", "."], Equal: ["ृ", "्"],
   KeyQ: ["ु", "फ"], KeyW: ["ू", "ॅ"], KeyE: ["म", "म्"], KeyR: ["त", "त्"], KeyT: ["ज", "ज्"], KeyY: ["ल", "ल्"], KeyU: ["न", "न्"],
   KeyI: ["प", "प्"], KeyO: ["व", "व्"], KeyP: ["च", "च्"], BracketLeft: ["ख्", "क्ष्"], BracketRight: [",", "द्व"], Backslash: ["(", ")"],
-  KeyA: ["ं", "ँ"], KeyS: ["े", "ै"], KeyD: ["क", "क्"], KeyF: ["ि", "थ्"], KeyG: ["ह", "ळ"], KeyH: ["ी", "भ्"], KeyJ: ["र", "श्र"],
+  KeyA: ["ं", "ा"], KeyS: ["े", "ै"], KeyD: ["क", "क्"], KeyF: ["ि", "थ्"], KeyG: ["ह", "ळ"], KeyH: ["ी", "भ्"], KeyJ: ["र", "श्र"],
   KeyK: ["ा", "ज्ञ"], KeyL: ["स", "स्"], Semicolon: ["य", "रू"], Quote: ["श्", "ष्"],
   KeyZ: ["्र", "र्"], KeyX: ["ग", "ग्"], KeyC: ["ब", "ब्"], KeyV: ["अ", "ट"], KeyB: ["इ", "ठ"], KeyN: ["द", "छ"], KeyM: ["उ", "ड"],
   Comma: ["ए", "ढ"], Period: ["ण्", "झ"], Slash: ["ध्", "घ्"],
@@ -214,10 +214,9 @@ export function findKey(layout: Layout, ch: string): { code: string; shift: bool
     return null;
   }
   const map = layoutMap(layout)!;
-  for (const [code, [n, s]] of Object.entries(map)) {
-    if (n === ch) return { code, shift: false };
-    if (s === ch) return { code, shift: true };
-  }
+  // bina Shift wali key pehle (ा = K, Shift+A nahi)
+  for (const [code, [n]] of Object.entries(map)) if (n === ch) return { code, shift: false };
+  for (const [code, [, s]] of Object.entries(map)) if (s === ch) return { code, shift: true };
   if (layout === "remington") {
     // full letter typed as half + ा
     for (const [code, [n, s]] of Object.entries(map)) {
@@ -263,7 +262,7 @@ export function keyHint(layout: Layout, cluster: string): string[] {
       if (done) continue;
     }
     const r = findKey(layout, c);
-    if (!r) { out.push(`${c}: Alt code`); continue; }
+    if (!r) { out.push(`Alt + ${c.codePointAt(0)} (${c})`); continue; }
     const val = map ? (r.shift ? map[r.code]?.[1] : map[r.code]?.[0]) : c;
     out.push(name(r) + ` (${c})`);
     if (layout === "remington" && val && val === c + "्") out.push("K (ा)");

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { qualifySpeed, scoreTyping, splitWords } from "@/lib/typingScore";
+import { getPattern, qualifyFor } from "@/lib/patterns";
 
 export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
@@ -15,8 +16,9 @@ export async function POST(req: Request) {
   const limit = [100, 150, 200, 250, 300].includes(Number(b.limit)) ? Number(b.limit) : 0;
   const text = limit ? splitWords(passage.text).slice(0, limit).join(" ") : passage.text;
   const s = scoreTyping(text, typed, seconds, lang, true);
-  const pattern = String(b.pattern || "cpct").slice(0, 20);
-  const qs = qualifySpeed(pattern, lang);
+  const pattern = String(b.pattern || "cpct").slice(0, 60);
+  const pat = await getPattern(pattern);
+  const qs = pat ? qualifyFor(pat, lang) : qualifySpeed(pattern, lang);
   const per = Array.isArray(b.perMinute) ? b.perMinute.slice(0, 60).map((x: any) => Math.max(0, Number(x) || 0)) : [];
   let certId = "";
   for (let i = 0; i < 5; i++) {

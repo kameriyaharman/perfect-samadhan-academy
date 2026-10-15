@@ -31,6 +31,10 @@ export const ALIASES: Record<string, Record<string, string>> = {
 
 /** Hand-written realistic examples for each section. Missing sections fall back to auto-generated rows. */
 const SAMPLES: Record<string, Record<string, any>[]> = {
+  typing_patterns: [
+    { name: "SSC CHSL 2025 Hindi (KrutiDev)", slug: "ssc-chsl-hindi-krutidev", category: "SSC", language: "hindi", hindi_layout: "krutidev", duration: 10, backspace: "full", highlight: "error", hindi_speed: 27, english_speed: "", words: 0, lock_rules: "false", description: "", sort: 10, active: "true" },
+    { name: "Bihar Civil Court Clerk", slug: "bihar-civil-court", category: "Bihar", language: "both", hindi_layout: "any", duration: 10, backspace: "word", highlight: "word", hindi_speed: 25, english_speed: 30, words: 0, lock_rules: "true", description: "", sort: 11, active: "true" },
+  ],
   exams: [
     { name: "CPCT", slug: "cpct", code: "CPCT", body: "MAP_IT", category: "MP", color: "blue", tag: "Popular", students: 12000, description: "Computer Proficiency Certification Test — MP govt jobs ke liye zaroori", overview: "CPCT MP sarkar ki computer dakshata pariksha hai.", pattern: "Computer Proficiency | 52 | 75 min | Yes\nEnglish Typing | 1 | 15 min | 30 WPM", syllabus: "## Computer | 52 Q\n- Computer basics\n- MS Office", eligibility: "12th pass", fee: "₹560", next_exam: "Dec 2026", official_url: "https://www.cpct.mp.gov.in", show_on_home: "yes", show_in_typing: "yes", sort: 1, active: "yes" },
   ],

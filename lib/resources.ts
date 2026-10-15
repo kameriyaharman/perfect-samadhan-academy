@@ -123,6 +123,25 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "typing_patterns", table: "typing_patterns", label: "Typing Exam Patterns", group: "Typing", icon: "ListChecks", order: "category, sort, id", search: ["name", "slug", "category"],
+    fields: [
+      { name: "name", label: "Exam / pattern ka naam (jaise SSC CHSL 2025 Hindi)", required: true, list: true },
+      { name: "slug", label: "Short code (URL me, jaise ssc-chsl-hindi) — sirf a-z, 0-9, -", required: true, list: true },
+      { name: "category", label: "Category (SSC, Court, MP State, Railway, Bihar…)", required: true, list: true, help: "Same category wale exams typing page par ek group me dikhenge" },
+      { name: "language", label: "Language", type: "select", options: ["both", "hindi", "english"], list: true },
+      { name: "hindi_layout", label: "Hindi keyboard layout", type: "select", options: ["any", "remington", "remington-cbi", "krutidev", "inscript", "system"], help: "any = student khud chunega" },
+      { name: "duration", label: "Samay (minute, 1–60)", type: "number", list: true },
+      { name: "backspace", label: "Backspace", type: "select", options: ["full", "word", "prev", "off"], help: "full = poora · word = sirf current word · prev = current + pichla word · off = band" },
+      { name: "highlight", label: "Highlight", type: "select", options: ["error", "word", "none"], help: "error = word + sahi/galat rang · word = sirf current word · none = koi highlight nahi" },
+      { name: "hindi_speed", label: "Hindi qualifying speed (NWPM)", type: "number" },
+      { name: "english_speed", label: "English qualifying speed (NWPM)", type: "number" },
+      { name: "words", label: "Passage words (0 = poora, ya 100/150/200/250/300)", type: "number" },
+      { name: "lock_rules", label: "Exam rules lock (student backspace/highlight badal na sake)", type: "bool" },
+      { name: "description", label: "Short description", type: "textarea", full: true },
+      { name: "sort", label: "Sort order", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
     key: "typing_results", table: "typing_results", label: "Typing Results", group: "Typing", icon: "Gauge", order: "created_at DESC", search: ["name", "cert_id"], noCreate: true,
     fields: [
       { name: "cert_id", label: "Certificate ID", list: true }, { name: "name", label: "Name", list: true },
