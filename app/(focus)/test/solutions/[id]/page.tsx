@@ -35,7 +35,7 @@ export default async function Solutions({ params, searchParams }: { params: { id
           <div className="space-y-4">
             {list.map(({ x, i }) => {
               const s = st(x);
-              const opts = [0, 1, 2, 3].map((k) => (lang === "en" ? x[`opt_${"abcd"[k]}_en`] || x[`opt_${"abcd"[k]}_hi`] : x[`opt_${"abcd"[k]}_hi`]));
+              const opts = [0, 1, 2, 3, 4].filter((k) => k < 2 || (x[`opt_${"abcde"[k]}_hi`] || "").trim() !== "").map((k) => (lang === "en" ? x[`opt_${"abcde"[k]}_en`] || x[`opt_${"abcde"[k]}_hi`] : x[`opt_${"abcde"[k]}_hi`]));
               const t = lang === "en" ? x.text_en || x.text_hi : x.text_hi;
               const alt = lang === "en" ? x.text_hi : x.text_en;
               return (
@@ -45,13 +45,13 @@ export default async function Solutions({ params, searchParams }: { params: { id
                   {alt && alt !== t && <p className={`mt-1 text-sm text-muted ${lang === "en" ? "hi" : ""}`}>{alt}</p>}
                   <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
                     {opts.map((o, k) => {
-                      const L = "ABCD"[k];
+                      const L = "ABCDE"[k];
                       const isAns = x.answer === L, isMine = ans[x.id] === L;
                       const cls = isAns ? "border-green-500 bg-green-50" : isMine ? "border-red-400 bg-red-50" : "border-line";
                       return <div key={k} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${cls}`}><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold ${isAns ? "bg-green-600 text-white" : isMine ? "bg-red-500 text-white" : "bg-canvas"}`}>{L}</span><span className={lang === "hi" ? "hi" : ""}>{o}</span></div>;
                     })}
                   </div>
-                  {x.explanation && <div className="tip mt-4 flex gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><span><b>Vyakhya:</b> {x.explanation}</span></div>}
+                  {x.explanation && <div className="tip mt-4 flex gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><span className="whitespace-pre-line"><b>Vyakhya:</b> {x.explanation}</span></div>}
                 </div>
               );
             })}

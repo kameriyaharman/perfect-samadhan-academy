@@ -26,7 +26,7 @@ export const importFields = (r: Resource) => r.fields.filter((f) => f.type !== "
 
 /** Old template headers → current field names (purane CSV bhi chalte rahein). */
 export const ALIASES: Record<string, Record<string, string>> = {
-  questions: { question_hi: "text_hi", question_en: "text_en", a_hi: "opt_a_hi", b_hi: "opt_b_hi", c_hi: "opt_c_hi", d_hi: "opt_d_hi", a_en: "opt_a_en", b_en: "opt_b_en", c_en: "opt_c_en", d_en: "opt_d_en" },
+  questions: { question_hi: "text_hi", question_en: "text_en", a_hi: "opt_a_hi", b_hi: "opt_b_hi", c_hi: "opt_c_hi", d_hi: "opt_d_hi", e_hi: "opt_e_hi", e_en: "opt_e_en", a_en: "opt_a_en", b_en: "opt_b_en", c_en: "opt_c_en", d_en: "opt_d_en" },
 };
 
 /** Hand-written realistic examples for each section. Missing sections fall back to auto-generated rows. */

@@ -135,7 +135,7 @@ export default function CBT({ attempt, questions, user }: { attempt: A; question
           {alt && alt !== text && <p className={`mt-2 text-muted ${lang === "en" ? "hi" : ""}`}>{alt}</p>}
           <div className="mt-6 space-y-3">
             {opts.map((o, i) => {
-              const L = "ABCD"[i];
+              const L = "ABCDE"[i];
               const on = sel === L;
               return (
                 <button key={i} onClick={() => setSel(L)} className={`flex w-full items-center gap-4 rounded-xl border px-4 py-3.5 text-left transition ${on ? "border-brand bg-brand-50 ring-2 ring-brand/15" : "border-line hover:border-brand/40"}`}>

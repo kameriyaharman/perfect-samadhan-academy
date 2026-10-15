@@ -1,9 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileText, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
 import type { Field, Resource } from "@/lib/resources";
 import { parseCSV, sampleCSV } from "@/lib/csv";
+import WordImport from "./WordImport";
 
 const PUBLIC: Record<string, (r: any) => string> = {
   exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, posts: (r) => `/blog/${r.slug}`,
@@ -34,6 +35,8 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [importing, setImporting] = useState(false);
+  const [wordImp, setWordImp] = useState(false);
+  const canWord = r.key === "questions" || r.key === "mock_tests";
   const canImport = !r.noCreate && !r.readonly;
   const per = 25;
   const listFields = r.fields.filter((f) => f.list);
@@ -80,6 +83,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
         <div className="flex flex-wrap gap-2">
           {canImport && <button onClick={() => downloadSample(r)} className="btn-ghost" title="Is section ka sample CSV (Excel me khulega)"><Download className="h-4 w-4" />Sample CSV</button>}
           {canImport && <button onClick={() => setImporting(true)} className="btn-soft"><FileUp className="h-4 w-4" />Import CSV</button>}
+          {canWord && <button onClick={() => setWordImp(true)} className="btn-orange"><FileText className="h-4 w-4" />Upload Word (.docx)</button>}
           {!r.noCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" />Add New</button>}
         </div>
       </div>
@@ -119,6 +123,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
         <button disabled={page >= pages} onClick={() => setPage(page + 1)} className="btn-ghost btn-sm"><ChevronRight className="h-4 w-4" /></button>
       </div>
 
+      {wordImp && <WordImport testId={filters.test_id || ""} defaultNew={r.key === "mock_tests"} onClose={() => setWordImp(false)} onDone={load} />}
       {importing && <ImportModal r={r} testId={filters.test_id || ""} onClose={() => setImporting(false)} onDone={load} />}
 
       {edit && (

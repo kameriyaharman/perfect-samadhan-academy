@@ -5,6 +5,8 @@ import { loadQuestions } from "@/lib/tests";
 import CBT from "@/components/test/CBT";
 
 export const metadata = { title: "Online Test" };
+// jitne options bhare hain utne hi (2–5) dikhayein
+const optCount = (x: any) => ["a", "b", "c", "d", "e"].filter((k, i) => i < 2 || (x[`opt_${k}_hi`] || "").trim() !== "");
 
 export default async function Attempt({ params }: { params: { id: string } }) {
   const user = await getUser();
@@ -16,7 +18,7 @@ export default async function Attempt({ params }: { params: { id: string } }) {
   if (Date.now() > endAt + 5000) redirect(`/test/result/${a.id}?autosubmit=1`);
   const qs = (await loadQuestions(JSON.parse(a.question_ids))).map((x) => ({
     id: x.id, section: x.section, topic: x.topic, hi: x.text_hi, en: x.text_en,
-    oh: [x.opt_a_hi, x.opt_b_hi, x.opt_c_hi, x.opt_d_hi], oe: [x.opt_a_en, x.opt_b_en, x.opt_c_en, x.opt_d_en],
+    oh: optCount(x).map((k) => x[`opt_${k}_hi`]), oe: optCount(x).map((k) => x[`opt_${k}_en`]),
   }));
   const neg = a.test_id ? (await one("SELECT negative, marks_per_q FROM mock_tests WHERE id=$1", [a.test_id])) : null;
   return (

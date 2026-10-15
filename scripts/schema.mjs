@@ -143,6 +143,8 @@ CREATE TABLE IF NOT EXISTS typing_results (
   qualify_speed INT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS opt_e_hi TEXT;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS opt_e_en TEXT;
 CREATE TABLE IF NOT EXISTS typing_patterns (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
