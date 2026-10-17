@@ -271,14 +271,6 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
-    key: "batches", table: "batches", label: "Batches (Attendance)", group: "Academy", icon: "UsersRound", order: "sort, id", search: ["name"],
-    fields: [
-      { name: "name", label: "Batch naam (jaise CPCT Morning 8 AM)", required: true, list: true },
-      { name: "timing", label: "Timing", list: true }, { name: "teacher", label: "Teacher", list: true },
-      { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
-    ],
-  },
-  {
     key: "videos", table: "videos", label: "Videos", group: "Academy", icon: "PlayCircle", order: "sort, id", search: ["title"],
     fields: [
       { name: "title", label: "Title", required: true, list: true },
@@ -376,7 +368,6 @@ export const RESOURCES: Resource[] = [
       { name: "email", label: "Email" }, { name: "city", label: "City", list: true },
       { name: "password", label: "Password (blank = unchanged)", type: "password" },
       { name: "role", label: "Role", type: "select", options: ["student", "admin"], list: true },
-      { name: "batch", label: "Batch (attendance ke liye — 'Batches' me jo naam hai)", list: true }, { name: "roll_no", label: "Roll no." },
       { name: "target_exam", label: "Target exam" }, { name: "exam_date", label: "Exam date" },
       { name: "premium_plan", label: "Premium plan", list: true }, { name: "premium_till", label: "Premium till", type: "date", list: true },
       { name: "blocked", label: "Blocked", type: "bool" },
