@@ -405,4 +405,49 @@ CREATE TABLE IF NOT EXISTS uploads (
   data BYTEA NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- v2 (Oct 2026): exam categories, free/paid typing, keywords, attendance, download categories
+CREATE TABLE IF NOT EXISTS typing_categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  icon TEXT NOT NULL DEFAULT 'landmark',
+  image_url TEXT,
+  color TEXT NOT NULL DEFAULT 'blue',
+  description TEXT,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
+ALTER TABLE passages ADD COLUMN IF NOT EXISTS is_free BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_free BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE typing_patterns ADD COLUMN IF NOT EXISTS is_free BOOLEAN NOT NULL DEFAULT true;
+CREATE TABLE IF NOT EXISTS keywords (
+  id SERIAL PRIMARY KEY,
+  label TEXT NOT NULL,
+  terms TEXT,
+  kind TEXT NOT NULL DEFAULT 'topic',
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
+CREATE TABLE IF NOT EXISTS batches (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  timing TEXT,
+  teacher TEXT,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS batch TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS roll_no TEXT;
+CREATE TABLE IF NOT EXISTS attendance (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  batch TEXT NOT NULL,
+  date DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'present',
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, batch, date)
+);
+CREATE INDEX IF NOT EXISTS attendance_batch_date ON attendance(batch, date);
+ALTER TABLE downloads ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Software';
+ALTER TABLE downloads ADD COLUMN IF NOT EXISTS version TEXT;
 `;

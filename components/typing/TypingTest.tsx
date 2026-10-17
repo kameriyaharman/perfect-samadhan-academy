@@ -10,10 +10,11 @@ import {
 } from "lucide-react";
 import KeyboardView from "./KeyboardView";
 import {
-  altCodeChar, displayText, engineBackspace, engineInsert, engineKey, findKey, isTypingPrefix, keyHint, normalizeWord, remingtonNextIsI,
+  altCodeChar, displayText, engineBackspace, engineInsert, engineKey, findKey, guideNextChar, isTypewriter, isTypingPrefix, keyHint, normalizeWord,
   type EngineState, type Layout,
 } from "@/lib/keyboard";
 import { scoreTyping, splitWords, type Score } from "@/lib/typingScore";
+import { playKey, warmUp, SOUND_OPTIONS, type SoundKind } from "@/lib/keySound";
 
 type PassageLite = { id: number; title: string; level?: string | null; exam?: string | null; session?: string | null; year?: number | null };
 type Props = {
@@ -22,10 +23,11 @@ type Props = {
   userName: string | null;
   lang: "hindi" | "english"; layout: Layout; layoutName: string; pattern: string; duration: number; mode: "practice" | "exam"; limit: number;
   rules?: { name: string; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none"; locked: boolean; qualify: number };
+  soundUrl?: string;
 };
 type BsMode = "full" | "word" | "prev" | "off";
 type HlMode = "word" | "error" | "none";
-type Prefs = { night: boolean; hint: boolean; hideArea: boolean; autoScroll: boolean; backspace: BsMode; highlight: HlMode; guide: boolean; sound: boolean; font: number };
+type Prefs = { night: boolean; hint: boolean; hideArea: boolean; autoScroll: boolean; backspace: BsMode; highlight: HlMode; guide: boolean; keySound: SoundKind; vol: number; font: number };
 type MyPassage = { id: string; title: string; text: string; lang: "hindi" | "english" };
 
 const DURATIONS = [2, 5, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
@@ -38,15 +40,6 @@ const store = {
   set(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
-let audioCtx: AudioContext | null = null;
-function click(freq = 520, dur = 0.025, vol = 0.04) {
-  try {
-    audioCtx = audioCtx || new (window.AudioContext || (window as any).webkitAudioContext)();
-    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-    o.frequency.value = freq; o.type = "square"; g.gain.value = vol;
-    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
-  } catch {}
-}
 
 /** backspace option ke hisaab se: is index se pehle ka text delete nahi ho sakta */
 function lockAt(text: string, mode: BsMode): number {
@@ -75,9 +68,13 @@ export default function TypingTest(p: Props) {
   // ---------- preferences ----------
   // backspace/highlight hamesha exam pattern (admin) ke hisaab se shuru; baaki tools student ki pasand se yaad rehte hain
   const R = p.rules || { name: "", backspace: "full" as BsMode, highlight: (p.pattern === "highcourt" ? "none" : "error") as HlMode, locked: false, qualify: 0 };
-  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: R.backspace, highlight: R.highlight, guide: false, sound: false, font: 22 };
+  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: R.backspace, highlight: R.highlight, guide: false, keySound: (p.soundUrl ? "custom" : "mechanical") as SoundKind, vol: 60, font: 22 };
   const [prefs, setPrefs] = useState<Prefs>(defaults);
-  useEffect(() => { const s = store.get<Partial<Prefs>>(PREFS_KEY); if (s) setPrefs((d) => ({ ...d, ...s, backspace: R.backspace, highlight: R.highlight })); }, []); // eslint-disable-line
+  useEffect(() => {
+    const s = store.get<Partial<Prefs> & { sound?: boolean }>(PREFS_KEY);
+    if (s) { delete s.sound; setPrefs((d) => ({ ...d, ...s, backspace: R.backspace, highlight: R.highlight })); }
+  }, []); // eslint-disable-line
+  const snd = (type: "key" | "space" | "back" = "key") => playKey(prefs.keySound, type, prefs.vol / 100, p.soundUrl);
   const setPref = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((o) => {
     if (R.locked && (k === "backspace" || k === "highlight")) return o;
     const n = { ...o, [k]: v }; store.set(PREFS_KEY, n); return n;
@@ -118,7 +115,7 @@ export default function TypingTest(p: Props) {
   const passRef = useRef<HTMLDivElement>(null);
   const finished = useRef(false);
   const altDigits = useRef<string | null>(null);
-  const isEngine = p.layout === "inscript" || p.layout === "remington";
+  const isEngine = p.layout === "inscript" || isTypewriter(p.layout);
 
   useEffect(() => { if (window.innerWidth < 1024) setSideOpen(false); }, []);
 
@@ -219,10 +216,10 @@ export default function TypingTest(p: Props) {
       if (e.code === "Backspace") {
         e.preventDefault();
         if (!tryBackspace()) return;
-        begin(); setSt((s) => engineBackspace(s)); setKeys((k) => k + 1); setBacks((b) => b + 1); if (prefs.sound) click(300); return;
+        snd("back"); begin(); setSt((s) => engineBackspace(s)); setKeys((k) => k + 1); setBacks((b) => b + 1); return;
       }
       const next = engineKey(p.layout, st, e.code, e.shiftKey);
-      if (next) { e.preventDefault(); begin(); setSt(next); setKeys((k) => k + 1); if (prefs.sound) click(); }
+      if (next) { e.preventDefault(); snd(e.code === "Space" ? "space" : "key"); begin(); setSt(next); setKeys((k) => k + 1); }
       else if (e.key.length === 1) e.preventDefault();
       return;
     }
@@ -233,10 +230,10 @@ export default function TypingTest(p: Props) {
       const s0 = ta.selectionStart, s1 = ta.selectionEnd;
       const bad = e.key === "Delete" ? prefs.backspace !== "full" : s0 === s1 ? s0 <= bound : s0 < bound;
       if (bad) { e.preventDefault(); return; }
-      begin(); setKeys((k) => k + 1); setBacks((b) => b + 1); if (prefs.sound) click(300);
+      snd("back"); begin(); setKeys((k) => k + 1); setBacks((b) => b + 1);
       return;
     }
-    if (e.key.length === 1 || e.key === "Enter") { begin(); setKeys((k) => k + 1); if (prefs.sound) click(); }
+    if (e.key.length === 1 || e.key === "Enter") { snd(e.key === " " ? "space" : "key"); begin(); setKeys((k) => k + 1); }
   };
   const onKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Alt" || altDigits.current === null) return;
@@ -245,7 +242,7 @@ export default function TypingTest(p: Props) {
     if (locked || !digits) return;
     const ch = altCodeChar(digits);
     if (!ch) return;
-    begin(); setSt((s) => engineInsert(p.layout, s, ch)); setKeys((k) => k + 1); if (prefs.sound) click();
+    snd(); begin(); setSt((s) => engineInsert(p.layout, s, ch)); setKeys((k) => k + 1);
   };
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (locked || isEngine) return;
@@ -265,6 +262,7 @@ export default function TypingTest(p: Props) {
 
   const startTest = () => {
     setReady(true);
+    warmUp(prefs.keySound, p.soundUrl);
     try { if (window.innerWidth >= 1024 && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {}); } catch {}
     setTimeout(() => inputRef.current?.focus(), 60);
   };
@@ -288,18 +286,8 @@ export default function TypingTest(p: Props) {
     if (!prefs.guide) return null;
     const exp = pw[curIdx];
     if (exp === undefined) return null;
-    let ch: string;
-    if (partial && !isTypingPrefix(exp, partial, p.layout)) return { code: "Backspace", shift: false };
-    if (partial === exp) ch = " ";
-    else {
-      const rest = Array.from(exp.slice(partial.length));
-      ch = rest[0];
-      if (p.layout === "remington") {
-        if (partial.endsWith("्") && !exp.startsWith(partial)) ch = "ा";
-        else if (st.pendingI && rest[0]) ch = rest[0];
-        else if (remingtonNextIsI(rest)) ch = "ि";
-      }
-    }
+    const ch = guideNextChar(p.layout, exp, partial, st.pendingI);
+    if (ch === null) return { code: "Backspace", shift: false };
     return findKey(p.layout, ch);
   }, [prefs.guide, pw, curIdx, partial, p.layout, st.pendingI]);
 
@@ -314,7 +302,7 @@ export default function TypingTest(p: Props) {
     side: n ? "bg-[#111727] border-white/10" : "bg-white border-[#d7dbe6]",
     row: n ? "border-white/5" : "border-[#eef0f4]",
   };
-  const hiFont = p.lang === "hindi" ? "hi" : "";
+  const hiFont = p.lang === "hindi" ? "hi typing-hi" : "";
   const layoutLabel = p.lang === "hindi" ? `${p.layoutName} Hindi Typing` : "English Typing";
   const sectionLabel = p.lang === "hindi" ? "Hindi actual Test" : "English actual Test";
 
@@ -499,7 +487,8 @@ export default function TypingTest(p: Props) {
               <li>Kindly note, it is mandatory for you to type the entire text contents to submit.</li>
               <li>Upon timeout, the system will automatically submit your response.</li>
               {isEngine && <li>System me Hindi keyboard OFF (English) rakhein — website khud {p.layoutName} layout me Hindi banayegi.</li>}
-              {p.layout === "remington" && <li>Alt dabaye rakh kar number type karein (jaise Alt + 0151 = —), phir Alt chhod dein.</li>}
+              {isTypewriter(p.layout) && <li className="hi">Chandrabindu (ँ): Shift + W (ॅ) phir A (ं) — jaise हाँ, हँसी{p.layout === "krutidev" ? " · ya Alt + 0161" : ""}. Reph (र्): akshar type karke Shift + Z — jaise कार्य, धर्म.</li>}
+              {isTypewriter(p.layout) && <li>Alt dabaye rakh kar number type karein (jaise Alt + 0151 = —), phir Alt chhod dein.</li>}
             </ul>
           </div>
         </aside>
@@ -530,7 +519,21 @@ export default function TypingTest(p: Props) {
                 <Toggle icon={<EyeOff className="h-5 w-5" />} t="Hide Typing Area" d="Advanced memory-typing practice" on={prefs.hideArea} set={(v) => setPref("hideArea", v)} night={n} />
                 <Toggle icon={<MoveVertical className="h-5 w-5" />} t="Auto-Scroll" d="Passage scrolls as you type" on={prefs.autoScroll} set={(v) => setPref("autoScroll", v)} night={n} />
                 <Toggle icon={<Keyboard className="h-5 w-5" />} t="Keyboard Guide" d="Agli key on-screen keyboard par dikhe" on={prefs.guide} set={(v) => setPref("guide", v)} night={n} disabled={p.layout === "system"} />
-                <Toggle icon={<Volume2 className="h-5 w-5" />} t="Key Sound" d="Har keystroke par halki click" on={prefs.sound} set={(v) => setPref("sound", v)} night={n} />
+              </div>
+              <div className="mt-4 px-2">
+                <div className="mb-1.5 flex items-center gap-3 text-[14.5px] font-semibold"><span className="opacity-60"><Volume2 className="h-5 w-5" /></span>Key Sound</div>
+                <div className="space-y-2 pl-8">
+                  <select value={prefs.keySound} onChange={(e) => { const v = e.target.value as SoundKind; setPref("keySound", v); warmUp(v, p.soundUrl); playKey(v, "key", prefs.vol / 100, p.soundUrl); }}
+                    className={`h-9 w-full rounded-md border px-2 text-sm outline-none ${n ? "border-white/15 bg-[#161e33]" : "border-line bg-white"}`}>
+                    {SOUND_OPTIONS.filter(([k]) => k !== "custom" || p.soundUrl).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                  </select>
+                  {prefs.keySound !== "off" && (
+                    <label className="flex items-center gap-2 text-xs opacity-80">Volume
+                      <input type="range" min={5} max={100} value={prefs.vol} onChange={(e) => setPref("vol", Number(e.target.value))} onMouseUp={() => playKey(prefs.keySound, "key", prefs.vol / 100, p.soundUrl)} className="flex-1 accent-[#1f4fb5]" />
+                      <span className="w-8 text-right tabular-nums">{prefs.vol}</span>
+                    </label>
+                  )}
+                </div>
               </div>
               {R.locked && <p className="mt-4 rounded-md bg-amber-50 p-2.5 text-xs text-amber-800">{R.name} exam pattern me Backspace aur Highlight admin ne fix kiye hain — inhe badla nahi ja sakta.</p>}
               <Group disabled={R.locked} icon={<Delete className="h-5 w-5" />} t="Backspace Options" value={prefs.backspace} set={(v) => setPref("backspace", v as BsMode)}

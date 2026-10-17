@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info, ListChecks, RotateCcw, Trophy, PartyPopper, Keyboard } from "lucide-react";
 import KeyboardView from "./KeyboardView";
-import { engineBackspace, engineKey, findKey, isTypingPrefix, remingtonNextIsI, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
+import { playKey, type SoundKind } from "@/lib/keySound";
+import { engineBackspace, engineKey, findKey, guideNextChar, isTypingPrefix, normalizeWord, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
 
 const STEPS = ["Akshar pehchaan", "Ek-ek key", "Akshar jodi", "Shabd", "Mini test"];
 export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number; number: number; title: string; subtitle: string | null; content: string; layout: string }; nextId: number | null }) {
@@ -17,7 +18,11 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
   const [done, setDone] = useState(false);
   const [saved, setSaved] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.focus(); }, []);
+  const sound = useRef<{ k: SoundKind; v: number }>({ k: "mechanical", v: 0.6 });
+  useEffect(() => {
+    ref.current?.focus();
+    try { const s = JSON.parse(localStorage.getItem("psa_typing_prefs") || "{}"); if (s.keySound) sound.current = { k: s.keySound === "custom" ? "mechanical" : s.keySound, v: (s.vol ?? 60) / 100 }; } catch {}
+  }, []);
   const cur = tokens[idx] || "";
   const wrong = st.text && !isTypingPrefix(cur, st.text, layout);
 
@@ -31,7 +36,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
   };
 
   const apply = (text: string, k: number) => {
-    if (text === cur) {
+    if (normalizeWord(text) === normalizeWord(cur)) {
       const ni = idx + 1;
       setSt({ text: "", pendingI: false });
       if (ni >= tokens.length) { setIdx(ni); finish(errors, k); } else setIdx(ni);
@@ -45,12 +50,13 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (!start) setStart(Date.now());
     if (e.code === "Space") { e.preventDefault(); return; }
-    if (e.code === "Backspace") { e.preventDefault(); setSt((s) => (layout === "english" ? { text: s.text.slice(0, -1), pendingI: false } : engineBackspace(s))); return; }
+    if (e.code === "Backspace") { e.preventDefault(); playKey(sound.current.k, "back", sound.current.v); setSt((s) => (layout === "english" ? { text: s.text.slice(0, -1), pendingI: false } : engineBackspace(s))); return; }
     let next: EngineState | null = null;
     if (layout === "english") { if (e.key.length === 1) next = { text: st.text + e.key, pendingI: false }; }
     else next = engineKey(layout, st, e.code, e.shiftKey);
     if (!next) return;
     e.preventDefault();
+    playKey(sound.current.k, "key", sound.current.v);
     const k = keys + 1;
     setKeys(k);
     setSt(next);
@@ -58,12 +64,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
     apply(shown, k);
   };
 
-  const nextCh = wrong ? null : (() => {
-    if (layout === "remington" && st.text.endsWith("्") && !cur.startsWith(st.text)) return "ा";
-    const rest = Array.from(cur.slice(st.text.length));
-    if (layout === "remington" && !st.pendingI && remingtonNextIsI(rest)) return "ि";
-    return rest[0];
-  })();
+  const nextCh = wrong || layout === "english" ? (wrong ? null : Array.from(cur.slice(st.text.length))[0]) : guideNextChar(layout, cur, st.text, st.pendingI);
   const target = wrong ? { code: "Backspace", shift: false } : nextCh ? findKey(layout, nextCh) : null;
   const finger = target ? FINGER[target.code] : null;
   const hand = target ? (LEFT_HAND.has(target.code) ? "bayaan haath" : "dayaan haath") : "";

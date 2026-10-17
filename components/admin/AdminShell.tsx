@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ExternalLink, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
+import { CalendarCheck, ExternalLink, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
 import Icon from "@/components/Icon";
 
 type N = { key: string; label: string; group: string; icon: string };
@@ -21,6 +21,7 @@ export default function AdminShell({ nav, name, children }: { nav: N[]; name: st
         <div className="space-y-0.5">
           <Item href="/admin" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
           <Item href="/admin/settings" icon={<Settings className="h-4 w-4" />} label="Site Settings" />
+          <Item href="/admin/attendance" icon={<CalendarCheck className="h-4 w-4" />} label="Attendance" />
         </div>
         {groups.map((g) => (
           <div key={g}>

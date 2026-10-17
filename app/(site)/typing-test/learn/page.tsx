@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Check, Clock, GraduationCap, Hand, Languages, Keyboard, PlayCircle } from "lucide-react";
+import { Check, Clock, GraduationCap, Hand, Languages, Keyboard, Lock, PlayCircle } from "lucide-react";
 import { q } from "@/lib/db";
-import { getUser } from "@/lib/auth";
+import { getUser, isPremium } from "@/lib/auth";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import KeyboardView from "@/components/typing/KeyboardView";
@@ -31,15 +31,16 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 self-start">
             {lessons.map((l: any, i: number) => {
               const acc = done.get(l.id);
+              const locked = l.is_free === false && !isPremium(user);
               return (
-                <Link key={l.id} href={`/typing-test/learn/${l.id}`} className="card flex items-center gap-4 p-4 transition hover:-translate-y-0.5 hover:shadow-lift">
+                <Link key={l.id} href={locked ? "/plans" : `/typing-test/learn/${l.id}`} className="card flex items-center gap-4 p-4 transition hover:-translate-y-0.5 hover:shadow-lift">
                   <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl text-lg font-bold ${acc != null ? NUM[0] : NUM[1 + (i % 3)]}`}>{l.number}</span>
                   <span className="min-w-0 flex-1">
                     <span className="hi block font-bold">{l.title}</span>
                     <span className="hi block truncate text-sm text-muted">{l.subtitle}</span>
                     <span className="mt-2 block h-1.5 rounded-full bg-canvas"><span className={`block h-1.5 rounded-full ${acc != null ? "bg-green-600" : "bg-brand/20"}`} style={{ width: acc != null ? `${Math.max(30, acc)}%` : "0%" }} /></span>
                   </span>
-                  {acc != null ? <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-green-600"><Check className="h-5 w-5" /></span> : <span className="btn-soft btn-sm"><PlayCircle className="h-4 w-4" />Start</span>}
+                  {locked ? <span className="chip bg-orange-50 py-1.5 text-saffron-600"><Lock className="h-3.5 w-3.5" />Premium</span> : acc != null ? <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-green-600"><Check className="h-5 w-5" /></span> : <span className="btn-soft btn-sm"><PlayCircle className="h-4 w-4" />Start</span>}
                 </Link>
               );
             })}

@@ -5,10 +5,21 @@ const SRC = `CASE WHEN NULLIF(qq.source,'') IS NOT NULL THEN qq.source
   WHEN m.kind='pyq' THEN 'PYQ · ' || COALESCE(NULLIF(m.session,''), m.title)
   ELSE 'Practice / Mock sets' END`;
 
-export type KwFilter = { keyword: string; sources?: string[]; topics?: string[] };
+export type KwFilter = { keyword: string; sources?: string[]; topics?: string[]; terms?: string[] };
+
+/** Admin "Keyword Test Topics" ka naam likha/chuna ho to uske saare search shabd (Memory|मेमोरी|RAM …) */
+async function resolve(f: KwFilter): Promise<KwFilter> {
+  if (f.terms) return f;
+  try {
+    const r = await q<{ terms: string | null }>("SELECT terms FROM keywords WHERE active AND lower(trim(label)) = lower(trim($1)) LIMIT 1", [f.keyword]);
+    const t = (r[0]?.terms || "").split("|").map((x) => x.trim()).filter((x) => x.length >= 2).slice(0, 15);
+    if (t.length) return { ...f, terms: t };
+  } catch {}
+  return f;
+}
 
 function where(f: KwFilter) {
-  const words = f.keyword.trim().split(/\s+/).filter(Boolean).slice(0, 4);
+  const words = f.terms?.length ? f.terms : f.keyword.trim().split(/\s+/).filter(Boolean).slice(0, 4);
   const args: any[] = words.map((w) => `%${w}%`);
   const conds = [
     "(" + words.map((_, i) => `(qq.text_hi ILIKE $${i + 1} OR qq.text_en ILIKE $${i + 1} OR qq.keywords ILIKE $${i + 1} OR qq.topic ILIKE $${i + 1})`).join(" OR ") + ")",
@@ -22,9 +33,10 @@ const FROM = "FROM questions qq LEFT JOIN mock_tests m ON m.id = qq.test_id";
 
 /** Keyword se mile sawal + filter ke options (paper/shift aur topic, har ek ke saath sawalon ki ginti) */
 export async function keywordSearch(f: KwFilter) {
+  f = await resolve(f);
   const w = where(f);
   if (!w.ok) return { count: 0, items: [], sources: [], topics: [] };
-  const base = where({ keyword: f.keyword }); // options hamesha poore keyword result par, taki checkbox gayab na hon
+  const base = where({ keyword: f.keyword, terms: f.terms }); // options hamesha poore keyword result par, taki checkbox gayab na hon
   const [items, cnt, sources, topics] = await Promise.all([
     q(`SELECT DISTINCT ON (qq.text_hi) qq.id, qq.text_hi, qq.source, qq.topic, ${SRC} AS src ${FROM} WHERE ${w.sql} ORDER BY qq.text_hi, qq.id LIMIT 8`, w.args),
     q(`SELECT count(DISTINCT qq.text_hi)::int AS n ${FROM} WHERE ${w.sql}`, w.args),
@@ -41,7 +53,17 @@ export async function keywordSearch(f: KwFilter) {
 
 /** Test ke liye random sawal (filter ke andar, duplicate text hata kar) */
 export async function keywordPick(f: KwFilter, n: number) {
+  f = await resolve(f);
   const w = where(f);
   if (!w.ok) return [];
   return q(`SELECT id FROM (SELECT DISTINCT ON (qq.text_hi) qq.id, qq.text_hi ${FROM} WHERE ${w.sql} ORDER BY qq.text_hi, qq.id) x ORDER BY random() LIMIT ${Math.min(100, Math.max(1, n))}`, w.args);
+}
+
+/** Keyword page ke liye topic list + popular chips (admin se) */
+export async function keywordTopics() {
+  try {
+    return await q<{ label: string; kind: string }>("SELECT label, kind FROM keywords WHERE active ORDER BY sort, id");
+  } catch {
+    return [];
+  }
 }

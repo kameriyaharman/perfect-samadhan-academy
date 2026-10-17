@@ -3,13 +3,14 @@
 // jo chuno sirf unhi me se test bane (koi na chuna ho to sab me se).
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Filter, ListOrdered, Loader2, Search, Sparkles, X } from "lucide-react";
+import { BookOpen, Check, Filter, ListOrdered, Loader2, Search, Sparkles, X } from "lucide-react";
 
 type Opt = { label: string; n: number };
 type Res = { count: number; items: any[]; sources: Opt[]; topics: Opt[] };
-const POPULAR = ["Excel", "Word", "PowerPoint", "Network", "Printer", "Memory", "Windows", "Input", "Shortcut", "Email", "Virus", "Full Form"];
+const DEFAULT_POPULAR = ["Excel", "Word", "PowerPoint", "Network", "Printer", "Memory", "Windows", "Input", "Shortcut", "Email", "Virus", "Full Form"];
 
-export default function KeywordSearch({ loggedIn, children, initial }: { loggedIn: boolean; children: React.ReactNode; initial?: string }) {
+export default function KeywordSearch({ loggedIn, children, initial, topics = [], popular }: { loggedIn: boolean; children: React.ReactNode; initial?: string; topics?: string[]; popular?: string[] }) {
+  const POPULAR = popular?.length ? popular : DEFAULT_POPULAR;
   const r = useRouter();
   const [kw, setKw] = useState(initial || "");
   const [n, setN] = useState(20);
@@ -64,6 +65,17 @@ export default function KeywordSearch({ loggedIn, children, initial }: { loggedI
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">Popular: {POPULAR.map((p) => <button key={p} onClick={() => setKw(p)} className={`chip ${kw === p ? "bg-brand text-white" : "bg-brand-50 text-brand hover:bg-brand-100"}`}>{p}</button>)}</div>
         {kw.trim().length > 0 && kw.trim().length < 2 && <p className="mt-2 text-sm italic text-muted">Kam se kam 2 akshar type karein…</p>}
+        {topics.length > 0 && (
+          <div className="mt-5 border-t border-line pt-4">
+            <div className="mb-2.5 flex items-center gap-2 text-sm font-bold text-navy"><BookOpen className="h-4 w-4 text-brand" />Topic list — topic chunein, usi par test banega</div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {topics.map((t) => (
+                <button key={t} onClick={() => { setKw(t); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className={`hi rounded-xl border px-3 py-2.5 text-left text-[14.5px] transition ${kw === t ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand hover:text-brand"}`}>{t}</button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {res && (

@@ -80,6 +80,65 @@ async function main() {
     console.log("Typing patterns seeded");
   }
 
+  // v2 seeds — sirf pehli baar (khaali table); uske baad admin panel se add/edit
+  const cnt = async (t) => (await client.query(`SELECT count(*)::int AS n FROM ${t}`)).rows[0].n;
+  if ((await cnt("typing_categories")) === 0) {
+    const C = [
+      ["SSC", "landmark", "blue"], ["Court", "gavel", "navy"], ["RRB NTPC / GDCE", "train-front", "red"], ["CAPF HCM", "shield", "green"],
+      ["Delhi NCR", "building-2", "purple"], ["MP State", "map-pin", "orange"], ["Bihar State", "map-pin", "teal"], ["UP State", "map-pin", "amber"],
+      ["Rajasthan", "map-pin", "orange"], ["Jharkhand", "map-pin", "green"], ["Other States", "map", "blue"], ["AIIMS Tests", "stethoscope", "red"],
+      ["Speed Booster", "gauge", "purple"], ["Practice", "keyboard", "navy"],
+    ];
+    for (let i = 0; i < C.length; i++) await client.query("INSERT INTO typing_categories (name, icon, color, sort) VALUES ($1,$2,$3,$4) ON CONFLICT (name) DO NOTHING", [...C[i], i + 1]);
+    console.log("Typing categories seeded");
+  }
+  if ((await cnt("keywords")) === 0) {
+    const T = [
+      ["संख्या पद्धति / Number System", "Number System|संख्या पद्धति|Binary|Octal|Hexadecimal|बाइनरी"],
+      ["कम्प्यूटर का परिचय / Introduction of Computers", "Introduction|परिचय|Generation|पीढ़ी|Father of Computer"],
+      ["कम्प्यूटर मेमोरी / Computer Memory", "Memory|मेमोरी|RAM|ROM|Cache"],
+      ["मेमोरी इकाई / Memory Units", "Memory Unit|इकाई|Byte|बाइट|KB|MB|GB|Nibble"],
+      ["कम्प्यूटर हार्डवेयर / Computer Hardware", "Hardware|हार्डवेयर|Input|Output|CPU|Printer|Mouse|Keyboard"],
+      ["कम्प्यूटर सॉफ्टवेयर एण्ड ओएस / Computer Software & OS", "Software|सॉफ्टवेयर|Operating System|ऑपरेटिंग सिस्टम|Linux"],
+      ["कम्प्यूटर भाषा / Computer Language", "Language|भाषा|Compiler|Interpreter|Assembler|कंपाइलर"],
+      ["कम्प्यूटर नेटवर्किंग / Computer Networking", "Network|नेटवर्क|LAN|WAN|MAN|Topology|टोपोलॉजी"],
+      ["डाटा संचार / Data Communication", "Data Communication|संचार|Modem|Bandwidth|Transmission"],
+      ["माइक्रोसॉफ्ट विंडोज / Microsoft Windows", "Windows|विंडोज|Desktop|Taskbar|Control Panel"],
+      ["इंटरनेट / Internet", "Internet|इंटरनेट|Email|ईमेल|Browser|URL|WWW|HTTP"],
+      ["नेटवर्क एवं साइबर सुरक्षा / Network & Cyber Security", "Security|सुरक्षा|Cyber|साइबर|Firewall|Hacking|Phishing"],
+      ["कम्प्यूटर वायरस / Computer Virus", "Virus|वायरस|Antivirus|Malware|Worm|Trojan"],
+      ["माइक्रोसॉफ्ट ऑफिस (एम एस वर्ड) / Microsoft Office (MS Word)", "MS Word|Word|वर्ड"],
+      ["एम एस एक्सेल / MS Excel", "Excel|एक्सेल"],
+      ["एम एस पावर पॉइंट / MS Power Point", "PowerPoint|Power Point|पावर पॉइंट|Slide|स्लाइड"],
+      ["आईटी टेक्नोलॉजी / IT Technology", "IT|Technology|टेक्नोलॉजी|E-Governance|ई-गवर्नेंस"],
+      ["एचटीएमएल / HTML", "HTML|एचटीएमएल|Tag|टैग"],
+      ["मल्टीमीडिया / Multimedia", "Multimedia|मल्टीमीडिया|Audio|Video|Animation"],
+      ["एम एस डॉस / MS-DOS", "DOS|डॉस"],
+      ["लॉजिक गेट / Logic Gate", "Logic Gate|लॉजिक|गेट|AND|NAND|NOR|XOR"],
+      ["ओपन ऑफिस राइटर / Open Office Writer", "Open Office|ओपन ऑफिस|Writer|राइटर|LibreOffice"],
+      ["क्लाउड कम्प्यूटिंग / Cloud Computing", "Cloud|क्लाउड"],
+      ["विविध / Miscellaneous", "Miscellaneous|विविध|Full Form|पूर्ण रूप|Abbreviation"],
+    ];
+    for (let i = 0; i < T.length; i++) await client.query("INSERT INTO keywords (label, terms, kind, sort) VALUES ($1,$2,'topic',$3)", [T[i][0], T[i][1], i + 1]);
+    const P = ["Excel", "Word", "PowerPoint", "Network", "Printer", "Memory", "Windows", "Input", "Shortcut", "Email", "Virus", "Full Form"];
+    for (let i = 0; i < P.length; i++) await client.query("INSERT INTO keywords (label, terms, kind, sort) VALUES ($1,$1,'popular',$2)", [P[i], i + 1]);
+    console.log("Keywords seeded");
+  }
+  // Software downloads (client list) — naam se check, dobara nahi judega
+  const SW = [
+    ["Microsoft Indic Input 2 — Hindi", "Windows XP / 7 ke liye Hindi Remington Gail & Inscript typing tool", "Software", "keyboard", "orange", "32 bit", null],
+    ["Microsoft Indic Input 3 — Hindi (32 bit)", "Windows 7 / 8 / 10 / 11 (32 bit) — CPCT Remington Gail Mangal typing", "Software", "keyboard", "blue", "32 bit", null],
+    ["Microsoft Indic Input 3 — Hindi (64 bit)", "Windows 7 / 8 / 10 / 11 (64 bit) — CPCT Remington Gail Mangal typing", "Software", "keyboard", "navy", "64 bit", null],
+    ["Google Input Tools — Hindi", "Offline Google Hindi Input Tool (phonetic typing) — Windows", "Software", "type", "green", "Windows", "https://drive.google.com/file/d/1Q62GMMRhonFoK9a4hzl9sx3AfLRcTu4q/view"],
+  ];
+  const swDone = (await client.query("SELECT 1 FROM settings WHERE key='seed_v2_downloads'")).rows.length;
+  for (let i = 0; !swDone && i < SW.length; i++) {
+    const [title, description, category, icon, color, version, url] = SW[i];
+    const ex = await client.query("SELECT id FROM downloads WHERE title=$1", [title]);
+    if (!ex.rows.length) await client.query("INSERT INTO downloads (title, description, category, icon, color, version, file_url, size, sort) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)", [title, description, category, icon, color, version, url, url ? "Free" : "", 100 + i]);
+  }
+  if (!swDone) await client.query("INSERT INTO settings (key, value) VALUES ('seed_v2_downloads','1') ON CONFLICT (key) DO NOTHING");
+
   const c = await client.query("SELECT count(*)::int AS n FROM exams");
   if (c.rows[0].n === 0) {
     console.log("Seeding demo content...");

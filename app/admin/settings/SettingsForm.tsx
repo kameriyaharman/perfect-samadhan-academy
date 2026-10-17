@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Loader2, Save, CheckCircle2, AlertTriangle, KeyRound, PlugZap, Info } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertTriangle, KeyRound, PlugZap, Info, FileUp } from "lucide-react";
 import type { SettingType } from "@/lib/resources";
 
 type Group = { title: string; note?: string; keys: [string, string, SettingType?][] };
@@ -67,6 +67,9 @@ export default function SettingsForm({ groups, initial, savedSecrets = {}, env =
                       </div>
                     );
                   }
+                  if (t === "file") {
+                    return <FileSetting key={k} label={l} value={v[k] || ""} onChange={(x) => setV({ ...v, [k]: x })} />;
+                  }
                   if (t === "secret") {
                     return (
                       <div key={k}>
@@ -100,6 +103,30 @@ export default function SettingsForm({ groups, initial, savedSecrets = {}, env =
         })}
       </div>
       <div className="mt-6 flex justify-end"><button onClick={save} disabled={busy} className="btn-primary">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Save All</button></div>
+    </div>
+  );
+}
+
+function FileSetting({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [up, setUp] = useState(false);
+  const [err, setErr] = useState("");
+  const upload = async (file: File) => {
+    setUp(true); setErr("");
+    const fd = new FormData(); fd.append("file", file);
+    const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    const j = await r.json().catch(() => ({}));
+    setUp(false);
+    if (r.ok && j.url) onChange(j.url); else setErr(j.error || "Upload nahi hua");
+  };
+  return (
+    <div className="md:col-span-2">
+      <label className="label">{label}</label>
+      <div className="flex gap-2">
+        <input className="input" value={value} onChange={(e) => onChange(e.target.value)} placeholder="URL ya file upload karein" />
+        <label className="btn-soft shrink-0 cursor-pointer !py-3">{up ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}Upload<input type="file" accept="audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} /></label>
+      </div>
+      {value && /\.(mp3|wav|ogg|m4a)($|\?)/i.test(value) && <audio controls src={value} className="mt-2 h-9" />}
+      {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
     </div>
   );
 }

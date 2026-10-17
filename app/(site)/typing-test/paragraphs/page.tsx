@@ -7,7 +7,7 @@ import { Container, Empty } from "@/components/Section";
 export const metadata = { title: "CPCT Typing Paragraphs" };
 
 export default async function Paragraphs({ searchParams }: { searchParams: { year?: string } }) {
-  const rows = await q(`SELECT id, title, language, year, session, shift, text FROM passages WHERE active AND exam IS NOT NULL AND year IS NOT NULL ORDER BY year DESC, id`);
+  const rows = await q(`SELECT id, title, language, year, session, shift, text, is_free FROM passages WHERE active AND exam IS NOT NULL AND year IS NOT NULL ORDER BY year DESC, id`);
   const years = Array.from(new Set(rows.map((r: any) => r.year))) as number[];
   const year = Number(searchParams.year) || years[0];
   const yr = rows.filter((r: any) => r.year === year);
@@ -49,8 +49,8 @@ export default async function Paragraphs({ searchParams }: { searchParams: { yea
                         <tr key={sess}>
                           <td className="font-bold">{sess}</td><td>Shift {shiftsOf(list)}</td>
                           <td><div className="flex gap-1.5">
-                            {hi && <Link href={`/typing-test/setup?lang=hindi&passage=${hi.id}`} className="btn-primary btn-sm"><Keyboard className="h-3.5 w-3.5" />Hindi</Link>}
-                            {en && <Link href={`/typing-test/setup?lang=english&passage=${en.id}`} className="btn-soft btn-sm"><Languages className="h-4 w-4" /><Languages className="h-3.5 w-3.5" />English</Link>}
+                            {hi && <Link href={`/typing-test/setup?lang=hindi&passage=${hi.id}`} className="btn-primary btn-sm"><Keyboard className="h-3.5 w-3.5" />Hindi{hi.is_free === false && " 🔒"}</Link>}
+                            {en && <Link href={`/typing-test/setup?lang=english&passage=${en.id}`} className="btn-soft btn-sm"><Languages className="h-3.5 w-3.5" />English{en.is_free === false && " 🔒"}</Link>}
                           </div></td>
                           <td>Remington + Inscript</td>
                           <td><span className={`chip ${year >= new Date().getFullYear() ? "bg-green-50 text-green-700" : "bg-brand-50 text-brand"}`}>{year >= new Date().getFullYear() ? "New" : year}</span></td>

@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "login" }, { status: 401 });
   const b = await req.json();
-  const kw = String(b.keyword || "").trim().slice(0, 60);
+  const kw = String(b.keyword || "").trim().slice(0, 120);
   const n = Math.min(100, Math.max(5, Number(b.count) || 10));
   if (kw.length < 2) return NextResponse.json({ error: "Keyword daalein" }, { status: 400 });
   const arr = (v: any) => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 100) : []);

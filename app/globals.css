@@ -6,6 +6,8 @@
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body { background: #f4f5fa; color: #111a3d; font-family: Poppins, Hind, system-ui, sans-serif; overflow-x: hidden; }
 .font-hindi, .hi { font-family: Hind, Poppins, sans-serif; }
+/* typing exam area: asli exam (CPCT) jaisa Mangal font, na ho to Nirmala UI / Hind */
+.typing-hi { font-family: Mangal, "Nirmala UI", Hind, "Noto Sans Devanagari", sans-serif; }
 h1, h2, h3, .heading { font-family: Poppins, Hind, sans-serif; letter-spacing: -0.01em; }
 
 .hero-bg { background: radial-gradient(1200px 400px at 85% -10%, rgba(64,96,255,.55), transparent 60%), linear-gradient(110deg, #0e1756 0%, #16237a 45%, #2a46d0 100%); }

@@ -8,7 +8,7 @@ type P = { id: number; title: string; language: string; level: string; exam: str
 const HINDI_LAYOUTS = [
   { v: "remington", t: "REMINGTON GAIL MANGAL", d: "(CPCT, MP GOVT. EXAM)" },
   { v: "remington-cbi", t: "Remington CBI", d: "Kuch central exams" },
-  { v: "krutidev", t: "Krutidev (Remington)", d: "UP/Rajasthan pattern" },
+  { v: "krutidev", t: "KRUTI DEV 010", d: "(SSC, UP, Rajasthan — asli Kruti Dev keys)" },
   { v: "system", t: "Apna system keyboard", d: "Mobile / Indic Input / Google Input Tools" },
   { v: "inscript", t: "Inscript", d: "Unicode standard layout" },
 ];
@@ -31,7 +31,7 @@ const EN_LAYOUTS = [{ v: "english", t: "QWERTY (Standard)", d: "Sabhi exams" }];
 type Pat = { slug: string; name: string; category: string; language: string; hindi_layout: string; duration: number; backspace: string; highlight: string; hindi_speed: number; english_speed: number; description: string | null };
 const BS_TXT: Record<string, string> = { full: "Backspace allowed", word: "Backspace sirf current word", prev: "Backspace current + pichla word", off: "Backspace band" };
 
-export default function SetupForm({ initial, passages, patterns }: { initial: Record<string, string | undefined>; passages: P[]; patterns: Pat[] }) {
+export default function SetupForm({ initial, passages, patterns, premium = false }: { initial: Record<string, string | undefined>; passages: P[]; patterns: Pat[]; premium?: boolean }) {
   const r = useRouter();
   const [lang, setLang] = useState<"hindi" | "english">((initial.lang as any) || "hindi");
   const initPat = patterns.find((x) => x.slug === initial.pattern);
@@ -66,12 +66,13 @@ export default function SetupForm({ initial, passages, patterns }: { initial: Re
 
   const start = () => {
     let pid = passage;
-    const pool = pmode === "exam" ? examList : pmode === "choose" ? list.filter((p) => String(p.id) === passage) : list;
+    const open = (x: P[]) => (premium ? x : x.filter((p: any) => p.is_free !== false));
+    const pool = pmode === "exam" ? open(examList) : pmode === "choose" ? list.filter((p) => String(p.id) === passage) : open(list);
     if (pmode !== "choose" || !pid) {
       const pick = pool[Math.floor(Math.random() * pool.length)] || list[0];
       pid = String(pick?.id || "");
     }
-    const lay = layout === "remington-cbi" || layout === "krutidev" ? "remington" : layout;
+    const lay = layout === "remington-cbi" ? "remington" : layout;
     const params = new URLSearchParams({ lang, layout: lay, layoutName: layout, pattern, duration: String(duration), passage: pid, mode });
     r.push(`/typing-test/start?${params.toString()}`);
   };
@@ -127,7 +128,7 @@ export default function SetupForm({ initial, passages, patterns }: { initial: Re
               {pmode === "choose" && (
                 <select value={passage} onChange={(e) => setPassage(e.target.value)} className="input mt-2.5">
                   <option value="">— Passage chunein —</option>
-                  {list.map((p) => <option key={p.id} value={p.id}>{p.title} {p.level ? `(${p.level})` : ""}</option>)}
+                  {list.map((p: any) => <option key={p.id} value={p.id}>{p.is_free === false ? "🔒 " : ""}{p.title} {p.level ? `(${p.level})` : ""}{p.is_free === false ? " — Premium" : ""}</option>)}
                 </select>
               )}
             </div>

@@ -55,6 +55,27 @@ export const REMINGTON: Record<string, [string, string]> = {
   Comma: ["ए", "ढ"], Period: ["ण्", "झ"], Slash: ["ध्", "घ्"],
 };
 
+// Kruti Dev 010 keyboard (UP/Rajasthan/SSC exams) — har key wahi akshar deti hai jo Kruti Dev font me us ASCII key par hota hai,
+// output Unicode (Mangal) me banta hai taki passage se sahi milan ho. Remington Gail se farak: ` = ृ, ~ = ्, = = त्र, + = ़,
+// - = . , _ = ऋ, Shift+A = ।, # = रु, : = रू, % = ः, \ = ?, | = द्य, ] = , , } = द्व, ( = ; , ) = द्ध …
+export const KRUTIDEV: Record<string, [string, string]> = {
+  Backquote: ["ृ", "्"], Digit1: ["1", "!"], Digit2: ["2", "/"], Digit3: ["3", "रु"], Digit4: ["4", "+"], Digit5: ["5", "ः"],
+  Digit6: ["6", "‘"], Digit7: ["7", "-"], Digit8: ["8", "’"], Digit9: ["9", ";"], Digit0: ["0", "द्ध"], Minus: [".", "ऋ"], Equal: ["त्र", "़"],
+  KeyQ: ["ु", "फ"], KeyW: ["ू", "ॅ"], KeyE: ["म", "म्"], KeyR: ["त", "त्"], KeyT: ["ज", "ज्"], KeyY: ["ल", "ल्"], KeyU: ["न", "न्"],
+  KeyI: ["प", "प्"], KeyO: ["व", "व्"], KeyP: ["च", "च्"], BracketLeft: ["ख्", "क्ष्"], BracketRight: [",", "द्व"], Backslash: ["?", "द्य"],
+  KeyA: ["ं", "।"], KeyS: ["े", "ै"], KeyD: ["क", "क्"], KeyF: ["ि", "थ्"], KeyG: ["ह", "ळ"], KeyH: ["ी", "भ्"], KeyJ: ["र", "श्र"],
+  KeyK: ["ा", "ज्ञ"], KeyL: ["स", "स्"], Semicolon: ["य", "रू"], Quote: ["श्", "ष्"],
+  KeyZ: ["्र", "र्"], KeyX: ["ग", "ग्"], KeyC: ["ब", "ब्"], KeyV: ["अ", "ट"], KeyB: ["इ", "ठ"], KeyN: ["द", "छ"], KeyM: ["उ", "ड"],
+  Comma: ["ए", "ढ"], Period: ["ण्", "झ"], Slash: ["ध्", "घ्"],
+};
+// Kruti Dev me Alt-code se aane wale khaas akshar (Alt+0161 = ँ chandrabindu, Alt+0130 = ॉ …)
+const KRUTI_ALT: Record<string, string> = {
+  "¡": "ँ", "‚": "ॉ", "Å": "ऊ", "Ã": "ई", "Ø": "क्र", "Ý": "फ्र", "ç": "प्र", "Á": "प्र", "Ù": "त्त्", "ä": "क्त", "–": "दृ", "—": "कृ",
+  "é": "न्न", "™": "न्न्", "à": "ह्न", "á": "ह्य", "â": "हृ", "ã": "ह्म", "º": "ह्", "í": "द्द", "«": "त्र्", "ô": "क्क", "Ä": "घ", "÷": "झ्",
+  "ê": "ट्ट", "ë": "ट्ठ", "ì": "ड्ड", "ï": "ड्ढ", "ñ": "॰", "•": "ऽ", "¼": "(", "½": ")", "¿": "{", "À": "}", "¶": "फ्", "³": "ङ", "¥": "ञ",
+  "å": "०", "ƒ": "१", "„": "२", "…": "३", "†": "४", "‡": "५", "ˆ": "६", "‰": "७", "Š": "८", "‹": "९",
+};
+
 export const FINGER: Record<string, "little" | "ring" | "middle" | "index" | "thumb"> = {};
 const fingerGroups: [string, string[]][] = [
   ["little", ["Backquote", "Digit1", "Digit0", "Minus", "Equal", "KeyQ", "KeyP", "BracketLeft", "BracketRight", "KeyA", "Semicolon", "Quote", "KeyZ", "Slash"]],
@@ -68,10 +89,12 @@ export const LEFT_HAND = new Set(["Backquote", "Digit1", "Digit2", "Digit3", "Di
 export const FINGER_COLOR: Record<string, string> = { little: "#fde2e2", ring: "#fff0d6", middle: "#dcf5e5", index: "#e3e8fb", thumb: "#efe6fd" };
 export const FINGER_NAME: Record<string, string> = { little: "Chhoti ungli (Little)", ring: "Anamika (Ring)", middle: "Madhyama (Middle)", index: "Tarjani (Index)", thumb: "Anguutha (Space)" };
 
-export type Layout = "inscript" | "remington" | "english" | "system";
+export type Layout = "inscript" | "remington" | "krutidev" | "english" | "system";
 export function layoutMap(layout: Layout) {
-  return layout === "inscript" ? INSCRIPT : layout === "remington" ? REMINGTON : null;
+  return layout === "inscript" ? INSCRIPT : layout === "remington" ? REMINGTON : layout === "krutidev" ? KRUTIDEV : null;
 }
+/** Typewriter-style layouts (ि pehle, aadha akshar + ा, reph baad me) */
+export const isTypewriter = (layout: Layout) => layout === "remington" || layout === "krutidev";
 
 const MATRA = "ािीुूृॄेैोौॅॉॆॊंँः़्";
 const CONSONANT = /[\u0915-\u0939\u0958-\u095F]/;
@@ -100,6 +123,13 @@ function remingtonRaw(st: EngineState, out: string): EngineState {
   if (out === "े" && last === "ा") return { text: text.slice(0, -1) + "ो", pendingI };
   if (out === "ै" && last === "ा") return { text: text.slice(0, -1) + "ौ", pendingI };
   if (out === "ॅ" && last === "ा") return { text: text.slice(0, -1) + "ॉ", pendingI };
+  if (out === "ॅ" && last === "आ") return { text: text.slice(0, -1) + "ऑ", pendingI };
+  // chandrabindu: Shift+W (ॅ) + A (ं) = ँ  →  हाँ, हँसी, आँख, माँ, जहाँ
+  if (out === "ं" || out === "ँ") {
+    if (last === "ॅ") return { text: text.slice(0, -1) + "ँ", pendingI };
+    if (last === "ॉ") return { text: text.slice(0, -1) + "ाँ", pendingI };
+    if (last === "ऑ") return { text: text.slice(0, -1) + "आँ", pendingI };
+  }
   if (out === "ा" && last === "अ") return { text: text.slice(0, -1) + "आ", pendingI };
   if (out === "े" && last === "आ") return { text: text.slice(0, -1) + "ओ", pendingI };
   if (out === "ै" && last === "आ") return { text: text.slice(0, -1) + "औ", pendingI };
@@ -109,6 +139,12 @@ function remingtonRaw(st: EngineState, out: string): EngineState {
   // reph: र् placed before the current syllable
   if (out === "र्") {
     if (last === "इ") return { text: text.slice(0, -1) + "ई", pendingI };
+    // aadhe akshar (थ्, ण्, श् …) ke baad Z — reph us akshar se pehle lagega, ा baad me poora akshar banayega (अथ् + Z + ा = अर्थ)
+    if (last === "्" && isCons(text.slice(-2, -1))) {
+      let j = text.length - 2;
+      while (j >= 2 && text[j - 1] === "्" && isCons(text[j - 2])) j -= 2;
+      return { text: text.slice(0, j) + "र्" + text.slice(j), pendingI };
+    }
     let i = text.length;
     while (i > 0 && isMatra(text[i - 1]) && text[i - 1] !== "्") i--;
     if (i > 0 && isCons(text[i - 1])) {
@@ -135,18 +171,20 @@ function remingtonRaw(st: EngineState, out: string): EngineState {
 export function engineKey(layout: Layout, st: EngineState, code: string, shift: boolean): EngineState | null {
   const map = layoutMap(layout);
   if (!map) return null;
-  if (code === "Space") return layout === "remington" ? remingtonApply(st, " ") : { ...st, text: st.text + " " };
+  const tw = isTypewriter(layout);
+  if (code === "Space") return tw ? remingtonApply(st, " ") : { ...st, text: st.text + " " };
   if (code === "Enter" || code === "NumpadEnter") return { ...st, text: st.text + " " };
   const m = map[code];
   if (!m) return null;
   const out = shift ? m[1] : m[0];
-  if (layout === "remington") return remingtonApply(st, out);
+  if (tw) return remingtonApply(st, out);
   return { ...st, text: st.text + out };
 }
 
 /** Insert a ready character (e.g. from an Alt code) through the layout engine */
 export function engineInsert(layout: Layout, st: EngineState, ch: string): EngineState {
-  return layout === "remington" ? remingtonApply(st, ch) : { ...st, text: st.text + ch };
+  if (layout === "krutidev" && KRUTI_ALT[ch]) ch = KRUTI_ALT[ch];
+  return isTypewriter(layout) ? remingtonApply(st, ch) : { ...st, text: st.text + ch };
 }
 
 // Windows-1252 characters for Alt+0128 … Alt+0159
@@ -188,8 +226,53 @@ export function displayText(st: EngineState): string {
 
 /** Is `partial` a valid in-progress prefix of `exp`? Remington me aadha akshar (श्) + ा = श hota hai, isliye श् bhi sahi maana jayega */
 export function isTypingPrefix(exp: string, partial: string, layout: Layout): boolean {
+  exp = normalizeWord(exp); partial = normalizeWord(partial);
   if (exp.startsWith(partial)) return true;
-  return layout === "remington" && partial.endsWith("्") && exp.startsWith(partial.slice(0, -1));
+  if (!isTypewriter(layout)) return false;
+  if (partial.endsWith("्") && exp.startsWith(partial.slice(0, -1))) return true;
+  // chandrabindu adhoora (ॅ dabaya, ं abhi baaki): हॉ → हाँ, हॅ → हँ
+  if (/[ॅॉऑ]$/.test(partial)) {
+    const base = partial.slice(0, -1) + ({ "ॅ": "", "ॉ": "ा", "ऑ": "आ" } as Record<string, string>)[partial.slice(-1)];
+    if (exp.startsWith(base) && /^[ँं]/.test(exp.slice(base.length)) && !exp.startsWith(partial)) return true;
+  }
+  // reph (र्) typewriter me akshar ke BAAD dabate hain — "काय" abhi "कार्य" ka sahi adhoora roop hai
+  if (exp.includes("र्")) {
+    const noReph = (w: string) => w.replace(/र्(?=[\u0915-\u0939])/g, "");
+    const p = noReph(partial);
+    if (noReph(exp).startsWith(p.endsWith("्") ? p.slice(0, -1) : p)) return true;
+  }
+  return false;
+}
+
+/** Typewriter order me expected shabd: reph (र्) apne akshar ke BAAD aata hai — "कार्य" ko "काय" + "र्" ki tarah type karte hain.
+ * Sirf pehla adhoora reph khiska kar lautata hai, taki guide/hint agli sahi key bata sake. */
+export function typewriterOrder(exp: string, partial: string): string {
+  for (let idx = exp.indexOf("र्"); idx >= 0; idx = exp.indexOf("र्", idx + 1)) {
+    if (!isCons(exp[idx + 2] || "")) continue;
+    if (partial.startsWith(exp.slice(0, idx + 3))) continue; // ye reph lag chuka
+    let k = idx + 3;
+    if (exp[k] === "़") k++;
+    while (exp[k] === "्" && isCons(exp[k + 1] || "")) { k += 2; if (exp[k] === "़") k++; }
+    while (k < exp.length && isMatra(exp[k]) && exp[k] !== "्") k++; // matra ke baad Z
+    return exp.slice(0, idx) + exp.slice(idx + 2, k) + "र्" + exp.slice(k);
+  }
+  return exp;
+}
+
+/** Guide / keyboard-highlight ke liye agla akshar (ya " " = space). null = galti hai, Backspace dabana hai. */
+export function guideNextChar(layout: Layout, exp: string, partial: string, pendingI: boolean): string | null {
+  if (partial && !isTypingPrefix(exp, partial, layout)) return null;
+  if (normalizeWord(partial) === normalizeWord(exp)) return " ";
+  if (!isTypewriter(layout)) return Array.from(exp.slice(partial.length))[0] ?? " ";
+  if (/[ॅॉऑ]$/.test(partial) && !exp.startsWith(partial)) return "ं";
+  if (partial.endsWith("्") && !exp.startsWith(partial)) return "ा";
+  const ord = typewriterOrder(exp, partial);
+  const base = ord.startsWith(partial) ? ord : exp;
+  const rest = Array.from(base.slice(partial.length));
+  if (base !== exp && rest[0] === "र" && rest[1] === "्") return "र्";
+  if (pendingI && rest[0]) return rest[0];
+  if (remingtonNextIsI(rest)) return "ि";
+  return rest[0] ?? " ";
 }
 
 /** Remington: agla syllable chhoti ि wala hai (कि, स्थि, क्षि …) to pehle ि dabani hai */
@@ -217,7 +300,8 @@ export function findKey(layout: Layout, ch: string): { code: string; shift: bool
   // bina Shift wali key pehle (ा = K, Shift+A nahi)
   for (const [code, [n]] of Object.entries(map)) if (n === ch) return { code, shift: false };
   for (const [code, [, s]] of Object.entries(map)) if (s === ch) return { code, shift: true };
-  if (layout === "remington") {
+  if (isTypewriter(layout)) {
+    if (ch === "ँ") return { code: "KeyW", shift: true }; // Shift+W (ॅ) phir A (ं)
     // full letter typed as half + ा
     for (const [code, [n, s]] of Object.entries(map)) {
       if (n === ch + "्") return { code, shift: false };
@@ -236,7 +320,7 @@ export function keyHint(layout: Layout, cluster: string): string[] {
   const out: string[] = [];
   const name = (r: { code: string; shift: boolean }) => (r.shift ? "Shift + " : "") + (KEY_LABEL[r.code] || r.code);
   let chars = Array.from(cluster);
-  if (layout === "remington" && chars.includes("ि")) {
+  if (isTypewriter(layout) && chars.includes("ि")) {
     // typewriter order: ि pehle
     out.push("F (ि)");
     chars = chars.filter((c) => c !== "ि");
@@ -244,8 +328,10 @@ export function keyHint(layout: Layout, cluster: string): string[] {
   const map = layoutMap(layout);
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
-    if (map && layout === "remington") {
+    if (map && isTypewriter(layout)) {
       if (c === "्" && chars[i + 1] === "र") { out.push("Z (्र)"); i++; continue; }
+      if (c === "ँ") { out.push("Shift + W (ॅ)", "A (ं) → ँ"); continue; }
+      if (c === "र" && chars[i + 1] === "्" && chars[i + 2] && CONSONANT.test(chars[i + 2])) { out.push("(agla akshar type karke) Shift + Z (र्)"); i++; continue; }
       // conjunct as a single key (क्ष्, त्र, द्ध, रू …)
       let done = false;
       for (const len of [3, 2]) {
@@ -265,7 +351,7 @@ export function keyHint(layout: Layout, cluster: string): string[] {
     if (!r) { out.push(`Alt + ${c.codePointAt(0)} (${c})`); continue; }
     const val = map ? (r.shift ? map[r.code]?.[1] : map[r.code]?.[0]) : c;
     out.push(name(r) + ` (${c})`);
-    if (layout === "remington" && val && val === c + "्") out.push("K (ा)");
+    if (isTypewriter(layout) && val && val === c + "्") out.push("K (ा)");
   }
   return out;
 }
@@ -274,6 +360,8 @@ const DEV_DIGITS = "०१२३४५६७८९";
 export function normalizeWord(w: string) {
   return w
     .normalize("NFC")
+    .replace(/[\u200b-\u200d\u00ad\ufeff]/g, "") // zero-width / soft hyphen (copy-paste passages me chhupe rehte hain)
+    .replace(/ॅं/g, "ँ").replace(/ॉं/g, "ाँ").replace(/ऑं/g, "आँ") // Shift+W + A = chandrabindu
     .replace(/[०-९]/g, (d) => String(DEV_DIGITS.indexOf(d)))
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')

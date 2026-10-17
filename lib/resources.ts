@@ -99,6 +99,16 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "keywords", table: "keywords", label: "Keyword Test Topics", group: "Tests", icon: "Tags", order: "kind, sort, id", search: ["label", "terms"],
+    filters: [{ name: "kind", options: ["topic", "popular"] }],
+    fields: [
+      { name: "label", label: "Dikhne wala naam (jaise कम्प्यूटर मेमोरी / Computer Memory)", required: true, list: true, full: true },
+      { name: "terms", label: "Search shabd — | se alag (jaise Memory|मेमोरी|RAM|ROM)", list: true, full: true, help: "In me se koi bhi shabd sawal, topic ya keywords me ho to sawal test me aayega. Khaali = naam hi search hoga." },
+      { name: "kind", label: "Kahan dikhe", type: "select", options: ["topic", "popular"], list: true, help: "topic = Topic list (grid) · popular = search box ke neeche chhote chips" },
+      { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
     key: "passages", table: "passages", label: "Typing Passages", group: "Typing", icon: "Keyboard", order: "language, year DESC NULLS FIRST, id", search: ["title", "text", "session"],
     filters: [{ name: "language", options: ["hindi", "english"] }],
     fields: [
@@ -108,6 +118,7 @@ export const RESOURCES: Resource[] = [
       { name: "exam", label: "Exam (CPCT etc. — for paragraphs page)", list: true },
       { name: "year", label: "Year", type: "number" }, { name: "session", label: "Session (e.g. Nov 2025)" }, { name: "shift", label: "Shift" },
       { name: "text", label: "Passage text (Hindi in Unicode/Mangal)", type: "textarea", required: true, full: true, rows: 8 },
+      { name: "is_free", label: "Free (band karne par sirf Premium students — 🔒 lock dikhega)", type: "bool", list: true },
       { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -120,6 +131,7 @@ export const RESOURCES: Resource[] = [
       { name: "title", label: "Title", required: true, list: true },
       { name: "subtitle", label: "Subtitle" },
       { name: "content", label: "Practice text (space separated)", type: "textarea", required: true, full: true },
+      { name: "is_free", label: "Free (band karne par sirf Premium students — 🔒 lock dikhega)", type: "bool", list: true },
       { name: "active", label: "Active", type: "bool" },
     ],
   },
@@ -128,7 +140,7 @@ export const RESOURCES: Resource[] = [
     fields: [
       { name: "name", label: "Exam / pattern ka naam (jaise SSC CHSL 2025 Hindi)", required: true, list: true },
       { name: "slug", label: "Short code (URL me, jaise ssc-chsl-hindi) — sirf a-z, 0-9, -", required: true, list: true },
-      { name: "category", label: "Category (SSC, Court, MP State, Railway, Bihar…)", required: true, list: true, help: "Same category wale exams typing page par ek group me dikhenge" },
+      { name: "category", label: "Category — 'Typing Exam Categories' me jo naam hai wahi likhein (SSC, Court, MP State, Bihar State…)", required: true, list: true, help: "Same category wale exams typing page par us category ke tile me dikhenge. Nayi category pehle 'Typing Exam Categories' me jodein." },
       { name: "language", label: "Language", type: "select", options: ["both", "hindi", "english"], list: true },
       { name: "hindi_layout", label: "Hindi keyboard layout", type: "select", options: ["any", "remington", "remington-cbi", "krutidev", "inscript", "system"], help: "any = student khud chunega" },
       { name: "duration", label: "Samay (minute, 1–60)", type: "number", list: true },
@@ -138,8 +150,20 @@ export const RESOURCES: Resource[] = [
       { name: "english_speed", label: "English qualifying speed (NWPM)", type: "number" },
       { name: "words", label: "Passage words (0 = poora, ya 100/150/200/250/300)", type: "number" },
       { name: "lock_rules", label: "Exam rules lock (student backspace/highlight badal na sake)", type: "bool" },
+      { name: "is_free", label: "Free (band karne par ye exam test sirf Premium students ke liye — 🔒)", type: "bool", list: true },
       { name: "description", label: "Short description", type: "textarea", full: true },
       { name: "sort", label: "Sort order", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
+    key: "typing_categories", table: "typing_categories", label: "Typing Exam Categories", group: "Typing", icon: "LayoutGrid", order: "sort, id", search: ["name"],
+    fields: [
+      { name: "name", label: "Category naam (jaise SSC, Bihar State, UP State)", required: true, list: true, help: "Typing Exam Patterns me isi naam ki category likhne par exam is tile me aayega" },
+      { name: "image_url", label: "Logo / icon image (optional)", type: "file", full: true },
+      { name: "icon", label: "Icon (image na ho to)", type: "select", options: ["landmark", "gavel", "train-front", "shield", "building-2", "map-pin", "map", "stethoscope", "gauge", "keyboard", "graduation-cap", "briefcase", "scale", "flag"], list: true },
+      { name: "color", label: "Colour", type: "select", options: COLOR_OPTS },
+      { name: "description", label: "Short description (optional)", full: true },
+      { name: "sort", label: "Sort order", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
   {
@@ -247,6 +271,14 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "batches", table: "batches", label: "Batches (Attendance)", group: "Academy", icon: "UsersRound", order: "sort, id", search: ["name"],
+    fields: [
+      { name: "name", label: "Batch naam (jaise CPCT Morning 8 AM)", required: true, list: true },
+      { name: "timing", label: "Timing", list: true }, { name: "teacher", label: "Teacher", list: true },
+      { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
     key: "videos", table: "videos", label: "Videos", group: "Academy", icon: "PlayCircle", order: "sort, id", search: ["title"],
     fields: [
       { name: "title", label: "Title", required: true, list: true },
@@ -272,8 +304,10 @@ export const RESOURCES: Resource[] = [
   {
     key: "downloads", table: "downloads", label: "Downloads", group: "Content", icon: "Download", order: "sort, id",
     fields: [
-      { name: "title", label: "Title", required: true, list: true }, { name: "description", label: "Description" },
-      { name: "file_url", label: "File or link", type: "file", full: true }, { name: "size", label: "Size text (12 MB · Free)" },
+      { name: "title", label: "Title", required: true, list: true }, { name: "description", label: "Description", full: true },
+      { name: "category", label: "Section", type: "select", options: ["Software", "Fonts", "Mobile App", "PDF / Charts", "Other"], list: true },
+      { name: "version", label: "Version / bit (32 bit, 64 bit, Windows 10…)", list: true },
+      { name: "file_url", label: "File upload (60MB tak) ya Google Drive / website link", type: "file", full: true }, { name: "size", label: "Size text (12 MB · Free)" },
       { name: "icon", label: "Icon", type: "select", options: ["keyboard", "type", "smartphone", "monitor", "file-text", "file-check"] },
       { name: "color", label: "Colour", type: "select", options: COLOR_OPTS }, { name: "sort", label: "Sort", type: "number" },
     ],
@@ -342,6 +376,7 @@ export const RESOURCES: Resource[] = [
       { name: "email", label: "Email" }, { name: "city", label: "City", list: true },
       { name: "password", label: "Password (blank = unchanged)", type: "password" },
       { name: "role", label: "Role", type: "select", options: ["student", "admin"], list: true },
+      { name: "batch", label: "Batch (attendance ke liye — 'Batches' me jo naam hai)", list: true }, { name: "roll_no", label: "Roll no." },
       { name: "target_exam", label: "Target exam" }, { name: "exam_date", label: "Exam date" },
       { name: "premium_plan", label: "Premium plan", list: true }, { name: "premium_till", label: "Premium till", type: "date", list: true },
       { name: "blocked", label: "Blocked", type: "bool" },
@@ -354,13 +389,14 @@ export function getResource(key: string) {
   return RESOURCES.find((r) => r.key === key) || null;
 }
 
-export type SettingType = "text" | "textarea" | "secret" | "toggle";
+export type SettingType = "text" | "textarea" | "secret" | "toggle" | "file";
 export const SETTING_GROUPS: { title: string; note?: string; keys: [string, string, SettingType?][] }[] = [
   { title: "Payment (Razorpay)", note: "Razorpay Dashboard → Account & Settings → API Keys se Key ID aur Key Secret yahan dalein. Test keys (rzp_test_…) se pehle check karein, phir Live keys (rzp_live_…) dalein. Secret save hone ke baad dobara nahi dikhega.", keys: [["razorpay_enabled", "Online payment (Razorpay) chalu", "toggle"], ["razorpay_key_id", "Razorpay Key ID (rzp_live_… / rzp_test_…)"], ["razorpay_key_secret", "Razorpay Key Secret", "secret"]] },
   { title: "Contact & Brand", keys: [["site_name", "Site name (Hindi)"], ["site_name_en", "Site name (English)"], ["tagline", "Tagline"], ["phone", "Phone"], ["whatsapp", "WhatsApp number (with 91, digits only)"], ["whatsapp_group", "WhatsApp group link"], ["email", "Email"], ["hours", "Hours (top bar)"], ["hours_full", "Hours (contact page)"], ["address", "Address", "textarea"], ["map_embed", "Google Map embed URL (src of iframe)", "textarea"], ["upi_id", "UPI ID for manual payment (optional)"]] },
   { title: "Social & App", keys: [["facebook", "Facebook URL"], ["youtube", "YouTube URL"], ["instagram", "Instagram URL"], ["telegram", "Telegram URL"], ["android_app", "Android app URL"]] },
   { title: "Home page", keys: [["hero_badge", "Hero badge"], ["hero_title_1", "Hero title line 1"], ["hero_title_2", "Hero title line 2 (white)"], ["hero_title_3", "Hero title line 2 (orange)"], ["hero_subtitle", "Hero subtitle", "textarea"], ["stat_1", "Stat 1 (value|label)"], ["stat_2", "Stat 2"], ["stat_3", "Stat 3"], ["stat_4", "Stat 4"], ["cta_title", "Bottom CTA title"], ["cta_subtitle", "Bottom CTA subtitle"], ["footer_about", "Footer about", "textarea"]] },
   { title: "About page", keys: [["about_story", "Our story", "textarea"], ["about_students", "Students stat"], ["about_selections", "Selections stat"], ["about_years", "Experience stat"], ["mission", "Mission"], ["vision", "Vision"], ["values", "Values"]] },
+  { title: "Typing Test", note: "Key sound: Pixabay / Monkeytype jaisi koi chhoti (0.1–0.3 sec) typing click mp3 upload karein. Students ko Settings me 'Academy sound' option milega aur wahi default bajegi. Khaali chhodne par website ki apni mechanical keyboard aawaz bajti hai.", keys: [["typing_sound_url", "Key sound file (mp3 / wav)", "file"]] },
   { title: "Misc", keys: [["weekly_rewards", "Leaderboard weekly rewards text", "textarea"], ["install_help", "Downloads installation help", "textarea"], ["payment_note", "Payment options text", "textarea"]] },
   { title: "Policies (markdown)", keys: [["privacy_policy", "Privacy Policy", "textarea"], ["terms", "Terms & Conditions", "textarea"], ["disclaimer", "Disclaimer", "textarea"], ["refund_policy", "Refund Policy", "textarea"]] },
 ];

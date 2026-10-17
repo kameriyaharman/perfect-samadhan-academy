@@ -3,14 +3,15 @@ import { ArrowRight, FileText, Gauge, GraduationCap, Keyboard, ScanSearch, Troph
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
-import { getPatterns } from "@/lib/patterns";
+import { getPatterns, getTypingCategories } from "@/lib/patterns";
+import { getUser, isPremium } from "@/lib/auth";
 import ExamLinks from "./ExamLinks";
 
 export const metadata = { title: "Hindi & English Typing Test" };
 
 export default async function TypingHub() {
-  const [patterns, stats] = await Promise.all([
-    getPatterns(),
+  const [patterns, cats, user, stats] = await Promise.all([
+    getPatterns(), getTypingCategories(), getUser(),
     q(`SELECT (SELECT count(*)::int FROM typing_results WHERE created_at > now()-interval '1 day') AS today, (SELECT count(*)::int FROM passages WHERE active) AS passages`),
   ]);
   const st = stats[0] || { today: 0, passages: 0 };
@@ -42,7 +43,7 @@ export default async function TypingHub() {
 
         <div className="mt-14">
           <SectionTitle eyebrow="Exam-wise Typing" title="अपनी परीक्षा के हिसाब से टेस्ट दें" />
-          <ExamLinks patterns={patterns.map((p) => ({ slug: p.slug, name: p.name, category: p.category, language: p.language, duration: p.duration, hindi_speed: p.hindi_speed, english_speed: p.english_speed, description: p.description }))} />
+          <ExamLinks patterns={patterns.map((p) => ({ slug: p.slug, name: p.name, category: p.category, language: p.language, duration: p.duration, hindi_speed: p.hindi_speed, english_speed: p.english_speed, description: p.description, is_free: p.is_free }))} categories={cats} premium={isPremium(user)} />
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
