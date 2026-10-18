@@ -451,4 +451,33 @@ CREATE INDEX IF NOT EXISTS attendance_batch_date ON attendance(batch, date);
 ALTER TABLE downloads ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Software';
 ALTER TABLE downloads ADD COLUMN IF NOT EXISTS version TEXT;
 ALTER TABLE keywords ADD COLUMN IF NOT EXISTS is_free BOOLEAN NOT NULL DEFAULT true;
+CREATE TABLE IF NOT EXISTS selections (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  photo_url TEXT,
+  exam TEXT NOT NULL,
+  post TEXT,
+  year INT,
+  rank_text TEXT,
+  city TEXT,
+  course TEXT,
+  quote TEXT,
+  featured BOOLEAN NOT NULL DEFAULT false,
+  show_on_home BOOLEAN NOT NULL DEFAULT true,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS leaders (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  designation TEXT NOT NULL,
+  photo_url TEXT,
+  qualification TEXT,
+  experience TEXT,
+  message TEXT,
+  phone TEXT,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
 `;

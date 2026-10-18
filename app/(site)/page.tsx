@@ -8,20 +8,25 @@ import { Container, SectionTitle } from "@/components/Section";
 import HeroTyping from "@/components/home/HeroTyping";
 import HeroSearch from "@/components/home/HeroSearch";
 import MaterialTabs from "@/components/home/MaterialTabs";
+import SelectionsSection from "@/components/home/Selections";
+import AboutSection from "@/components/home/AboutSection";
 
 export default async function Home() {
   const s = await getSettings();
-  const [exams, allExams, notes, pyq, shortcut, notices, testimonials, leaders, counts] = await Promise.all([
+  const [exams, allExams, notes, pyq, shortcut, notices, selections, leaders, counts, selMeta, owners] = await Promise.all([
     q(`SELECT e.*, (SELECT count(*)::int FROM mock_tests m WHERE m.exam_slug=e.slug AND m.kind='full' AND m.active) AS mocks FROM exams e WHERE active AND show_on_home ORDER BY sort LIMIT 4`),
     q(`SELECT slug, name FROM exams WHERE active ORDER BY sort`),
     q(`SELECT * FROM materials WHERE active AND type='notes' ORDER BY popular DESC, downloads DESC LIMIT 3`),
     q(`SELECT * FROM materials WHERE active AND type='pyq' ORDER BY downloads DESC LIMIT 3`),
     q(`SELECT * FROM materials WHERE active AND type IN ('shortcut','syllabus') ORDER BY downloads DESC LIMIT 3`),
     q(`SELECT * FROM notices WHERE active AND show_on_home ORDER BY date DESC LIMIT 4`),
-    q(`SELECT * FROM testimonials ORDER BY sort LIMIT 4`),
+    q(`SELECT * FROM selections WHERE active AND show_on_home ORDER BY featured DESC, year DESC NULLS LAST, sort, id LIMIT 40`).catch(() => []),
     leaderboard("week", 3),
     q(`SELECT (SELECT count(*)::int FROM typing_results WHERE created_at > now() - interval '1 day') AS today`),
+    q(`SELECT count(*)::int AS n, min(year) AS y1, max(year) AS y2 FROM selections WHERE active`).catch(() => [{ n: 0 }]),
+    q(`SELECT * FROM leaders WHERE active ORDER BY sort, id`).catch(() => []),
   ]);
+  const sm = selMeta[0] || { n: 0 };
   const stats = [s.stat_1, s.stat_2, s.stat_3, s.stat_4].filter(Boolean).map((x) => x.split("|"));
   const quick = [
     { icon: Keyboard, t: "Hindi Typing", d: "Remington Gail Mangal · Krutidev · Inscript", href: "/typing-test/setup?lang=hindi", c: "orange" },
@@ -181,23 +186,8 @@ export default async function Home() {
         </div>
       </Container>
 
-      {/* TOPPERS */}
-      <section className="bg-white py-16">
-        <Container>
-          <SectionTitle eyebrow="Hamare Toppers" title="सफलता की उड़ान भरने वाले" right={<Link href="/about" className="flex items-center gap-1 text-sm font-semibold text-brand">Sabhi results <ArrowRight className="h-4 w-4" /></Link>} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {testimonials.map((t: any) => (
-              <div key={t.id} className="card p-6 text-center transition hover:-translate-y-1 hover:shadow-lift">
-                <span className={`mx-auto grid h-16 w-16 place-items-center rounded-full text-lg font-bold text-white ring-4 ring-gold/50 bg-gradient-to-br ${color(t.color).grad}`}>{initials(t.name)}</span>
-                <div className="mt-3 font-bold">{t.name}</div>
-                <div className="text-xs text-muted">{t.exam}</div>
-                <span className="chip mt-2 bg-green-50 text-green-700"><Medal className="h-3 w-3" />{t.result}</span>
-                <p className="mt-3 text-sm italic text-muted">“{t.quote}”</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
+      {/* SELECTIONS — admin: Selections (Results) */}
+      <SelectionsSection list={selections as any} total={sm.n} stat={s.about_selections} years={sm.y1 && sm.y2 ? (sm.y1 === sm.y2 ? String(sm.y1) : `${sm.y1}–${sm.y2}`) : ""} />
 
       {/* APP + QUIZ */}
       <Container className="py-16">
@@ -219,6 +209,9 @@ export default async function Home() {
           </div>
         </div>
       </Container>
+
+      {/* ABOUT — admin: Site Settings → About + About — Owner / Director */}
+      <div className="border-t border-line bg-white"><AboutSection s={s} leaders={owners as any} /></div>
 
       {/* CTA */}
       <div className="relative">

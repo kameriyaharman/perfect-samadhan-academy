@@ -8,7 +8,7 @@ const COLS: [string, [string, string][]][] = [
   ["Typing Test", [["Hindi Typing Test", "/typing-test/setup?lang=hindi"], ["English Typing Test", "/typing-test/setup?lang=english"], ["Learn Typing", "/typing-test/learn"], ["CPCT Typing Paragraphs", "/typing-test/paragraphs"], ["Leaderboard", "/typing-test/leaderboard"]]],
   ["Mock Tests", [["CPCT Mock Test", "/mock-tests/cpct"], ["Topic-wise Test", "/mock-tests/topic-wise"], ["CPCT Computer PYQ (52 Q)", "/mock-tests/cpct-computer"], ["PYQ Online Test", "/mock-tests/pyq"], ["Keyword Test", "/mock-tests/keyword"], ["All Exams", "/exams"]]],
   ["Resources", [["Notes PDF", "/study-material"], ["Previous Papers", "/previous-papers"], ["Shortcut Keys", "/shortcut-keys"], ["Abbreviations", "/abbreviations"], ["Downloads", "/downloads"]]],
-  ["Academy", [["About Us", "/about"], ["Courses & Batches", "/courses"], ["Contact Us", "/contact"], ["FAQ", "/faq"], ["Blog", "/blog"]]],
+  ["Academy", [["About Us", "/about"], ["Selections", "/selections"], ["Courses & Batches", "/courses"], ["Contact Us", "/contact"], ["FAQ", "/faq"], ["Blog", "/blog"]]],
 ];
 
 export default async function Footer() {

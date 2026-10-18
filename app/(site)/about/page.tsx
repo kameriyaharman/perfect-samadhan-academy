@@ -4,11 +4,13 @@ import { getSettings } from "@/lib/settings";
 import { color, initials } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
+import { LeaderCard } from "@/components/home/AboutSection";
+import Link from "next/link";
 
 export const metadata = { title: "About Us" };
 
 export default async function About() {
-  const [s, fac, t] = await Promise.all([getSettings(), q("SELECT * FROM faculty ORDER BY sort"), q("SELECT * FROM testimonials ORDER BY sort")]);
+  const [s, fac, t, leaders] = await Promise.all([getSettings(), q("SELECT * FROM faculty ORDER BY sort"), q("SELECT * FROM testimonials ORDER BY sort"), q("SELECT * FROM leaders WHERE active ORDER BY sort, id").catch(() => [])]);
   return (
     <>
       <PageHero crumbs={[{ label: "About Us" }]} title="हमारे" highlight="बारे में" subtitle={`Perfect Samadhan Academy — sarkari pariksha ki tayari me har vidyarthi ke liye "perfect samadhan".`} compact />
@@ -29,6 +31,8 @@ export default async function About() {
             <div key={t} className="card p-6"><span className={`grid h-12 w-12 place-items-center rounded-xl ${color(c).bg} ${color(c).text}`}><I className="h-5 w-5" /></span><h3 className="mt-5 text-lg font-bold">{t}</h3><p className="mt-1 text-sm text-muted">{d}</p></div>
           ))}
         </div>
+        {leaders.length > 0 && <div className="mt-14"><SectionTitle eyebrow="Leadership" title="संचालक मंडल" />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{leaders.map((l: any) => <LeaderCard key={l.id} l={l} full />)}</div></div>}
         <div className="mt-14"><SectionTitle eyebrow="Faculty" title="हमारे शिक्षक" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{fac.map((f: any) => (
             <div key={f.id} className="card p-6 text-center">
@@ -36,7 +40,7 @@ export default async function About() {
               <div className="mt-3 text-lg font-bold">{f.name}</div><div className="text-sm text-muted">{f.subject}{f.experience ? ` · ${f.experience}` : ""}</div>
             </div>))}</div>
         </div>
-        {t.length > 0 && <div className="mt-14"><SectionTitle eyebrow="Results" title="हमारे सफल विद्यार्थी" />
+        {t.length > 0 && <div className="mt-14"><SectionTitle eyebrow="Results" title="हमारे सफल विद्यार्थी" right={<Link href="/selections" className="text-sm font-semibold text-brand">Sabhi Selections →</Link>} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{t.map((x: any) => <div key={x.id} className="card p-5"><b>{x.name}</b><div className="text-xs text-muted">{x.exam} · {x.result}</div><p className="mt-2 text-sm italic text-muted">“{x.quote}”</p></div>)}</div></div>}
       </Container>
     </>

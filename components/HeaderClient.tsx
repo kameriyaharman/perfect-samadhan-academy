@@ -98,7 +98,7 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
                 <Link key={n.href} href={n.href} className={`rounded-xl px-4 py-3 text-base font-semibold ${active(n.href) ? "bg-brand-50 text-brand" : "text-ink"}`}>{n.label}</Link>
               ))}
               <div className="my-3 h-px bg-line" />
-              {[["/typing-test/leaderboard", "Leaderboard"], ["/plans", "Premium Plans"], ["/blog", "Blog"], ["/downloads", "Downloads"], ["/verify", "Certificate Verify"], ["/about", "About Us"], ["/contact", "Contact"], ["/faq", "FAQ"]].map(([h, l]) => (
+              {[["/selections", "Selections / Results"], ["/typing-test/leaderboard", "Leaderboard"], ["/plans", "Premium Plans"], ["/blog", "Blog"], ["/downloads", "Downloads"], ["/verify", "Certificate Verify"], ["/about", "About Us"], ["/contact", "Contact"], ["/faq", "FAQ"]].map(([h, l]) => (
                 <Link key={h} href={h} className="rounded-xl px-4 py-2.5 text-[15px] text-muted">{l}</Link>
               ))}
             </nav>
