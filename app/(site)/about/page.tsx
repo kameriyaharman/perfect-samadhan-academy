@@ -36,7 +36,7 @@ export default async function About() {
         <div className="mt-14"><SectionTitle eyebrow="Faculty" title="हमारे शिक्षक" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{fac.map((f: any) => (
             <div key={f.id} className="card p-6 text-center">
-              {f.photo_url ? <img src={f.photo_url} alt={f.name} className="mx-auto h-20 w-20 rounded-full object-cover ring-4 ring-gold/50" /> : <span className={`mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br text-2xl font-bold text-white ring-4 ring-gold/50 ring-offset-2 ${color(f.color).grad}`}>{initials(f.name)}</span>}
+              {f.photo_url ? <img src={f.photo_url} alt={f.name} className="mx-auto h-20 w-20 rounded-full object-cover object-top ring-4 ring-gold/50" /> : <span className={`mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br text-2xl font-bold text-white ring-4 ring-gold/50 ring-offset-2 ${color(f.color).grad}`}>{initials(f.name)}</span>}
               <div className="mt-3 text-lg font-bold">{f.name}</div><div className="text-sm text-muted">{f.subject}{f.experience ? ` · ${f.experience}` : ""}</div>
             </div>))}</div>
         </div>

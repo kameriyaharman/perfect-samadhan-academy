@@ -9,8 +9,8 @@ export function LeaderCard({ l, full = false }: { l: Leader; full?: boolean }) {
     <div className="card overflow-hidden">
       <div className="flex items-center gap-4 bg-gradient-to-r from-navy to-brand p-4 text-white" data-dark>
         {l.photo_url
-          ? <img src={l.photo_url} alt={l.name} className="h-20 w-20 shrink-0 rounded-2xl object-cover ring-2 ring-gold md:h-24 md:w-24" />
-          : <span className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white/15 text-2xl font-bold ring-2 ring-gold md:h-24 md:w-24">{initials(l.name)}</span>}
+          ? <img src={l.photo_url} alt={l.name} className="h-28 w-24 shrink-0 rounded-2xl bg-white object-cover object-top ring-2 ring-gold md:h-32 md:w-28" />
+          : <span className="grid h-28 w-24 shrink-0 place-items-center rounded-2xl bg-white/15 text-2xl font-bold ring-2 ring-gold md:h-32 md:w-28">{initials(l.name)}</span>}
         <div className="min-w-0">
           <div className="hi text-lg font-bold leading-tight">{l.name}</div>
           <div className="mt-1 inline-block rounded-full bg-gold px-2.5 py-0.5 text-[11px] font-bold text-navy">{l.designation}</div>

@@ -8,7 +8,7 @@ const GRADS = ["from-[#1f35b8] to-[#0e1756]", "from-[#f28c0f] to-[#c2610c]", "fr
 
 export function Photo({ s, size = "h-24 w-24" }: { s: Sel; size?: string }) {
   return s.photo_url
-    ? <img src={s.photo_url} alt={s.name} loading="lazy" className={`${size} rounded-full object-cover ring-4 ring-gold/60 ring-offset-2`} />
+    ? <img src={s.photo_url} alt={s.name} loading="lazy" className={`${size} rounded-full object-cover object-top ring-4 ring-gold/60 ring-offset-2`} />
     : <span className={`${size} grid place-items-center rounded-full bg-gradient-to-br text-2xl font-bold text-white ring-4 ring-gold/60 ring-offset-2 ${GRADS[s.id % GRADS.length]}`}>{initials(s.name)}</span>;
 }
 
