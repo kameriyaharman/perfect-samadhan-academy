@@ -10,6 +10,7 @@ import HeroSearch from "@/components/home/HeroSearch";
 import MaterialTabs from "@/components/home/MaterialTabs";
 import SelectionsSection from "@/components/home/Selections";
 import AboutSection from "@/components/home/AboutSection";
+import { getUser } from "@/lib/auth";
 
 export default async function Home() {
   const s = await getSettings();
@@ -27,6 +28,7 @@ export default async function Home() {
     q(`SELECT * FROM leaders WHERE active ORDER BY sort, id`).catch(() => []),
   ]);
   const sm = selMeta[0] || { n: 0 };
+  const isAdmin = (await getUser())?.role === "admin";
   const stats = [s.stat_1, s.stat_2, s.stat_3, s.stat_4].filter(Boolean).map((x) => x.split("|"));
   const quick = [
     { icon: Keyboard, t: "Hindi Typing", d: "Remington Gail Mangal · Krutidev · Inscript", href: "/typing-test/setup?lang=hindi", c: "orange" },
@@ -187,7 +189,7 @@ export default async function Home() {
       </Container>
 
       {/* SELECTIONS — admin: Selections (Results) */}
-      <SelectionsSection list={selections as any} total={sm.n} stat={s.about_selections} years={sm.y1 && sm.y2 ? (sm.y1 === sm.y2 ? String(sm.y1) : `${sm.y1}–${sm.y2}`) : ""} />
+      <SelectionsSection list={selections as any} total={sm.n} stat={s.about_selections} isAdmin={isAdmin} years={sm.y1 && sm.y2 ? (sm.y1 === sm.y2 ? String(sm.y1) : `${sm.y1}–${sm.y2}`) : ""} />
 
       {/* APP + QUIZ */}
       <Container className="py-16">
@@ -211,7 +213,7 @@ export default async function Home() {
       </Container>
 
       {/* ABOUT — admin: Site Settings → About + About — Owner / Director */}
-      <div className="border-t border-line bg-white"><AboutSection s={s} leaders={owners as any} /></div>
+      <div className="border-t border-line bg-white"><AboutSection s={s} leaders={owners as any} isAdmin={isAdmin} /></div>
 
       {/* CTA */}
       <div className="relative">

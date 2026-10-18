@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, MapPin, Quote, Star } from "lucide-react";
+import { ArrowRight, BadgeCheck, MapPin, Plus, Quote, Star, Trophy } from "lucide-react";
 import { initials } from "@/lib/utils";
 
 export type Sel = { id: number; name: string; photo_url: string | null; exam: string; post: string | null; year: number | null; rank_text: string | null; city: string | null; course: string | null; quote: string | null; featured: boolean };
@@ -32,8 +32,7 @@ export function SelectionCard({ s, wide = false }: { s: Sel; wide?: boolean }) {
 }
 
 /** Home page: chalti hui patti (5+ selections) ya grid */
-export default function SelectionsSection({ list, total, years, stat }: { list: Sel[]; total: number; years: string; stat?: string }) {
-  if (!list.length) return null;
+export default function SelectionsSection({ list, total, years, stat, isAdmin = false }: { list: Sel[]; total: number; years: string; stat?: string; isAdmin?: boolean }) {
   const moving = list.length >= 5;
   const featured = list.filter((s) => s.featured && s.quote).slice(0, 2);
   return (
@@ -47,12 +46,22 @@ export default function SelectionsSection({ list, total, years, stat }: { list: 
           </div>
           <div className="flex items-center gap-3">
             <div className="rounded-2xl bg-navy px-5 py-2.5 text-center text-white" data-dark><div className="text-2xl font-extrabold text-gold">{stat || `${total}+`}</div><div className="text-[11px] text-white/70">Selections</div></div>
-            <Link href="/selections" className="btn-primary">Sabhi Selections <ArrowRight className="h-4 w-4" /></Link>
+            {isAdmin && <Link href="/admin/r/selections" className="btn-orange"><Plus className="h-4 w-4" />Selection jodein</Link>}
+            {list.length > 0 && <Link href="/selections" className="btn-primary">Sabhi Selections <ArrowRight className="h-4 w-4" /></Link>}
           </div>
         </div>
       </div>
 
-      {moving ? (
+      {!list.length ? (
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-brand/25 bg-white px-6 py-10 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-gold/20 text-saffron"><Trophy className="h-7 w-7" /></span>
+            <b className="hi text-lg text-navy">हमारे चयनित विद्यार्थियों की सूची जल्द ही यहाँ</b>
+            <p className="max-w-md text-sm text-muted">Academy se padhkar selected students ki photo, naam aur exam yahan dikhenge.{isAdmin ? " Admin → Selections (Results) se add karein." : ""}</p>
+            {isAdmin && <Link href="/admin/r/selections" className="btn-primary mt-1"><Plus className="h-4 w-4" />Pehla selection jodein</Link>}
+          </div>
+        </div>
+      ) : moving ? (
         <div className="group relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#f8f9fe] to-transparent md:w-24" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#f8f9fe] to-transparent md:w-24" />
