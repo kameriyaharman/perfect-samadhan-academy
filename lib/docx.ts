@@ -37,14 +37,22 @@ export function docxLines(buf: Buffer): string[] | null {
   const s = xml.toString("utf8");
   const out: string[] = [];
   const paras = s.match(/<w:p[\s>][\s\S]*?<\/w:p>|<w:p\/>/g) || [];
+  // Word ki auto-numbering (1. 2. 3. list) text me nahi hoti — numbered paragraph ke aage khud "N. " lagate hain
+  const numberedStyle = /<w:pStyle w:val="(?:ListNumber\d*|List\s?Number\d*)"/;
+  let listNo = 0;
   for (const p of paras) {
     let t = "";
+    const isList = /<w:numPr>[\s\S]*?<w:numId w:val="(?!0")\d+"/.test(p) || numberedStyle.test(p);
     const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>|<w:tab\/>|<w:br(?:\s[^>]*)?\/>|<w:cr\/>/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(p))) {
       if (m[1] !== undefined) t += decode(m[1]);
       else if (m[0].startsWith("<w:tab")) t += " ";
       else t += "\n";
+    }
+    if (isList && t.trim()) {
+      listNo++;
+      if (!/^\s*(?:Q\.?\s*)?\d{1,4}\s*[.)\]:]/i.test(t) && !/^\s*\(?[A-Ea-e]\s*[.)\]:]/.test(t)) t = `${listNo}. ` + t.replace(/^\s+/, "");
     }
     for (const line of t.split("\n")) out.push(line.replace(/ /g, " ").replace(/[ \t]+/g, " ").trim());
   }

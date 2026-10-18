@@ -97,7 +97,7 @@ export function parseQuestionDoc(lines: string[]): { questions: ParsedQ[]; warni
       qLines.push(line);
     }
     if (opts.length < 2) { warnings.push(`Q${no}: options nahi mile — chhod diya`); return; }
-    if (!answer) { warnings.push(`Q${no}: "Answer" line nahi mili — chhod diya`); return; }
+    if (!answer) { warnings.push(`Q${no}: "Answer" line nahi mili${opts.length < 4 ? ` (sirf ${opts.length} option mile — sawal adhoora lagta hai)` : ""} — chhod diya`); return; }
     if ("ABCDE".indexOf(answer) >= opts.length) { warnings.push(`Q${no}: Answer ${answer} hai par option ${answer} nahi hai — chhod diya`); return; }
     if (opts.length > 5) warnings.push(`Q${no}: 5 se zyada options — sirf A–E liye`);
 
