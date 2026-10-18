@@ -41,4 +41,4 @@ export async function gradeAttempt(attemptId: number) {
   return { score, correct, wrong, skipped };
 }
 
-export const KIND_LABEL: Record<string, string> = { full: "Full Mock", subject: "Subject-wise", topic: "Topic-wise", pyq: "PYQ", quiz: "Daily Quiz", keyword: "Keyword Test" };
+export const KIND_LABEL: Record<string, string> = { full: "Full Mock", subject: "Subject-wise", topic: "Topic-wise", pyq: "PYQ", "pyq-computer": "CPCT Computer PYQ", quiz: "Daily Quiz", keyword: "Keyword Test" };

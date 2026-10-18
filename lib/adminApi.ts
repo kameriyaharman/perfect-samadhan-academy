@@ -18,3 +18,15 @@ export async function toRow(r: Resource, body: Record<string, any>, isCreate: bo
   if (isCreate) for (const f of r.fields) if (f.required && !(f.name in out) && f.type !== "password") throw new Error(`${f.label} zaroori hai`);
   return out;
 }
+
+/** Admin list ka WHERE (search + filters + test_id) — list aur bulk dono me same */
+export function listWhere(r: Resource, sp: URLSearchParams | Record<string, any>) {
+  const get = (k: string) => (sp instanceof URLSearchParams ? sp.get(k) : sp[k] != null ? String(sp[k]) : null);
+  const where: string[] = []; const args: any[] = [];
+  const s = get("q")?.trim();
+  if (s && r.search?.length) { args.push(`%${s}%`); where.push("(" + r.search.map((c) => `${c}::text ILIKE $${args.length}`).join(" OR ") + ")"); }
+  for (const f of r.filters || []) { const v = get(f.name); if (v) { args.push(v); where.push(`${f.name}=$${args.length}`); } }
+  const tid = get("test_id");
+  if (tid && r.key === "questions") { args.push(Number(tid)); where.push(`test_id=$${args.length}`); }
+  return { sql: where.length ? "WHERE " + where.join(" AND ") : "", args };
+}

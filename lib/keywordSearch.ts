@@ -62,8 +62,20 @@ export async function keywordPick(f: KwFilter, n: number) {
 /** Keyword page ke liye topic list + popular chips (admin se) */
 export async function keywordTopics() {
   try {
-    return await q<{ label: string; kind: string }>("SELECT label, kind FROM keywords WHERE active ORDER BY sort, id");
+    return await q<{ label: string; kind: string; is_free: boolean }>("SELECT label, kind, is_free FROM keywords WHERE active ORDER BY sort, id");
   } catch {
     return [];
+  }
+}
+
+/** Is keyword ka test premium hai? (locked topic, ya admin ne custom keyword premium kiya ho) */
+export async function keywordLocked(keyword: string): Promise<boolean> {
+  try {
+    const r = await q<{ is_free: boolean }>("SELECT is_free FROM keywords WHERE active AND lower(trim(label)) = lower(trim($1)) LIMIT 1", [keyword]);
+    if (r.length) return r[0].is_free === false;
+    const s = await q<{ value: string }>("SELECT value FROM settings WHERE key='keyword_custom_premium'");
+    return s[0]?.value === "1";
+  } catch {
+    return false;
   }
 }

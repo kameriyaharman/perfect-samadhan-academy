@@ -5,7 +5,6 @@ import LockedNotice from "@/components/typing/LockedNotice";
 import TypingTest from "@/components/typing/TypingTest";
 import { LAYOUT_NAME } from "@/lib/typingScore";
 import { getPattern, qualifyFor } from "@/lib/patterns";
-import { getSettings } from "@/lib/settings";
 
 export const metadata = { title: "Typing Test" };
 
@@ -37,7 +36,6 @@ export default async function Start({ searchParams: sp }: { searchParams: Record
       passages={passages.map((x: any) => ({ id: x.id, title: (x.is_free === false && !premium ? "🔒 " : "") + x.title, level: x.level, exam: x.exam, session: x.session, year: x.year }))}
       userName={user?.name || null} limit={limit}
       rules={{ name: pat.name, backspace: pat.backspace, highlight: pat.highlight, locked: pat.lock_rules, qualify: qualifyFor(pat, lang) }}
-      soundUrl={(await getSettings()).typing_sound_url || ""}
       lang={lang} layout={layout} layoutName={layoutName} pattern={pat.slug} duration={duration} mode={sp.mode === "practice" || pat.slug === "practice" ? "practice" : "exam"} />
   );
 }

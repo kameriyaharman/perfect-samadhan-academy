@@ -59,7 +59,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: "mock_tests", table: "mock_tests", label: "Mock Tests", group: "Tests", icon: "ClipboardCheck", order: "exam_slug, kind, sort, id", search: ["title", "subject", "topic", "session"],
-    filters: [{ name: "kind", options: EXAM_KIND }],
+    filters: [{ name: "kind", options: EXAM_KIND }, { name: "is_free", options: ["true", "false"] }],
     fields: [
       { name: "title", label: "Title", required: true, list: true },
       { name: "exam_slug", label: "Exam slug (cpct, ssc-chsl…)", required: true, list: true },
@@ -105,6 +105,7 @@ export const RESOURCES: Resource[] = [
       { name: "label", label: "Dikhne wala naam (jaise कम्प्यूटर मेमोरी / Computer Memory)", required: true, list: true, full: true },
       { name: "terms", label: "Search shabd — | se alag (jaise Memory|मेमोरी|RAM|ROM)", list: true, full: true, help: "In me se koi bhi shabd sawal, topic ya keywords me ho to sawal test me aayega. Khaali = naam hi search hoga." },
       { name: "kind", label: "Kahan dikhe", type: "select", options: ["topic", "popular"], list: true, help: "topic = Topic list (grid) · popular = search box ke neeche chhote chips" },
+      { name: "is_free", label: "Free (band karne par is topic ka MCQ test sirf Premium — 🔒)", type: "bool", list: true },
       { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -387,7 +388,7 @@ export const SETTING_GROUPS: { title: string; note?: string; keys: [string, stri
   { title: "Social & App", keys: [["facebook", "Facebook URL"], ["youtube", "YouTube URL"], ["instagram", "Instagram URL"], ["telegram", "Telegram URL"], ["android_app", "Android app URL"]] },
   { title: "Home page", keys: [["hero_badge", "Hero badge"], ["hero_title_1", "Hero title line 1"], ["hero_title_2", "Hero title line 2 (white)"], ["hero_title_3", "Hero title line 2 (orange)"], ["hero_subtitle", "Hero subtitle", "textarea"], ["stat_1", "Stat 1 (value|label)"], ["stat_2", "Stat 2"], ["stat_3", "Stat 3"], ["stat_4", "Stat 4"], ["cta_title", "Bottom CTA title"], ["cta_subtitle", "Bottom CTA subtitle"], ["footer_about", "Footer about", "textarea"]] },
   { title: "About page", keys: [["about_story", "Our story", "textarea"], ["about_students", "Students stat"], ["about_selections", "Selections stat"], ["about_years", "Experience stat"], ["mission", "Mission"], ["vision", "Vision"], ["values", "Values"]] },
-  { title: "Typing Test", note: "Key sound: Pixabay / Monkeytype jaisi koi chhoti (0.1–0.3 sec) typing click mp3 upload karein. Students ko Settings me 'Academy sound' option milega aur wahi default bajegi. Khaali chhodne par website ki apni mechanical keyboard aawaz bajti hai.", keys: [["typing_sound_url", "Key sound file (mp3 / wav)", "file"]] },
+  { title: "MCQ / Keyword Test", note: "Topic-wise lock: Admin → Keyword Test Topics me har topic par Free / Premium. Ye toggle sirf us test ke liye hai jo student khud keyword likh kar banata hai.", keys: [["keyword_custom_premium", "Khud likhe keyword se MCQ test sirf Premium students", "toggle"]] },
   { title: "Misc", keys: [["weekly_rewards", "Leaderboard weekly rewards text", "textarea"], ["install_help", "Downloads installation help", "textarea"], ["payment_note", "Payment options text", "textarea"]] },
   { title: "Policies (markdown)", keys: [["privacy_policy", "Privacy Policy", "textarea"], ["terms", "Terms & Conditions", "textarea"], ["disclaimer", "Disclaimer", "textarea"], ["refund_policy", "Refund Policy", "textarea"]] },
 ];

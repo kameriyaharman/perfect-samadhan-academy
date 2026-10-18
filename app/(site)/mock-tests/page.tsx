@@ -18,6 +18,11 @@ export default async function MockTests() {
       <PageHero crumbs={[{ label: "Mock Tests" }]} title="ऑनलाइन" highlight="मॉक टेस्ट" subtitle="Real exam jaisa interface, Hindi/English dono me, instant result aur har question ka explanation."
         chips={[<><ClipboardCheck className="h-4 w-4" />{total}+ Mock Tests</>, <><Languages className="h-4 w-4" />Bilingual</>, <><BarChart3 className="h-4 w-4" />All-India Rank</>]} />
       <Container className="py-10">
+        <Link href="/mock-tests/cpct-computer" className="mb-6 flex flex-col gap-3 rounded-2xl bg-navy p-5 text-white transition hover:-translate-y-0.5 hover:shadow-lift md:flex-row md:items-center md:p-6" data-dark>
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold text-lg font-extrabold text-navy">52</span>
+          <span className="flex-1"><b className="block text-lg md:text-xl">CPCT Previous Year Online Test — <span className="hi">कंप्यूटर (52 प्रश्न)</span></b><span className="text-sm text-white/75">Sirf Computer wala hissa · saal aur shift ke hisaab se · Hindi + English</span></span>
+          <span className="btn bg-gold px-5 py-2.5 font-bold text-navy">Test dein →</span>
+        </Link>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[[ClipboardCheck, "Full Mock Test", "Poora paper, 75 min", "/mock-tests/cpct", "blue"], [Layers, "Subject-wise", "Computer, Maths, GK…", "/mock-tests/cpct?tab=subject", "orange"], [Target, "Topic-wise", "Ek chapter, chhote tests", "/mock-tests/topic-wise", "green"], [FileText, "PYQ Online Test", "Purane paper online", "/mock-tests/pyq", "red"]].map(([I, t, d, h, c]: any) => (
             <Link key={t} href={h} className="card flex items-center gap-4 p-5 transition hover:-translate-y-1 hover:shadow-lift">

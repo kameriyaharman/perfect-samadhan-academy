@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { q, one } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { getResource } from "@/lib/resources";
-import { toRow } from "@/lib/adminApi";
+import { listWhere, toRow } from "@/lib/adminApi";
 
 export async function GET(req: Request, { params }: { params: { resource: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -11,13 +11,7 @@ export async function GET(req: Request, { params }: { params: { resource: string
   const u = new URL(req.url);
   const page = Math.max(1, Number(u.searchParams.get("page")) || 1);
   const per = Math.min(100, Number(u.searchParams.get("per")) || 25);
-  const s = u.searchParams.get("q")?.trim();
-  const where: string[] = []; const args: any[] = [];
-  if (s && r.search?.length) { args.push(`%${s}%`); where.push("(" + r.search.map((c) => `${c}::text ILIKE $${args.length}`).join(" OR ") + ")"); }
-  for (const f of r.filters || []) { const v = u.searchParams.get(f.name); if (v) { args.push(v); where.push(`${f.name}=$${args.length}`); } }
-  const tid = u.searchParams.get("test_id");
-  if (tid && r.key === "questions") { args.push(Number(tid)); where.push(`test_id=$${args.length}`); }
-  const w = where.length ? "WHERE " + where.join(" AND ") : "";
+  const { sql: w, args } = listWhere(r, u.searchParams);
   const cols = ["id", ...r.fields.filter((f) => f.list && f.type !== "password").map((f) => f.name)];
   const [rows, total] = await Promise.all([
     q(`SELECT ${cols.join(",")} FROM ${r.table} ${w} ORDER BY ${r.order} LIMIT ${per} OFFSET ${(page - 1) * per}`, args),

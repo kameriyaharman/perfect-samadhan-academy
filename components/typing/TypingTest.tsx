@@ -23,7 +23,6 @@ type Props = {
   userName: string | null;
   lang: "hindi" | "english"; layout: Layout; layoutName: string; pattern: string; duration: number; mode: "practice" | "exam"; limit: number;
   rules?: { name: string; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none"; locked: boolean; qualify: number };
-  soundUrl?: string;
 };
 type BsMode = "full" | "word" | "prev" | "off";
 type HlMode = "word" | "error" | "none";
@@ -68,13 +67,13 @@ export default function TypingTest(p: Props) {
   // ---------- preferences ----------
   // backspace/highlight hamesha exam pattern (admin) ke hisaab se shuru; baaki tools student ki pasand se yaad rehte hain
   const R = p.rules || { name: "", backspace: "full" as BsMode, highlight: (p.pattern === "highcourt" ? "none" : "error") as HlMode, locked: false, qualify: 0 };
-  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: R.backspace, highlight: R.highlight, guide: false, keySound: (p.soundUrl ? "custom" : "mechanical") as SoundKind, vol: 60, font: 22 };
+  const defaults: Prefs = { night: false, hint: false, hideArea: false, autoScroll: true, backspace: R.backspace, highlight: R.highlight, guide: false, keySound: "mechanical" as SoundKind, vol: 60, font: 22 };
   const [prefs, setPrefs] = useState<Prefs>(defaults);
   useEffect(() => {
     const s = store.get<Partial<Prefs> & { sound?: boolean }>(PREFS_KEY);
-    if (s) { delete s.sound; setPrefs((d) => ({ ...d, ...s, backspace: R.backspace, highlight: R.highlight })); }
+    if (s) { delete s.sound; if ((s.keySound as string) === "custom") s.keySound = "mechanical"; setPrefs((d) => ({ ...d, ...s, backspace: R.backspace, highlight: R.highlight })); }
   }, []); // eslint-disable-line
-  const snd = (type: "key" | "space" | "back" = "key") => playKey(prefs.keySound, type, prefs.vol / 100, p.soundUrl);
+  const snd = (type: "key" | "space" | "back" = "key") => playKey(prefs.keySound, type, prefs.vol / 100);
   const setPref = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((o) => {
     if (R.locked && (k === "backspace" || k === "highlight")) return o;
     const n = { ...o, [k]: v }; store.set(PREFS_KEY, n); return n;
@@ -262,7 +261,7 @@ export default function TypingTest(p: Props) {
 
   const startTest = () => {
     setReady(true);
-    warmUp(prefs.keySound, p.soundUrl);
+    warmUp(prefs.keySound);
     try { if (window.innerWidth >= 1024 && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {}); } catch {}
     setTimeout(() => inputRef.current?.focus(), 60);
   };
@@ -523,13 +522,13 @@ export default function TypingTest(p: Props) {
               <div className="mt-4 px-2">
                 <div className="mb-1.5 flex items-center gap-3 text-[14.5px] font-semibold"><span className="opacity-60"><Volume2 className="h-5 w-5" /></span>Key Sound</div>
                 <div className="space-y-2 pl-8">
-                  <select value={prefs.keySound} onChange={(e) => { const v = e.target.value as SoundKind; setPref("keySound", v); warmUp(v, p.soundUrl); playKey(v, "key", prefs.vol / 100, p.soundUrl); }}
+                  <select value={prefs.keySound} onChange={(e) => { const v = e.target.value as SoundKind; setPref("keySound", v); warmUp(v); playKey(v, "key", prefs.vol / 100); }}
                     className={`h-9 w-full rounded-md border px-2 text-sm outline-none ${n ? "border-white/15 bg-[#161e33]" : "border-line bg-white"}`}>
-                    {SOUND_OPTIONS.filter(([k]) => k !== "custom" || p.soundUrl).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                    {SOUND_OPTIONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                   </select>
                   {prefs.keySound !== "off" && (
                     <label className="flex items-center gap-2 text-xs opacity-80">Volume
-                      <input type="range" min={5} max={100} value={prefs.vol} onChange={(e) => setPref("vol", Number(e.target.value))} onMouseUp={() => playKey(prefs.keySound, "key", prefs.vol / 100, p.soundUrl)} className="flex-1 accent-[#1f4fb5]" />
+                      <input type="range" min={5} max={100} value={prefs.vol} onChange={(e) => setPref("vol", Number(e.target.value))} onMouseUp={() => playKey(prefs.keySound, "key", prefs.vol / 100)} className="flex-1 accent-[#1f4fb5]" />
                       <span className="w-8 text-right tabular-nums">{prefs.vol}</span>
                     </label>
                   )}

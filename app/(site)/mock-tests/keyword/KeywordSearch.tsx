@@ -3,13 +3,13 @@
 // jo chuno sirf unhi me se test bane (koi na chuna ho to sab me se).
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Check, Filter, ListOrdered, Loader2, Search, Sparkles, X } from "lucide-react";
+import { BookOpen, Lock, Check, Filter, ListOrdered, Loader2, Search, Sparkles, X } from "lucide-react";
 
 type Opt = { label: string; n: number };
 type Res = { count: number; items: any[]; sources: Opt[]; topics: Opt[] };
 const DEFAULT_POPULAR = ["Excel", "Word", "PowerPoint", "Network", "Printer", "Memory", "Windows", "Input", "Shortcut", "Email", "Virus", "Full Form"];
 
-export default function KeywordSearch({ loggedIn, children, initial, topics = [], popular }: { loggedIn: boolean; children: React.ReactNode; initial?: string; topics?: string[]; popular?: string[] }) {
+export default function KeywordSearch({ loggedIn, children, initial, topics = [], popular, lockedTopics = [], customLocked = false }: { loggedIn: boolean; children: React.ReactNode; initial?: string; topics?: string[]; popular?: string[]; lockedTopics?: string[]; customLocked?: boolean }) {
   const POPULAR = popular?.length ? popular : DEFAULT_POPULAR;
   const r = useRouter();
   const [kw, setKw] = useState(initial || "");
@@ -39,11 +39,14 @@ export default function KeywordSearch({ loggedIn, children, initial, topics = []
   }, [kw, srcSel, topSel]);
 
   const total = res?.count ?? 0;
+  const isLocked = lockedTopics.includes(kw) || (customLocked && !topics.includes(kw) && !POPULAR.includes(kw));
   const make = async () => {
+    if (isLocked) return r.push("/plans");
     if (!loggedIn) return r.push(`/login?next=/mock-tests/keyword?q=${encodeURIComponent(kw)}`);
     setBusy(true); setErr("");
     const x = await fetch("/api/test/keyword", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keyword: kw, count: n || total, language: lang, sources: srcSel, topics: topSel }) });
     const j = await x.json();
+    if (x.status === 402) return r.push("/plans");
     if (!x.ok) { setErr(j.error || "Error"); setBusy(false); return; }
     r.push(`/test/attempt/${j.attemptId}`);
   };
@@ -71,7 +74,7 @@ export default function KeywordSearch({ loggedIn, children, initial, topics = []
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {topics.map((t) => (
                 <button key={t} onClick={() => { setKw(t); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className={`hi rounded-xl border px-3 py-2.5 text-left text-[14.5px] transition ${kw === t ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand hover:text-brand"}`}>{t}</button>
+                  className={`hi rounded-xl border px-3 py-2.5 text-left text-[14.5px] transition ${kw === t ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand hover:text-brand"}`}>{lockedTopics.includes(t) && <Lock className="mr-1.5 inline h-3.5 w-3.5 text-saffron" />}{t}</button>
               ))}
             </div>
           </div>
@@ -95,7 +98,7 @@ export default function KeywordSearch({ loggedIn, children, initial, topics = []
             <div className="sticky bottom-3 mt-5 rounded-xl bg-white/90 backdrop-blur">
               <button onClick={make} disabled={busy || !total} className="btn-primary w-full !py-3.5 text-base">
                 {busy || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {total ? `टेस्ट शुरू करें — ${qCount} sawal` : "टेस्ट शुरू करें"}
+                {isLocked ? "🔒 Premium — Unlock karein" : total ? `टेस्ट शुरू करें — ${qCount} sawal` : "टेस्ट शुरू करें"}
               </button>
             </div>
           </div>

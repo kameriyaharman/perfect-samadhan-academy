@@ -450,4 +450,5 @@ CREATE TABLE IF NOT EXISTS attendance (
 CREATE INDEX IF NOT EXISTS attendance_batch_date ON attendance(batch, date);
 ALTER TABLE downloads ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Software';
 ALTER TABLE downloads ADD COLUMN IF NOT EXISTS version TEXT;
+ALTER TABLE keywords ADD COLUMN IF NOT EXISTS is_free BOOLEAN NOT NULL DEFAULT true;
 `;

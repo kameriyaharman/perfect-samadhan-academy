@@ -101,7 +101,13 @@ export default function WordImport({ testId: tid, defaultNew, onClose, onDone }:
                       <div><label className="label">Marks / sawal</label><input value={t.marks_per_q} onChange={(e) => setT({ ...t, marks_per_q: e.target.value })} className="input" inputMode="decimal" /></div>
                       <div><label className="label">Negative</label><input value={t.negative} onChange={(e) => setT({ ...t, negative: e.target.value })} className="input" inputMode="decimal" /></div>
                     </div>
-                    <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" checked={t.is_free} onChange={(e) => setT({ ...t, is_free: e.target.checked })} className="h-4 w-4 accent-[#1f35b8]" />Free test (bina premium)</label>
+                    <div className="md:col-span-2">
+                      <label className="label">Test kiske liye? *</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={() => setT({ ...t, is_free: true })} className={`rounded-xl border-2 px-3 py-2.5 text-left text-sm ${t.is_free ? "border-green-600 bg-green-50 font-semibold text-green-800" : "border-line"}`}>🔓 Free — sab students</button>
+                        <button type="button" onClick={() => setT({ ...t, is_free: false })} className={`rounded-xl border-2 px-3 py-2.5 text-left text-sm ${!t.is_free ? "border-saffron bg-orange-50 font-semibold text-orange-800" : "border-line"}`}>🔒 Premium — sirf paid students</button>
+                      </div>
+                    </div>
                   </div>
                 )}
                 <div className="mt-4 grid gap-3 md:grid-cols-3">

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileText, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
+import { CheckCircle2, Lock, Unlock, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileText, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
 import type { Field, Resource } from "@/lib/resources";
 import { parseCSV, sampleCSV } from "@/lib/csv";
 import WordImport from "./WordImport";
@@ -39,6 +39,10 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const canWord = r.key === "questions" || r.key === "mock_tests";
   const canImport = !r.noCreate && !r.readonly;
   const per = 25;
+  const [sel, setSel] = useState<Set<number>>(new Set());
+  const [allMatch, setAllMatch] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const hasFree = r.fields.some((f) => f.name === "is_free");
   const listFields = r.fields.filter((f) => f.list);
 
   const load = useCallback(async () => {
@@ -47,6 +51,30 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
     const j = await fetch(`/api/admin/${r.key}?${p}`).then((x) => x.json());
     setRows(j.rows || []); setTotal(j.total || 0); setLoading(false);
   }, [page, search, filters, r.key]);
+  // filter / search badla to selection saaf
+  useEffect(() => { setSel(new Set()); setAllMatch(false); }, [search, filters, r.key]);
+  const pageIds = rows.map((x) => x.id as number);
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => sel.has(id));
+  const togglePage = () => { const n = new Set(sel); if (allOnPage) pageIds.forEach((id) => n.delete(id)); else pageIds.forEach((id) => n.add(id)); setSel(n); setAllMatch(false); };
+  const toggleOne = (id: number) => { const n = new Set(sel); n.has(id) ? n.delete(id) : n.add(id); setSel(n); setAllMatch(false); };
+  const selCount = allMatch ? total : sel.size;
+  const bulk = async (action: "delete" | "lock" | "unlock") => {
+    if (!selCount) return;
+    const what = action === "delete" ? "DELETE" : action === "lock" ? "🔒 Premium (lock)" : "Free (unlock)";
+    if (!confirm(`${selCount} records ${what} karne hain?${action === "delete" ? " Yeh wapas nahi aayenge." + (r.key === "mock_tests" ? " In tests ke saare sawal bhi delete ho jayenge." : "") : ""}`)) return;
+    setBulkBusy(true);
+    const body = allMatch ? { action, all: true, filter: { q: search, ...filters } } : { action, ids: Array.from(sel) };
+    const x = await fetch(`/api/admin/${r.key}/bulk`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await x.json().catch(() => ({}));
+    setBulkBusy(false);
+    if (!x.ok) return alert(j.error || "Error");
+    setSel(new Set()); setAllMatch(false);
+    if (action === "delete" && page > 1 && rows.length <= (allMatch ? rows.length : sel.size)) setPage(1); else load();
+  };
+  const quickFree = async (row: any) => {
+    await fetch(`/api/admin/${r.key}/bulk`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: row.is_free ? "lock" : "unlock", ids: [row.id] }) });
+    load();
+  };
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [load]);
 
   const openNew = () => {
@@ -96,16 +124,32 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
         ))}
         {filters.test_id && <button onClick={() => { const f = { ...filters }; delete f.test_id; setFilters(f); }} className="chip bg-brand-50 text-brand py-2">Test #{filters.test_id} <X className="h-3 w-3" /></button>}
       </div>
+      {selCount > 0 && (
+        <div className="sticky top-2 z-20 mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-brand/30 bg-brand-50 px-4 py-2.5 shadow-sm">
+          <b className="text-sm text-navy">{selCount} selected</b>
+          {!allMatch && allOnPage && total > rows.length && <button onClick={() => setAllMatch(true)} className="text-sm font-semibold text-brand underline">Is list ke sabhi {total} chunein</button>}
+          {allMatch && <span className="text-xs text-muted">(is search/filter ke sabhi records)</span>}
+          <button onClick={() => { setSel(new Set()); setAllMatch(false); }} className="text-sm text-muted hover:text-ink">Clear</button>
+          <span className="ml-auto flex flex-wrap gap-2">
+            {hasFree && <button disabled={bulkBusy} onClick={() => bulk("lock")} className="btn-soft btn-sm"><Lock className="h-3.5 w-3.5" />Lock (Premium)</button>}
+            {hasFree && <button disabled={bulkBusy} onClick={() => bulk("unlock")} className="btn-ghost btn-sm"><Unlock className="h-3.5 w-3.5" />Unlock (Free)</button>}
+            <button disabled={bulkBusy} onClick={() => bulk("delete")} className="btn-sm inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700">{bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}Delete selected</button>
+          </span>
+        </div>
+      )}
       <div className="card mt-4 overflow-x-auto">
         <table className="table-x min-w-[700px]">
-          <thead><tr><th className="w-14">ID</th>{listFields.map((f) => <th key={f.name}>{f.label.split("(")[0].split("—")[0]}</th>)}<th className="w-40 text-right">Actions</th></tr></thead>
+          <thead><tr><th className="w-10"><input type="checkbox" aria-label="Is page ke sab chunein" checked={allOnPage} onChange={togglePage} className="h-4 w-4 cursor-pointer accent-[#1f35b8]" /></th><th className="w-14">ID</th>{listFields.map((f) => <th key={f.name}>{f.label.split("(")[0].split("—")[0]}</th>)}<th className="w-40 text-right">Actions</th></tr></thead>
           <tbody>
-            {loading ? <tr><td colSpan={listFields.length + 2} className="py-10 text-center text-muted"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
-              : !rows.length ? <tr><td colSpan={listFields.length + 2} className="py-10 text-center text-muted">Kuch nahi mila</td></tr>
+            {loading ? <tr><td colSpan={listFields.length + 3} className="py-10 text-center text-muted"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+              : !rows.length ? <tr><td colSpan={listFields.length + 3} className="py-10 text-center text-muted">Kuch nahi mila</td></tr>
               : rows.map((row) => (
-                <tr key={row.id}>
+                <tr key={row.id} className={sel.has(row.id) || allMatch ? "bg-brand-50/50" : ""}>
+                  <td><input type="checkbox" aria-label={`Select ${row.id}`} checked={allMatch || sel.has(row.id)} onChange={() => toggleOne(row.id)} className="h-4 w-4 cursor-pointer accent-[#1f35b8]" /></td>
                   <td className="text-muted">{row.id}</td>
-                  {listFields.map((f) => <td key={f.name} className={f.name.endsWith("_hi") || f.name === "hindi" ? "hi" : ""}>{fmt(row[f.name], f)}</td>)}
+                  {listFields.map((f) => <td key={f.name} className={f.name.endsWith("_hi") || f.name === "hindi" ? "hi" : ""}>{f.name === "is_free"
+                    ? <button onClick={() => quickFree(row)} title="Click karke Free / Premium badlein" className={`chip cursor-pointer ${row.is_free ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>{row.is_free ? <><Unlock className="h-3 w-3" />Free</> : <><Lock className="h-3 w-3" />Premium</>}</button>
+                    : fmt(row[f.name], f)}</td>)}
                   <td className="whitespace-nowrap text-right">
                     {r.key === "mock_tests" && <Link href={`/admin/r/questions?test_id=${row.id}`} title="Questions" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand"><ListChecks className="h-4 w-4" /></Link>}
                     {PUBLIC[r.key] && <a href={PUBLIC[r.key](row)} target="_blank" title="View" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-canvas"><ExternalLink className="h-4 w-4" /></a>}

@@ -7,7 +7,6 @@ export const SOUND_OPTIONS: [SoundKind, string][] = [
   ["mechanical", "Mechanical keyboard"],
   ["typewriter", "Typewriter"],
   ["soft", "Soft click"],
-  ["custom", "Academy sound (admin)"],
   ["off", "Band"],
 ];
 
