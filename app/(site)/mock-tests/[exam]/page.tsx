@@ -6,6 +6,7 @@ import { getUser, isPremium } from "@/lib/auth";
 import { rupee, sections } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 const TABS = [["full", "Full Mock"], ["subject", "Subject-wise"], ["topic", "Topic-wise"], ["pyq", "PYQ"]] as const;
 const PER = 10;
@@ -44,6 +45,7 @@ export default async function Series({ params, searchParams }: { params: { exam:
         subtitle={exam.description}
         chips={[<><ClipboardCheck className="h-4 w-4" />{cnt("full")} Full Mocks</>, <><Target className="h-4 w-4" />{cnt("topic")} Topic Tests</>, <><FileText className="h-4 w-4" />{cnt("pyq")} PYQ Tests</>, <><Users className="h-4 w-4" />{((students?.n || 0) + (exam.students || 0)).toLocaleString("en-IN")} students</>]} />
       <Container className="py-10">
+        <AdSlot place="Mock Test" />
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="min-w-0">
             <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line scrollbar-none">
@@ -103,6 +105,7 @@ export default async function Series({ params, searchParams }: { params: { exam:
             )}
           </aside>
         </div>
+        <AdSlot place="Mock Test" pos="bottom" />
       </Container>
     </>
   );

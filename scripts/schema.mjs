@@ -480,4 +480,21 @@ CREATE TABLE IF NOT EXISTS leaders (
   sort INT NOT NULL DEFAULT 0,
   active BOOLEAN NOT NULL DEFAULT true
 );
+-- v3 (Oct 2026): image ads / banners — admin se har section me
+CREATE TABLE IF NOT EXISTS ads (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  image_url TEXT NOT NULL,
+  mobile_image_url TEXT,
+  link TEXT,
+  placement TEXT NOT NULL DEFAULT 'all',
+  position TEXT NOT NULL DEFAULT 'top',
+  start_date DATE,
+  end_date DATE,
+  new_tab BOOLEAN NOT NULL DEFAULT true,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ads_place ON ads(placement, position);
 `;

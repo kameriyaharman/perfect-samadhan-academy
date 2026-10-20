@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { MONTHS } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Notice Board aur Important Dates" };
 const TABS = [["", "Sabhi"], ["Admit Card", "Admit Card"], ["Result", "Result"], ["Vacancy", "Vacancy"], ["Answer Key", "Answer Key"]];
@@ -18,6 +19,7 @@ export default async function Notices({ searchParams }: { searchParams: { c?: st
     <>
       <PageHero crumbs={[{ label: "Notices" }]} title="नोटिस बोर्ड और" highlight="महत्वपूर्ण तिथियाँ" subtitle="Admit card, result, answer key, vacancy aur exam dates — sab updates ek jagah. WhatsApp par bhi milenge." compact />
       <Container className="py-10">
+        <AdSlot place="Notice" />
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="min-w-0">
             <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line scrollbar-none">{TABS.map(([k, l]) => <Link key={k} href={k ? `/notices?c=${encodeURIComponent(k)}` : "/notices"} className={`tab ${c === k ? "active" : ""}`}>{l}</Link>)}</div>
@@ -40,10 +42,13 @@ export default async function Notices({ searchParams }: { searchParams: { c?: st
             )}
           </div>
           <aside className="space-y-4">
+            <AdSlot place="Upcoming Exams" className="" includeAll={false} />
             <div className="card p-6"><h3 className="mb-2 flex items-center gap-2 text-lg font-bold"><CalendarDays className="h-5 w-5" />Upcoming Exams</h3>{up.map((u: any) => <div key={u.id} className="flex justify-between border-b border-line py-3 last:border-0"><span>{u.name}</span><b className="text-brand">{u.date}</b></div>)}</div>
+            <AdSlot place="Upcoming Exams" pos="bottom" className="" includeAll={false} />
             <div className="rounded-2xl border border-green-200 bg-green-50 p-6"><h3 className="flex items-center gap-2 text-lg font-bold text-green-700"><MessageCircle className="h-5 w-5" />WhatsApp Alerts</h3><p className="mt-1 text-sm text-muted">Har notice sabse pehle WhatsApp par paayein.</p><a href={s.whatsapp_group || `https://wa.me/${s.whatsapp}`} target="_blank" rel="noreferrer" className="btn mt-3 bg-[#25d366] px-5 py-2.5 text-white"><MessageCircle className="h-4 w-4" />Join Group</a></div>
           </aside>
         </div>
+        <AdSlot place="Notice" pos="bottom" />
       </Container>
     </>
   );

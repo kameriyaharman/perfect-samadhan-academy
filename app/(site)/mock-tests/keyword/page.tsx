@@ -7,6 +7,7 @@ import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import KeywordSearch from "./KeywordSearch";
 import { keywordTopics } from "@/lib/keywordSearch";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Keyword Mock Test" };
 
@@ -18,6 +19,7 @@ export default async function Keyword({ searchParams }: { searchParams: { q?: st
     <>
       <PageHero crumbs={[{ label: "Mock Tests", href: "/mock-tests" }, { label: "Keyword Mock Test" }]} title="कीवर्ड से" highlight="टेस्ट बनाएँ" subtitle={`Koi bhi topic ya keyword likhiye — jaise "Excel", "RAM", "Shortcut" — aur usi par bane sawalon ka test turant dijiye.`} compact />
       <Container className="py-10">
+        <AdSlot place="Questions Making" />
         <KeywordSearch loggedIn={!!user} initial={searchParams.q} topics={kws.filter((k) => k.kind !== "popular").map((k) => k.label)} lockedTopics={premium ? [] : kws.filter((k) => k.is_free === false).map((k) => k.label)} customLocked={!premium && st.keyword_custom_premium === "1"} popular={kws.filter((k) => k.kind === "popular").map((k) => k.label)}>
           <div className="card p-6">
             <h3 className="mb-3 flex items-center gap-2 text-lg font-bold"><History className="h-5 w-5" />Aapke pichhle keyword tests</h3>
@@ -31,6 +33,7 @@ export default async function Keyword({ searchParams }: { searchParams: { q?: st
             ) : <p className="text-sm text-muted">{user ? "Abhi koi keyword test nahi diya." : "Login karke apne tests ka record dekhein."}</p>}
           </div>
         </KeywordSearch>
+        <AdSlot place="Questions Making" pos="bottom" />
       </Container>
     </>
   );

@@ -5,6 +5,7 @@ import { color } from "@/lib/utils";
 import Icon from "@/components/Icon";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Downloads — Software, Fonts & App" };
 
@@ -14,6 +15,7 @@ export default async function Downloads() {
     <>
       <PageHero crumbs={[{ label: "Downloads" }]} title={<span className="text-gold">डाउनलोड</span>} after=" — Software, Fonts & App" subtitle="Hindi typing ke liye zaroori software, fonts aur hamari mobile app — sab free." compact />
       <Container className="py-10">
+        <AdSlot place="Download" />
         {!rows.length ? <Empty /> : (
           <div className="space-y-10">
             {Array.from(new Set(rows.map((d: any) => d.category || "Software"))).map((cat) => (
@@ -40,6 +42,7 @@ export default async function Downloads() {
           </div>
         )}
         {s.install_help && <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-6"><h3 className="flex items-center gap-2 text-lg font-bold text-amber-800"><Info className="h-5 w-5" />Installation Help</h3><p className="mt-2 text-[15px] text-muted">{s.install_help}</p></div>}
+        <AdSlot place="Download" pos="bottom" />
       </Container>
     </>
   );

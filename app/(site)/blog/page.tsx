@@ -3,6 +3,7 @@ import { q } from "@/lib/db";
 import { color, fmtDate } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Blog aur Lekh" };
 const CATS = ["Exam News", "Typing Tips", "Strategy", "Computer Notes"];
@@ -19,6 +20,7 @@ export default async function Blog({ searchParams }: { searchParams: { c?: strin
     <>
       <PageHero crumbs={[{ label: "Blog" }]} title="ब्लॉग और" highlight="लेख" subtitle="Exam news, preparation strategy, typing tips aur computer notes — har hafte naye articles." compact />
       <Container className="py-10">
+        <AdSlot place="Blog Post" />
         <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line scrollbar-none">
           <Link href="/blog" className={`tab ${!c ? "active" : ""}`}>Sabhi</Link>
           {CATS.map((k) => <Link key={k} href={`/blog?c=${encodeURIComponent(k)}`} className={`tab ${c === k ? "active" : ""}`}>{k}</Link>)}
@@ -34,6 +36,7 @@ export default async function Blog({ searchParams }: { searchParams: { c?: strin
           </div>
         )}
         {pages > 1 && <div className="mt-8 flex justify-center gap-2">{Array.from({ length: pages }, (_, i) => i + 1).map((n) => <Link key={n} href={`/blog?${c ? `c=${encodeURIComponent(c)}&` : ""}page=${n}`} className={`grid h-10 w-10 place-items-center rounded-xl border text-sm font-bold ${n === page ? "border-brand bg-brand text-white" : "border-line bg-white"}`}>{n}</Link>)}</div>}
+        <AdSlot place="Blog Post" pos="bottom" />
       </Container>
     </>
   );

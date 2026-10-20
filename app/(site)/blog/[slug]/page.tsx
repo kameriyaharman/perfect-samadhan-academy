@@ -4,6 +4,7 @@ import { ChevronRight, Keyboard, List, Newspaper } from "lucide-react";
 import { one, q } from "@/lib/db";
 import { color, fmtDate, headings, initials, md } from "@/lib/utils";
 import { Container } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const p = await one("SELECT title, excerpt FROM posts WHERE slug=$1", [params.slug]);
@@ -18,6 +19,7 @@ export default async function Post({ params }: { params: { slug: string } }) {
   return (
     <Container className="py-8">
       <nav className="mb-3 flex items-center gap-1.5 text-sm text-muted"><Link href="/">Home</Link><ChevronRight className="h-3.5 w-3.5" /><Link href="/blog">Blog</Link><ChevronRight className="h-3.5 w-3.5" /><span>{p.category}</span></nav>
+      <AdSlot place="Blog Post" />
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <article className="min-w-0">
           <span className="chip bg-orange-50 text-orange-700">{p.category}</span>
@@ -35,6 +37,7 @@ export default async function Post({ params }: { params: { slug: string } }) {
           {related.length > 0 && <div className="card p-6"><h3 className="mb-2 flex items-center gap-2 text-lg font-bold"><Newspaper className="h-5 w-5" />Related</h3>{related.map((r: any) => <Link key={r.slug} href={`/blog/${r.slug}`} className="hi block border-b border-line py-3 text-[15px] last:border-0 hover:text-brand">{r.title}</Link>)}</div>}
         </aside>
       </div>
+      <AdSlot place="Blog Post" pos="bottom" />
     </Container>
   );
 }

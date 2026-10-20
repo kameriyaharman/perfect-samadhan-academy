@@ -4,6 +4,7 @@ import { q } from "@/lib/db";
 import { color } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Online Mock Tests" };
 
@@ -18,6 +19,7 @@ export default async function MockTests() {
       <PageHero crumbs={[{ label: "Mock Tests" }]} title="ऑनलाइन" highlight="मॉक टेस्ट" subtitle="Real exam jaisa interface, Hindi/English dono me, instant result aur har question ka explanation."
         chips={[<><ClipboardCheck className="h-4 w-4" />{total}+ Mock Tests</>, <><Languages className="h-4 w-4" />Bilingual</>, <><BarChart3 className="h-4 w-4" />All-India Rank</>]} />
       <Container className="py-10">
+        <AdSlot place="Mock Test" />
         <Link href="/mock-tests/cpct-computer" className="mb-6 flex flex-col gap-3 rounded-2xl bg-navy p-5 text-white transition hover:-translate-y-0.5 hover:shadow-lift md:flex-row md:items-center md:p-6" data-dark>
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold text-lg font-extrabold text-navy">52</span>
           <span className="flex-1"><b className="block text-lg md:text-xl">CPCT Previous Year Online Test — <span className="hi">कंप्यूटर (52 प्रश्न)</span></b><span className="text-sm text-white/75">Sirf Computer wala hissa · saal aur shift ke hisaab se · Hindi + English</span></span>
@@ -58,6 +60,7 @@ export default async function MockTests() {
           <Link href="/mock-tests/keyword" className="card flex items-center justify-between p-5 hover:shadow-lift"><span><b className="block text-lg">Keyword se Test banayein</b><span className="text-sm text-muted">"Excel", "RAM", "Shortcut" — kisi bhi topic par turant test</span></span><ArrowRight className="h-5 w-5 text-brand" /></Link>
           <Link href="/typing-test" className="card flex items-center justify-between p-5 hover:shadow-lift"><span><b className="block text-lg">Typing Test bhi dein</b><span className="text-sm text-muted">CPCT Hindi + English typing practice</span></span><ArrowRight className="h-5 w-5 text-brand" /></Link>
         </div>
+        <AdSlot place="Mock Test" pos="bottom" />
       </Container>
     </>
   );

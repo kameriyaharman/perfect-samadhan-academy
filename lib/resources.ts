@@ -25,6 +25,7 @@ export type Resource = {
 };
 
 const COLOR_OPTS = ["blue", "navy", "orange", "amber", "green", "red", "purple", "teal"];
+export const AD_PLACES = ["All Sections", "Blog Post", "Questions Making", "Mock Test", "Upcoming Exams", "Download", "Notice"];
 const EXAM_KIND = ["full", "subject", "topic", "pyq", "quiz"];
 
 export const RESOURCES: Resource[] = [
@@ -350,6 +351,23 @@ export const RESOURCES: Resource[] = [
       { name: "name", label: "Name", required: true, list: true }, { name: "exam", label: "Exam · session", list: true },
       { name: "result", label: "Result badge (Selected / Score 62/75)", list: true }, { name: "quote", label: "Quote", type: "textarea", full: true },
       { name: "city", label: "City" }, { name: "color", label: "Colour", type: "select", options: COLOR_OPTS }, { name: "sort", label: "Sort", type: "number" },
+    ],
+  },
+  {
+    key: "ads", table: "ads", label: "Ads / Banners", group: "Ads", icon: "Megaphone", order: "placement, position, sort, id", search: ["title", "placement"],
+    filters: [{ name: "placement", options: AD_PLACES }, { name: "position", options: ["top", "bottom"] }],
+    fields: [
+      { name: "title", label: "Ad ka naam (sirf admin ke liye, jaise Diwali Offer Banner)", required: true, list: true },
+      { name: "image_url", label: "Ad image (banner) — JPG / PNG / WEBP / GIF upload karein", type: "file", required: true, list: true, help: "Best size: 1200 × 300 px (chauda banner). Image poori dikhegi, kategi nahi." },
+      { name: "mobile_image_url", label: "Mobile ke liye alag image — optional (best 800 × 400 px)", type: "file", help: "Khaali chhodein to upar wali image hi mobile par dikhegi." },
+      { name: "placement", label: "Kis section me dikhe", type: "select", options: AD_PLACES, required: true, list: true, help: "All Sections = Blog, Questions, Mock Test, Upcoming Exams, Download, Notice — sab jagah" },
+      { name: "position", label: "Page par kahan", type: "select", options: ["top", "bottom"], list: true, help: "top = page ke upar (heading ke neeche) · bottom = page ke neeche" },
+      { name: "link", label: "Click karne par kahan jaye — optional (URL, WhatsApp link, /courses …)", full: true },
+      { name: "new_tab", label: "Link naye tab me khule", type: "bool" },
+      { name: "start_date", label: "Kab se dikhe — optional", type: "date" },
+      { name: "end_date", label: "Kab tak dikhe — optional (is din ke baad apne aap band)", type: "date", list: true },
+      { name: "sort", label: "Sort (1 = pehle; ek jagah 2+ ad ho to slider banega)", type: "number" },
+      { name: "active", label: "Active (band = website par nahi dikhega)", type: "bool", list: true },
     ],
   },
   {

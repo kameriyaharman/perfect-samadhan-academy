@@ -5,6 +5,7 @@ import { cpctComputerPapers, splitSession } from "@/lib/pyqComputer";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
 import StartButton from "./StartButton";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "CPCT Previous Year Online Test — Computer (52 प्रश्न)" };
 
@@ -23,6 +24,7 @@ export default async function CpctComputer() {
         subtitle="Pichhle saalon ke CPCT paper ka sirf Computer / IT wala hissa — 52 sawal, Hindi + English me. Submit karte hi score card aur answer key."
         chips={[<><MonitorCheck className="h-4 w-4" />52 प्रश्न · Computer &amp; IT</>, <><Clock className="h-4 w-4" />1 min / sawal</>, <><Languages className="h-4 w-4" />हिंदी / English</>]} compact />
       <Container className="py-10">
+        <AdSlot place="Mock Test" />
         <div className="mb-6 grid gap-3 rounded-2xl border border-line bg-white p-5 text-sm md:grid-cols-3">
           <div className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />Sabhi sawal hal karein, phir <b className="hi">&nbsp;सबमिट</b>&nbsp;dabayein.</div>
           <div className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />Score card aur har sawal ka sahi uttar milega.</div>
@@ -46,6 +48,7 @@ export default async function CpctComputer() {
             ))}
           </div>
         )}
+        <AdSlot place="Mock Test" pos="bottom" />
       </Container>
     </>
   );

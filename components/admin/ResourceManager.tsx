@@ -11,11 +11,13 @@ const PUBLIC: Record<string, (r: any) => string> = {
   mock_tests: (r) => `/test/${r.id}`, typing_results: (r) => `/typing-test/result/${r.cert_id}`,
 };
 
+const isImg = (s: string) => /\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(s);
 function fmt(v: any, f: Field) {
   if (v === null || v === undefined || v === "") return <span className="text-slate-300">—</span>;
   if (f.type === "bool") return v ? <span className="chip bg-green-50 text-green-700">Yes</span> : <span className="chip bg-slate-100 text-slate-500">No</span>;
   if (f.type === "datetime" || f.type === "date") { const d = new Date(v); return isNaN(+d) ? String(v) : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
   const s = String(v);
+  if (f.type === "file" && isImg(s)) return <img src={s} alt="" className="h-10 max-w-[140px] rounded border border-line object-contain bg-canvas" />;
   return s.length > 70 ? s.slice(0, 70) + "…" : s;
 }
 
@@ -79,7 +81,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
 
   const openNew = () => {
     const d: Record<string, any> = {};
-    for (const f of r.fields) if (f.type === "bool") d[f.name] = ["active", "show_on_home", "published", "is_free"].includes(f.name);
+    for (const f of r.fields) if (f.type === "bool") d[f.name] = ["active", "show_on_home", "published", "is_free", "new_tab"].includes(f.name);
     if (filters.test_id && r.key === "questions") d.test_id = filters.test_id;
     if (r.key === "questions") { d.answer = "A"; d.section = "Computer"; }
     setErr(""); setEdit(d);
@@ -224,6 +226,7 @@ function FieldInput({ f, value, onChange }: { f: Field; value: any; onChange: (v
         <input className="input" value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="URL ya file upload karein" />
         <label className="btn-soft shrink-0 cursor-pointer !py-3">{up ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}Upload<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} /></label>
         {value && <a href={value} target="_blank" className="btn-ghost shrink-0 !py-3"><ExternalLink className="h-4 w-4" />Open</a>}
+        {value && isImg(String(value)) && <img src={value} alt="" className="h-12 max-w-[180px] shrink-0 rounded-lg border border-line bg-canvas object-contain" />}
       </div>
     );
   }

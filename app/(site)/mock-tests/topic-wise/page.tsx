@@ -4,6 +4,7 @@ import { getUser, isPremium } from "@/lib/auth";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const metadata = { title: "Topic-wise Test" };
 
@@ -17,6 +18,7 @@ export default async function TopicWise({ searchParams }: { searchParams: { exam
     <>
       <PageHero crumbs={[{ label: "Mock Tests", href: "/mock-tests" }, { label: "Topic-wise Test" }]} title="सिलेबस अनुसार" highlight="टॉपिक-वाइज़ टेस्ट" subtitle="Official syllabus ke har chapter par chhote tests. Weak topic ko target karein aur turant sudharein." compact />
       <Container className="py-10">
+        <AdSlot place="Mock Test" />
         {!tests.length ? <Empty /> : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Object.entries(groups).map(([sub, list]) => (
@@ -31,6 +33,7 @@ export default async function TopicWise({ searchParams }: { searchParams: { exam
             ))}
           </div>
         )}
+        <AdSlot place="Mock Test" pos="bottom" />
       </Container>
     </>
   );
