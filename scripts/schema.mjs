@@ -497,4 +497,18 @@ CREATE TABLE IF NOT EXISTS ads (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS ads_place ON ads(placement, position);
+-- v4 (Oct 2026): typing lesson folders (Hindi / English alag), test series, plan me kaun-si series
+CREATE TABLE IF NOT EXISTS lesson_folders (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  layout TEXT NOT NULL DEFAULT 'remington',
+  description TEXT,
+  is_free BOOLEAN NOT NULL DEFAULT true,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS folder_id INT REFERENCES lesson_folders(id) ON DELETE SET NULL;
+ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS series TEXT;
+ALTER TABLE plans ADD COLUMN IF NOT EXISTS includes TEXT;
 `;

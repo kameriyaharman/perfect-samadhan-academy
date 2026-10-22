@@ -9,7 +9,7 @@
 //   ...vyakhya ki lines (agle number tak)
 
 export type ParsedQ = {
-  no: number; text_hi: string; text_en: string | null;
+  no: number; text_hi: string; text_en: string | null; section?: string | null;
   opts: { hi: string; en: string | null }[]; answer: string; explanation: string | null;
 };
 
@@ -20,6 +20,26 @@ const Q_START = /^(?:Q(?:ue(?:stion)?)?\.?\s*|प्रश्न\s*)?(\d{1,4})\s
 const OPT = /^\(?([A-Ea-e])\s*[.)\]:]\s*(.*)$/;
 const ANS = /^(?:Answer|Ans|Correct\s*Answer|उत्तर|सही\s*उत्तर)\s*[:.\-–]?\s*\(?\s*([A-Ea-e])\s*\)?\.?\s*$/i;
 const SOL = /^(?:Solution|Explanation|Sol|व्याख्या|हल|स्पष्टीकरण)\s*[.:\-–]?\s*(.*)$/i;
+
+// Section heading (ek file me kai section): "Section: Maths", "## Reasoning", "खंड - सामान्य ज्ञान", ya sirf "Computer" (agli line sawal ho to)
+export const SECTIONS = ["Computer", "Reading Comprehension", "Maths", "Reasoning", "General Awareness", "Hindi", "English", "GK"];
+const SEC_ALIAS: [RegExp, string][] = [
+  [/^(computer|computers|कम्प्यूटर|कंप्यूटर|कम्प्युटर)( (knowledge|proficiency|ज्ञान))?$/i, "Computer"],
+  [/^(reading comprehension|comprehension|rc|अपठित गद्यांश|गद्यांश)$/i, "Reading Comprehension"],
+  [/^(maths?|mathematics|quantitative aptitude|गणित|अंकगणित)$/i, "Maths"],
+  [/^(reasoning|mental ability|logical reasoning|रीजनिंग|तर्कशक्ति|मानसिक योग्यता)$/i, "Reasoning"],
+  [/^(general awareness|सामान्य जागरूकता)$/i, "General Awareness"],
+  [/^(hindi|हिंदी|हिन्दी|सामान्य हिंदी|सामान्य हिन्दी)$/i, "Hindi"],
+  [/^(english|general english|अंग्रेजी|अंग्रेज़ी)$/i, "English"],
+  [/^(gk|g\.k\.?|gs|general knowledge|general studies|सामान्य ज्ञान|सामान्य अध्ययन)$/i, "GK"],
+];
+const SEC_PREFIX = /^(?:#{1,3}\s*|(?:section|subject|part|खंड|खण्ड|भाग|विषय)\s*[:\-–]\s*)/i;
+export function sectionOf(line: string): string | null {
+  const t = line.replace(/[*_]/g, "").trim().replace(/[:.\-–]+$/, "").trim();
+  const name = t.replace(SEC_PREFIX, "").trim();
+  for (const [re, v] of SEC_ALIAS) if (re.test(name)) return v;
+  return null;
+}
 
 /** "English / हिंदी" ya "English हिंदी" ko alag karo */
 export function splitBilingual(s: string): { hi: string; en: string | null } {
@@ -39,7 +59,18 @@ export function splitBilingual(s: string): { hi: string; en: string | null } {
 }
 
 export function parseQuestionDoc(lines: string[]): { questions: ParsedQ[]; warnings: string[] } {
-  const L = lines.map((x) => x.trim());
+  const L0 = lines.map((x) => x.trim());
+  // section heading lines pehchaano, unhe khaali kar do (taaki pichle sawal ki vyakhya me na judein)
+  const secAt: (string | null)[] = L0.map(() => null);
+  const L = L0.map((x, i) => {
+    if (!x || x.length > 60) return x;
+    const sec = sectionOf(x);
+    if (!sec) return x;
+    const prefixed = SEC_PREFIX.test(x.replace(/[*_]/g, "").trim());
+    let j = i + 1; while (j < L0.length && !L0[j]) j++;
+    if (prefixed || (j < L0.length && Q_START.test(L0[j]))) { secAt[i] = sec; return ""; }
+    return x;
+  });
   const warnings: string[] = [];
   const questions: ParsedQ[] = [];
 
@@ -114,8 +145,10 @@ export function parseQuestionDoc(lines: string[]): { questions: ParsedQ[]; warni
     if (!text_hi) { warnings.push(`Q${no}: sawal ka text khali hai — chhod diya`); return; }
     if (!hi.length) warnings.push(`Q${no}: Hindi sawal nahi mila — English hi dono jagah`);
 
+    let section: string | null = null;
+    for (let j = s; j >= 0; j--) if (secAt[j]) { section = secAt[j]; break; }
     questions.push({
-      no, text_hi, text_en: text_en && text_en !== text_hi ? text_en : null,
+      no, text_hi, section, text_en: text_en && text_en !== text_hi ? text_en : null,
       opts: opts.slice(0, 5).map(splitBilingual), answer,
       explanation: sol.join("\n").trim() || null,
     });

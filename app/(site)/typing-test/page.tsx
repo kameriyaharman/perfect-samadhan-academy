@@ -4,7 +4,8 @@ import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, SectionTitle } from "@/components/Section";
 import { getPatterns, getTypingCategories } from "@/lib/patterns";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canPattern, getAccess } from "@/lib/access";
 import ExamLinks from "./ExamLinks";
 
 export const metadata = { title: "Hindi & English Typing Test" };
@@ -15,6 +16,7 @@ export default async function TypingHub() {
     q(`SELECT (SELECT count(*)::int FROM typing_results WHERE created_at > now()-interval '1 day') AS today, (SELECT count(*)::int FROM passages WHERE active) AS passages`),
   ]);
   const st = stats[0] || { today: 0, passages: 0 };
+  const acc = await getAccess(user);
   const cards = [
     { k: "अ", c: "bg-saffron", t: "Hindi Typing Test", d: "Unicode (Mangal) — Remington Gail Mangal, Remington CBI, Krutidev, Inscript", chips: ["Remington Gail Mangal", "CPCT Pattern", "Krutidev", "Inscript"], href: "/typing-test/setup?lang=hindi", btn: "Hindi Test Shuru Karein" },
     { k: "Aa", c: "bg-brand", t: "English Typing Test", d: "QWERTY layout — easy se exam level tak paragraphs, numbers aur punctuation", chips: ["Easy", "Medium", "Exam Level", "SSC DEST"], href: "/typing-test/setup?lang=english", btn: "English Test Shuru Karein" },
@@ -43,7 +45,7 @@ export default async function TypingHub() {
 
         <div className="mt-14">
           <SectionTitle eyebrow="Exam-wise Typing" title="अपनी परीक्षा के हिसाब से टेस्ट दें" />
-          <ExamLinks patterns={patterns.map((p) => ({ slug: p.slug, name: p.name, category: p.category, language: p.language, duration: p.duration, hindi_speed: p.hindi_speed, english_speed: p.english_speed, description: p.description, is_free: p.is_free }))} categories={cats} premium={isPremium(user)} />
+          <ExamLinks patterns={patterns.map((p) => ({ slug: p.slug, name: p.name, category: p.category, language: p.language, duration: p.duration, hindi_speed: p.hindi_speed, english_speed: p.english_speed, description: p.description, is_free: canPattern(acc, p) }))} categories={cats} premium={false} />
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

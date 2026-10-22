@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, Clock, Languages, MonitorCheck, Search } from "lucide-react";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canTest, getAccess } from "@/lib/access";
 import { cpctComputerPapers, splitSession } from "@/lib/pyqComputer";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
@@ -11,7 +12,7 @@ export const metadata = { title: "CPCT Previous Year Online Test — Computer (5
 
 export default async function CpctComputer() {
   const [papers, user] = await Promise.all([cpctComputerPapers(), getUser()]);
-  const premium = isPremium(user);
+  const acc = await getAccess(user);
   const byYear = new Map<string, any[]>();
   for (const p of papers) {
     const y = String(p.year || "Other");
@@ -38,7 +39,7 @@ export default async function CpctComputer() {
                 <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                   {list.map((p) => {
                     const { label, shift } = splitSession(p.session, p.title);
-                    return <StartButton key={p.id} testId={p.id} loggedIn={!!user} locked={!p.is_free && !premium} label={`${label}${shift ? ` – ${shift}` : ""} · ${p.qn} Q`} />;
+                    return <StartButton key={p.id} testId={p.id} loggedIn={!!user} locked={!canTest(acc, { is_free: p.is_free, exam_slug: "cpct", series: p.series })} label={`${label}${shift ? ` – ${shift}` : ""} · ${p.qn} Q`} />;
                   })}
                 </div>
                 {i === 0 && (

@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea" | "number" | "bool" | "select" | "date" | "file" | "html" | "password" | "datetime";
+export type FieldType = "text" | "textarea" | "number" | "bool" | "select" | "date" | "file" | "html" | "password" | "datetime" | "ref" | "includes" | "series";
 export type Field = {
   name: string;
   label: string;
@@ -9,6 +9,7 @@ export type Field = {
   help?: string;
   rows?: number;
   full?: boolean; // full width in form
+  ref?: "lesson_folders"; // type "ref": dusri table se dropdown
 };
 export type Resource = {
   key: string;
@@ -64,6 +65,7 @@ export const RESOURCES: Resource[] = [
     fields: [
       { name: "title", label: "Title", required: true, list: true },
       { name: "exam_slug", label: "Exam slug (cpct, ssc-chsl…)", required: true, list: true },
+      { name: "series", label: "Test Series (optional) — jaise CPCT Premium Test Series 2026", type: "series", list: true, help: "Ek series ke saare tests ek saath Premium Plan me jud jate hain. Purani series list me se chunein ya naya naam likhein." },
       { name: "kind", label: "Type", type: "select", options: EXAM_KIND, list: true },
       { name: "subject", label: "Subject (subject/topic tests)" },
       { name: "topic", label: "Topic (topic tests)" },
@@ -125,9 +127,21 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "lesson_folders", table: "lesson_folders", label: "Typing Lesson Folders", group: "Typing", icon: "FolderOpen", order: "CASE WHEN layout='english' THEN 1 ELSE 0 END, sort, id", search: ["name"],
+    filters: [{ name: "layout", options: ["remington", "inscript", "english"] }],
+    fields: [
+      { name: "name", label: "Folder ka naam (jaise हिंदी Remington — Basic, English — Speed Practice)", required: true, list: true, full: true },
+      { name: "layout", label: "Kis typing ka folder", type: "select", options: ["remington", "inscript", "english"], required: true, list: true, help: "remington / inscript = Hindi typing · english = English typing. Folder ke saare lessons isi layout par chalenge." },
+      { name: "description", label: "Short description (website par folder ke neeche) — optional", type: "textarea", full: true, rows: 2 },
+      { name: "is_free", label: "Free (band karne par poora folder 🔒 Premium — Premium Plan me ye folder chun sakte hain)", type: "bool", list: true },
+      { name: "sort", label: "Sort (1 = pehle)", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
     key: "lessons", table: "lessons", label: "Typing Lessons", group: "Typing", icon: "BookOpen", order: "layout, number",
     filters: [{ name: "layout", options: ["remington", "inscript", "english"] }],
     fields: [
+      { name: "folder_id", label: "Folder", type: "ref", ref: "lesson_folders", list: true, help: "Folder chunne par layout apne aap folder wala lag jayega" },
       { name: "layout", label: "Layout", type: "select", options: ["remington", "inscript", "english"], list: true },
       { name: "number", label: "Lesson number", type: "number", list: true },
       { name: "title", label: "Title", required: true, list: true },
@@ -377,6 +391,7 @@ export const RESOURCES: Resource[] = [
       { name: "price", label: "Price (₹)", type: "number", list: true }, { name: "mrp", label: "MRP (₹)", type: "number" },
       { name: "subtitle", label: "Subtitle" }, { name: "validity_days", label: "Validity (days)", type: "number", list: true },
       { name: "features", label: "Features: '+included' or '-not included', one per line", type: "textarea", full: true },
+      { name: "includes", label: "Is plan me kya-kya unlock hoga (locked series)", type: "includes", full: true, list: true },
       { name: "popular", label: "Most popular", type: "bool" }, { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },

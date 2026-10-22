@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { keywordLocked, keywordPick } from "@/lib/keywordSearch";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canKeywords, getAccess } from "@/lib/access";
 import { createAttempt } from "@/lib/tests";
 
 export async function POST(req: Request) {
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
   const kw = String(b.keyword || "").trim().slice(0, 120);
   const n = Math.min(100, Math.max(5, Number(b.count) || 10));
   if (kw.length < 2) return NextResponse.json({ error: "Keyword daalein" }, { status: 400 });
-  if (!isPremium(user) && (await keywordLocked(kw))) return NextResponse.json({ error: "premium" }, { status: 402 });
+  if (!canKeywords(await getAccess(user)) && (await keywordLocked(kw))) return NextResponse.json({ error: "premium" }, { status: 402 });
   const arr = (v: any) => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 100) : []);
   const sources = arr(b.sources), topics = arr(b.topics);
   const rows = await keywordPick({ keyword: kw, sources, topics }, n);

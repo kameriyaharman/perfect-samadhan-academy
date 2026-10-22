@@ -1,6 +1,7 @@
 import { History } from "lucide-react";
 import { q } from "@/lib/db";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canKeywords, getAccess } from "@/lib/access";
 import { getSettings } from "@/lib/settings";
 import { fmtDate } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
@@ -13,7 +14,7 @@ export const metadata = { title: "Keyword Mock Test" };
 
 export default async function Keyword({ searchParams }: { searchParams: { q?: string } }) {
   const [user, kws, st] = await Promise.all([getUser(), keywordTopics(), getSettings()]);
-  const premium = isPremium(user);
+  const premium = canKeywords(await getAccess(user));
   const past = user ? await q(`SELECT id, keyword, score, total, status, started_at FROM attempts WHERE user_id=$1 AND kind='keyword' ORDER BY id DESC LIMIT 8`, [user.id]) : [];
   return (
     <>

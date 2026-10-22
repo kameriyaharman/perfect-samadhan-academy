@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Lock, Unlock, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileText, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
+import { CheckCircle2, Folder, FolderInput, FolderPlus, Lock, Unlock, ChevronLeft, ChevronRight, Download, Edit3, ExternalLink, FileSpreadsheet, FileText, FileUp, ListChecks, Loader2, Plus, Search, Trash2, X, Save } from "lucide-react";
 import type { Field, Resource } from "@/lib/resources";
 import { parseCSV, sampleCSV } from "@/lib/csv";
 import WordImport from "./WordImport";
+import PlanIncludes, { incSummary, type IncOpts } from "./PlanIncludes";
 
 const PUBLIC: Record<string, (r: any) => string> = {
   exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, posts: (r) => `/blog/${r.slug}`,
@@ -12,8 +13,10 @@ const PUBLIC: Record<string, (r: any) => string> = {
 };
 
 const isImg = (s: string) => /\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(s);
-function fmt(v: any, f: Field) {
+function fmt(v: any, f: Field, o?: IncOpts | null) {
+  if (f.type === "includes") return <span className="text-xs">{incSummary(v, o || null)}</span>;
   if (v === null || v === undefined || v === "") return <span className="text-slate-300">—</span>;
+  if (f.type === "ref") { const fo = o?.folders.find((x) => x.id === Number(v)); return fo ? <span className="hi inline-flex items-center gap-1"><Folder className="h-3.5 w-3.5 text-brand" />{fo.name}</span> : `#${v}`; }
   if (f.type === "bool") return v ? <span className="chip bg-green-50 text-green-700">Yes</span> : <span className="chip bg-slate-100 text-slate-500">No</span>;
   if (f.type === "datetime" || f.type === "date") { const d = new Date(v); return isNaN(+d) ? String(v) : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
   const s = String(v);
@@ -30,6 +33,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
     const f: Record<string, string> = {};
     for (const x of r.filters || []) if (initialFilter[x.name]) f[x.name] = initialFilter[x.name];
     if (initialFilter.test_id) f.test_id = initialFilter.test_id;
+    if (initialFilter.folder_id) f.folder_id = initialFilter.folder_id;
     return f;
   });
   const [loading, setLoading] = useState(true);
@@ -46,6 +50,12 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const [bulkBusy, setBulkBusy] = useState(false);
   const hasFree = r.fields.some((f) => f.name === "is_free");
   const listFields = r.fields.filter((f) => f.list);
+  const needOpts = r.key === "lessons" || r.fields.some((f) => f.type === "ref" || f.type === "includes" || f.type === "series");
+  const [opts, setOpts] = useState<IncOpts | null>(null);
+  const loadOpts = useCallback(() => { if (needOpts) fetch("/api/admin/options").then((x) => x.json()).then((j) => j.folders && setOpts(j)).catch(() => {}); }, [needOpts]);
+  useEffect(loadOpts, [loadOpts]);
+  const [moveTo, setMoveTo] = useState("");
+  const isLessons = r.key === "lessons";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,17 +70,20 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const togglePage = () => { const n = new Set(sel); if (allOnPage) pageIds.forEach((id) => n.delete(id)); else pageIds.forEach((id) => n.add(id)); setSel(n); setAllMatch(false); };
   const toggleOne = (id: number) => { const n = new Set(sel); n.has(id) ? n.delete(id) : n.add(id); setSel(n); setAllMatch(false); };
   const selCount = allMatch ? total : sel.size;
-  const bulk = async (action: "delete" | "lock" | "unlock") => {
+  const bulk = async (action: "delete" | "lock" | "unlock" | "move") => {
     if (!selCount) return;
-    const what = action === "delete" ? "DELETE" : action === "lock" ? "🔒 Premium (lock)" : "Free (unlock)";
+    const fName = action === "move" ? (moveTo === "none" ? "bina folder" : opts?.folders.find((x) => String(x.id) === moveTo)?.name || "") : "";
+    if (action === "move" && !moveTo) return alert("Pehle folder chunein");
+    const what = action === "move" ? `"${fName}" folder me move` : action === "delete" ? "DELETE" : action === "lock" ? "🔒 Premium (lock)" : "Free (unlock)";
     if (!confirm(`${selCount} records ${what} karne hain?${action === "delete" ? " Yeh wapas nahi aayenge." + (r.key === "mock_tests" ? " In tests ke saare sawal bhi delete ho jayenge." : "") : ""}`)) return;
     setBulkBusy(true);
-    const body = allMatch ? { action, all: true, filter: { q: search, ...filters } } : { action, ids: Array.from(sel) };
+    const extra = action === "move" ? { folder_id: moveTo === "none" ? null : Number(moveTo) } : {};
+    const body = allMatch ? { action, all: true, filter: { q: search, ...filters }, ...extra } : { action, ids: Array.from(sel), ...extra };
     const x = await fetch(`/api/admin/${r.key}/bulk`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await x.json().catch(() => ({}));
     setBulkBusy(false);
     if (!x.ok) return alert(j.error || "Error");
-    setSel(new Set()); setAllMatch(false);
+    setSel(new Set()); setAllMatch(false); loadOpts();
     if (action === "delete" && page > 1 && rows.length <= (allMatch ? rows.length : sel.size)) setPage(1); else load();
   };
   const quickFree = async (row: any) => {
@@ -84,8 +97,10 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
     for (const f of r.fields) if (f.type === "bool") d[f.name] = ["active", "show_on_home", "published", "is_free", "new_tab"].includes(f.name);
     if (filters.test_id && r.key === "questions") d.test_id = filters.test_id;
     if (r.key === "questions") { d.answer = "A"; d.section = "Computer"; }
+    if (isLessons && filters.folder_id && filters.folder_id !== "none") d.folder_id = Number(filters.folder_id);
     setErr(""); setEdit(d);
   };
+  useEffect(() => { if (initialFilter.new === "1" && !r.noCreate) openNew(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const openEdit = async (id: number) => { setErr(""); const j = await fetch(`/api/admin/${r.key}/${id}`).then((x) => x.json()); setEdit(j); };
   const save = async () => {
     if (!edit) return;
@@ -94,7 +109,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
     const x = await fetch(isNew ? `/api/admin/${r.key}` : `/api/admin/${r.key}/${edit.id}`, { method: isNew ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(edit) });
     const j = await x.json(); setSaving(false);
     if (!x.ok) return setErr(j.error || "Error");
-    setEdit(null); load();
+    setEdit(null); load(); loadOpts();
   };
   const del = async (id: number) => {
     if (!confirm("Pakka delete karna hai? Yeh wapas nahi aayega.")) return;
@@ -117,6 +132,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           {!r.noCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" />Add New</button>}
         </div>
       </div>
+      {isLessons && opts && <FolderBar opts={opts} cur={filters.folder_id || ""} onPick={(v) => { const f = { ...filters }; if (v) f.folder_id = v; else delete f.folder_id; setFilters(f); setPage(1); }} />}
       <div className="mt-5 flex flex-wrap gap-2">
         {r.search && <label className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3"><Search className="h-4 w-4 text-muted" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search…" className="w-full bg-transparent py-2.5 outline-none" /></label>}
         {(r.filters || []).map((f) => (
@@ -133,6 +149,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           {allMatch && <span className="text-xs text-muted">(is search/filter ke sabhi records)</span>}
           <button onClick={() => { setSel(new Set()); setAllMatch(false); }} className="text-sm text-muted hover:text-ink">Clear</button>
           <span className="ml-auto flex flex-wrap gap-2">
+            {isLessons && opts && <span className="flex items-center gap-1.5"><select value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className="hi rounded-lg border border-line bg-white px-2 py-1.5 text-sm"><option value="">Folder chunein…</option>{opts.folders.map((f) => <option key={f.id} value={f.id}>{f.layout === "english" ? "EN" : "HI"} · {f.name}</option>)}<option value="none">— Bina folder —</option></select><button disabled={bulkBusy} onClick={() => bulk("move")} className="btn-soft btn-sm"><FolderInput className="h-3.5 w-3.5" />Move</button></span>}
             {hasFree && <button disabled={bulkBusy} onClick={() => bulk("lock")} className="btn-soft btn-sm"><Lock className="h-3.5 w-3.5" />Lock (Premium)</button>}
             {hasFree && <button disabled={bulkBusy} onClick={() => bulk("unlock")} className="btn-ghost btn-sm"><Unlock className="h-3.5 w-3.5" />Unlock (Free)</button>}
             <button disabled={bulkBusy} onClick={() => bulk("delete")} className="btn-sm inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700">{bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}Delete selected</button>
@@ -149,9 +166,11 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
                 <tr key={row.id} className={sel.has(row.id) || allMatch ? "bg-brand-50/50" : ""}>
                   <td><input type="checkbox" aria-label={`Select ${row.id}`} checked={allMatch || sel.has(row.id)} onChange={() => toggleOne(row.id)} className="h-4 w-4 cursor-pointer accent-[#1f35b8]" /></td>
                   <td className="text-muted">{row.id}</td>
-                  {listFields.map((f) => <td key={f.name} className={f.name.endsWith("_hi") || f.name === "hindi" ? "hi" : ""}>{f.name === "is_free"
+                  {listFields.map((f) => <td key={f.name} className={f.name.endsWith("_hi") || f.name === "hindi" ? "hi" : ""}>{f.name === "is_free" && isLessons && row.is_free && opts?.folders.find((x) => x.id === row.folder_id)?.is_free === false
+                    ? <span title="Poora folder Premium hai (Typing Lesson Folders me badlein)" className="chip bg-orange-50 text-orange-700"><Lock className="h-3 w-3" />Folder locked</span>
+                    : f.name === "is_free"
                     ? <button onClick={() => quickFree(row)} title="Click karke Free / Premium badlein" className={`chip cursor-pointer ${row.is_free ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>{row.is_free ? <><Unlock className="h-3 w-3" />Free</> : <><Lock className="h-3 w-3" />Premium</>}</button>
-                    : fmt(row[f.name], f)}</td>)}
+                    : fmt(row[f.name], f, opts)}</td>)}
                   <td className="whitespace-nowrap text-right">
                     {r.key === "mock_tests" && <Link href={`/admin/r/questions?test_id=${row.id}`} title="Questions" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand"><ListChecks className="h-4 w-4" /></Link>}
                     {PUBLIC[r.key] && <a href={PUBLIC[r.key](row)} target="_blank" title="View" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-canvas"><ExternalLink className="h-4 w-4" /></a>}
@@ -185,7 +204,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
                 {r.fields.filter((f) => f.type !== "datetime" || edit.id).map((f) => (
                   <div key={f.name} className={f.full || f.type === "textarea" || f.type === "html" || f.type === "file" ? "sm:col-span-2" : ""}>
                     <label className="label">{f.label}{f.required && <span className="text-red-500"> *</span>}</label>
-                    <FieldInput f={f} value={edit[f.name]} onChange={(v) => setEdit({ ...edit, [f.name]: v })} />
+                    <FieldInput f={f} value={edit[f.name]} opts={opts} onChange={(v) => setEdit({ ...edit, [f.name]: v })} />
                     {f.help && <p className="mt-1 text-xs text-muted">{f.help}</p>}
                   </div>
                 ))}
@@ -202,8 +221,48 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   );
 }
 
-function FieldInput({ f, value, onChange }: { f: Field; value: any; onChange: (v: any) => void }) {
+function FolderBar({ opts, cur, onPick }: { opts: IncOpts; cur: string; onPick: (v: string) => void }) {
+  const groups: [string, IncOpts["folders"]][] = [["हिंदी Typing", opts.folders.filter((f) => f.layout !== "english")], ["English Typing", opts.folders.filter((f) => f.layout === "english")]];
+  const chip = (on: boolean) => `hi inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition ${on ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand"}`;
+  return (
+    <div className="card mt-5 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <b className="flex items-center gap-2 text-navy"><Folder className="h-4 w-4" />Folders</b>
+        <span className="flex gap-2">
+          <Link href="/admin/r/lesson_folders" className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Folders edit / lock</Link>
+          <Link href="/admin/r/lesson_folders?new=1" className="btn-soft btn-sm"><FolderPlus className="h-3.5 w-3.5" />Naya folder</Link>
+        </span>
+      </div>
+      <button onClick={() => onPick("")} className={chip(!cur)}>Sabhi lessons</button>
+      {groups.map(([t, list]) => (
+        <div key={t} className="mt-3">
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{t}</div>
+          <div className="flex flex-wrap gap-2">
+            {!list.length && <span className="text-xs text-muted">Koi folder nahi</span>}
+            {list.map((f) => <button key={f.id} onClick={() => onPick(String(f.id))} className={chip(cur === String(f.id))}><Folder className="h-4 w-4" />{f.name}<span className="opacity-70">({f.n})</span>{!f.is_free && <Lock className="h-3.5 w-3.5 text-saffron" />}</button>)}
+          </div>
+        </div>
+      ))}
+      <button onClick={() => onPick("none")} className={`${chip(cur === "none")} mt-3`}>Bina folder wale</button>
+    </div>
+  );
+}
+
+function FieldInput({ f, value, onChange, opts }: { f: Field; value: any; onChange: (v: any) => void; opts?: IncOpts | null }) {
   const [up, setUp] = useState(false);
+  if (f.type === "includes") return <PlanIncludes value={value} onChange={onChange} opts={opts || null} />;
+  if (f.type === "ref") return (
+    <select className="input hi" value={value ?? ""} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}>
+      <option value="">— Bina folder —</option>
+      {(opts?.folders || []).map((x) => <option key={x.id} value={x.id}>{x.layout === "english" ? "English" : "हिंदी"} · {x.name}{x.is_free ? "" : " 🔒"}</option>)}
+    </select>
+  );
+  if (f.type === "series") return (
+    <>
+      <input className="input" list={`dl-${f.name}`} value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="Khaali = koi series nahi" />
+      <datalist id={`dl-${f.name}`}>{(opts?.series || []).map((x) => <option key={x.name} value={x.name} />)}</datalist>
+    </>
+  );
   const hi = f.name.endsWith("_hi") || f.name === "hindi" || f.name === "text";
   if (f.type === "datetime") return <input className="input bg-canvas" disabled value={value ? new Date(value).toLocaleString("en-IN") : ""} />;
   if (f.type === "bool") return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { one, q } from "@/lib/db";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canTest, getAccess } from "@/lib/access";
 import { createAttempt, gradeAttempt } from "@/lib/tests";
 
 export async function POST(req: Request) {
@@ -9,7 +10,7 @@ export async function POST(req: Request) {
   const b = await req.json();
   const t = await one("SELECT * FROM mock_tests WHERE id=$1 AND active", [Number(b.testId)]);
   if (!t) return NextResponse.json({ error: "Test nahi mila" }, { status: 404 });
-  if (!t.is_free && !isPremium(user)) return NextResponse.json({ error: "premium" }, { status: 402 });
+  if (!canTest(await getAccess(user), t)) return NextResponse.json({ error: "premium" }, { status: 402 });
   // Purana adhoora attempt: time bacha hai to wahi resume (dusre computer par bhi), warna use band karke naya test shuru.
   // (Pehle expired attempt resume ho jata tha aur turant 0 marks ke saath submit ho jata tha.)
   const old = await q("SELECT id, started_at, duration FROM attempts WHERE user_id=$1 AND test_id=$2 AND status='in_progress' ORDER BY id DESC", [user.id, t.id]);

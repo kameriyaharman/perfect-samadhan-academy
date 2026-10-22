@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ClipboardCheck, FileText, Lock, PieChart, Target, Users, Clock, CheckCircle2, Unlock, Crown, Eye, RotateCcw, PlayCircle, ArrowRight, ShoppingCart } from "lucide-react";
 import { q, one } from "@/lib/db";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canTest, getAccess } from "@/lib/access";
 import { rupee, sections } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
@@ -22,7 +23,8 @@ export default async function Series({ params, searchParams }: { params: { exam:
   const tab = (TABS.find(([k]) => k === searchParams.tab)?.[0] || "full") as string;
   const page = Math.max(1, Number(searchParams.page) || 1);
   const user = await getUser();
-  const premium = isPremium(user);
+  const acc = await getAccess(user);
+  const premium = acc.premium;
   const [counts, tests, plan, students] = await Promise.all([
     q(`SELECT kind, count(*)::int n FROM mock_tests WHERE exam_slug=$1 AND active GROUP BY kind`, [exam.slug]),
     q(`SELECT m.*, (SELECT count(*)::int FROM questions WHERE test_id=m.id) qn,
@@ -58,7 +60,7 @@ export default async function Series({ params, searchParams }: { params: { exam:
                   <tbody>
                     {tests.map((t: any) => {
                       const a: any = att.get(t.id);
-                      const locked = !t.is_free && !premium;
+                      const locked = !canTest(acc, t);
                       return (
                         <tr key={t.id}>
                           <td><div className="font-bold">{t.title}</div><div className="text-xs text-muted">{shortBreak(t.breakdown)}</div></td>
@@ -96,7 +98,7 @@ export default async function Series({ params, searchParams }: { params: { exam:
                 <Link href={`/checkout?item=plan:${plan.slug}`} className="btn-primary mt-5 w-full"><ShoppingCart className="h-4 w-4" />Abhi Kharidein</Link>
               </div>
             )}
-            {premium && <div className="rounded-2xl bg-green-50 p-5 text-sm text-green-800"><b className="flex items-center gap-1.5"><Crown className="h-4 w-4" />Premium active</b><br />Sabhi tests unlocked hain.</div>}
+            {premium && <div className="rounded-2xl bg-green-50 p-5 text-sm text-green-800"><b className="flex items-center gap-1.5"><Crown className="h-4 w-4" />Premium active</b><br />{acc.all ? "Sabhi tests unlocked hain." : "Aapke plan ki series unlocked hain. Baaki locked tests ke liye plan upgrade karein."}</div>}
             {pattern.length > 0 && (
               <div className="card p-6">
                 <div className="mb-2 flex items-center gap-2 text-lg font-bold"><PieChart className="h-5 w-5" />{exam.code} Pattern</div>

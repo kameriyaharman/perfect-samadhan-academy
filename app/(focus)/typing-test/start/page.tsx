@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { one, q } from "@/lib/db";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canPassages, canPattern, getAccess } from "@/lib/access";
 import LockedNotice from "@/components/typing/LockedNotice";
 import TypingTest from "@/components/typing/TypingTest";
 import { LAYOUT_NAME } from "@/lib/typingScore";
@@ -12,7 +13,8 @@ export default async function Start({ searchParams: sp }: { searchParams: Record
   const pat = (await getPattern(sp.pattern)) || (await getPattern("cpct"))!;
   const lang = sp.lang === "english" || sp.lang === "hindi" ? sp.lang : pat.language === "english" ? "english" : "hindi";
   const user = await getUser();
-  const premium = isPremium(user);
+  const acc = await getAccess(user);
+  const premium = canPassages(acc);
   let passage = sp.passage ? await one("SELECT * FROM passages WHERE id=$1 AND active", [Number(sp.passage) || 0]) : null;
   // random passage: free student ko sirf free passages
   if (!passage) passage = await one("SELECT * FROM passages WHERE active AND language=$1 AND (is_free OR $2) ORDER BY random() LIMIT 1", [lang, premium]);
@@ -22,7 +24,7 @@ export default async function Start({ searchParams: sp }: { searchParams: Record
     [passage.language === "english" ? "english" : "hindi"]
   );
   const here = `/typing-test/start?${new URLSearchParams(sp).toString()}`;
-  if (!premium && pat.is_free === false) return <LockedNotice title={`${pat.name} typing test`} loggedIn={!!user} back="/typing-test" next={here} />;
+  if (!canPattern(acc, pat)) return <LockedNotice title={`${pat.name} typing test`} loggedIn={!!user} back="/typing-test" next={here} />;
   if (!premium && passage.is_free === false) return <LockedNotice title={passage.title} loggedIn={!!user} back="/typing-test" next={here} />;
   // layout: URL se, warna exam pattern ka layout, warna Remington Gail
   const wanted = sp.layoutName || sp.layout || (pat.hindi_layout !== "any" ? pat.hindi_layout : "remington");

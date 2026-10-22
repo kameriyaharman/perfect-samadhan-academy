@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Download, Lock, MonitorPlay } from "lucide-react";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canTest, getAccess } from "@/lib/access";
 import { q } from "@/lib/db";
 import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
@@ -12,7 +13,7 @@ export default async function Pyq({ searchParams }: { searchParams: { exam?: str
   const exams = await q(`SELECT DISTINCT e.slug, e.code, e.name, e.sort FROM exams e JOIN mock_tests m ON m.exam_slug=e.slug AND m.kind='pyq' AND m.active ORDER BY e.sort`);
   const exam = searchParams.exam || exams[0]?.slug || "cpct";
   const tests = await q(`SELECT * FROM mock_tests WHERE kind='pyq' AND active AND exam_slug=$1 ORDER BY year DESC, sort`, [exam]);
-  const premium = isPremium(await getUser());
+  const acc = await getAccess(await getUser());
   const byYear: Record<string, any[]> = {};
   for (const t of tests) (byYear[t.year || "Other"] ||= []).push(t);
   const cur = exams.find((e: any) => e.slug === exam);
@@ -40,7 +41,7 @@ export default async function Pyq({ searchParams }: { searchParams: { exam?: str
                     <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-line py-2.5 last:border-0">
                       <span className="whitespace-nowrap text-sm"><b>{ses}</b>{sh ? ` · ${sh}` : ""}</span>
                       <span className="flex gap-1.5">
-                        {!t.is_free && !premium
+                        {!canTest(acc, t)
                           ? <Link href="/plans" className="btn-orange btn-sm !py-1.5"><Lock className="h-3.5 w-3.5" />Premium</Link>
                           : <Link href={`/test/${t.id}`} className="btn-primary btn-sm"><MonitorPlay className="h-4 w-4" />Online Test</Link>}
                         <a href={t.pdf_url || `/previous-papers?exam=${encodeURIComponent(cur?.name || "")}`} className="btn-soft btn-sm"><Download className="h-3.5 w-3.5" />PDF</a>

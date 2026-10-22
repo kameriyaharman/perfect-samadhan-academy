@@ -24,6 +24,15 @@ export async function POST(req: Request, { params }: { params: { resource: strin
   if (!questions.length) return NextResponse.json({ error: "File me koi sahi sawal nahi mila", warnings }, { status: 400 });
 
   const section = String(fd.get("section") || "GK").slice(0, 60);
+  // multiple sections: "doc" = Word file ki headings se, ya ranges [{name, from, to}] (sawal kram 1..N)
+  const secMode = String(fd.get("secMode") || "one");
+  let ranges: { name: string; from: number; to: number }[] = [];
+  try { ranges = (JSON.parse(String(fd.get("ranges") || "[]")) || []).map((r: any) => ({ name: String(r.name || "").slice(0, 60), from: Number(r.from) || 0, to: Number(r.to) || 0 })).filter((r: any) => r.name && r.from > 0 && r.to >= r.from); } catch {}
+  const secFor = (qq: { section?: string | null }, pos: number) => {
+    if (secMode === "doc" && qq.section) return qq.section;
+    if (secMode === "ranges") { const r = ranges.find((x) => pos >= x.from && pos <= x.to); if (r) return r.name; }
+    return section;
+  };
   const topic = String(fd.get("topic") || "").trim().slice(0, 80) || null;
   const source = String(fd.get("source") || "").trim().slice(0, 80) || null;
   const c = await pool.connect();
@@ -36,22 +45,24 @@ export async function POST(req: Request, { params }: { params: { resource: strin
       if (!String(t.title || "").trim()) throw new Error("Naye Mock Test ka title daalein");
       const kind = ["full", "subject", "topic", "pyq", "quiz"].includes(t.kind) ? t.kind : "full";
       const r = await c.query(
-        `INSERT INTO mock_tests (title, exam_slug, kind, subject, topic, year, session, duration, marks_per_q, negative, is_free, active)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true) RETURNING id`,
+        `INSERT INTO mock_tests (title, exam_slug, kind, subject, topic, year, session, duration, marks_per_q, negative, is_free, series, active)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true) RETURNING id`,
         [String(t.title).trim().slice(0, 200), String(t.exam_slug || "cpct").trim().slice(0, 60) || "cpct", kind, t.subject || null, topic, Number(t.year) || null, t.session || null,
-          Math.max(1, Number(t.duration) || questions.length), Number(t.marks_per_q) || 1, Number(t.negative) || 0, t.is_free !== false]
+          Math.max(1, Number(t.duration) || questions.length), Number(t.marks_per_q) || 1, Number(t.negative) || 0, t.is_free !== false, String(t.series || "").trim().slice(0, 120) || null]
       );
       testId = r.rows[0].id;
     } else if (!testId || !(await one("SELECT id FROM mock_tests WHERE id=$1", [testId]))) {
       throw new Error("Mock Test chunein (ID sahi nahi hai) ya naya Mock Test banayein");
     }
     let sort = (await c.query("SELECT COALESCE(max(sort),0)::int m FROM questions WHERE test_id=$1", [testId])).rows[0].m;
+    let pos = 0;
     for (const q of questions) {
+      pos++;
       const o = (i: number) => q.opts[i] || { hi: "", en: null };
       await c.query(
         `INSERT INTO questions (test_id, section, topic, text_hi, text_en, opt_a_hi, opt_a_en, opt_b_hi, opt_b_en, opt_c_hi, opt_c_en, opt_d_hi, opt_d_en, opt_e_hi, opt_e_en, answer, explanation, source, sort)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-        [testId, section, topic, q.text_hi, q.text_en, o(0).hi, o(0).en, o(1).hi, o(1).en, o(2).hi, o(2).en, o(3).hi, o(3).en, q.opts[4]?.hi || null, q.opts[4]?.en || null, q.answer, q.explanation, source, ++sort]
+        [testId, secFor(q, pos), topic, q.text_hi, q.text_en, o(0).hi, o(0).en, o(1).hi, o(1).en, o(2).hi, o(2).en, o(3).hi, o(3).en, q.opts[4]?.hi || null, q.opts[4]?.en || null, q.answer, q.explanation, source, ++sort]
       );
     }
     await c.query("COMMIT");

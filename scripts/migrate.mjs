@@ -124,6 +124,15 @@ async function main() {
     for (let i = 0; i < P.length; i++) await client.query("INSERT INTO keywords (label, terms, kind, sort) VALUES ($1,$1,'popular',$2)", [P[i], i + 1]);
     console.log("Keywords seeded");
   }
+  // v4: lesson folders — pehli baar har layout ka ek folder, purane lessons usme
+  if ((await cnt("lesson_folders")) === 0) {
+    const F = [["हिंदी Remington Gail — Basic Lessons", "remington", 1], ["हिंदी Inscript — Basic Lessons", "inscript", 2], ["English Typing — Basic Lessons", "english", 3]];
+    for (const [name, layout, sort] of F) {
+      const r = await client.query("INSERT INTO lesson_folders (name, layout, sort) VALUES ($1,$2,$3) RETURNING id", [name, layout, sort]);
+      await client.query("UPDATE lessons SET folder_id=$1 WHERE folder_id IS NULL AND layout=$2", [r.rows[0].id, layout]);
+    }
+    console.log("Lesson folders seeded");
+  }
   // Software downloads (client list) — naam se check, dobara nahi judega
   const SW = [
     ["Microsoft Indic Input 2 — Hindi", "Windows XP / 7 ke liye Hindi Remington Gail & Inscript typing tool", "Software", "keyboard", "orange", "32 bit", null],

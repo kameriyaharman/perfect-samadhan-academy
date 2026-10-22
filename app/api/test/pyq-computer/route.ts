@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canTest, getAccess } from "@/lib/access";
 import { createAttempt } from "@/lib/tests";
 import { cpctComputerPaper, splitSession } from "@/lib/pyqComputer";
 
@@ -9,7 +10,7 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => ({}));
   const p = await cpctComputerPaper(Number(b.testId) || 0);
   if (!p) return NextResponse.json({ error: "Paper nahi mila" }, { status: 404 });
-  if (!p.is_free && !isPremium(user)) return NextResponse.json({ error: "premium" }, { status: 402 });
+  if (!canTest(await getAccess(user), { is_free: p.is_free, exam_slug: (p as any).exam_slug || "cpct", series: (p as any).series })) return NextResponse.json({ error: "premium" }, { status: 402 });
   if (!p.questionIds.length) return NextResponse.json({ error: "Is paper me Computer ke sawal nahi hain" }, { status: 404 });
   const { label, shift } = splitSession(p.session, p.title);
   const id = await createAttempt(user.id, {

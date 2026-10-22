@@ -3,7 +3,8 @@ import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import SetupForm from "./SetupForm";
 import { getPatterns } from "@/lib/patterns";
-import { getUser, isPremium } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { canPassages, getAccess } from "@/lib/access";
 
 export const metadata = { title: "Typing Test — Setting chunein" };
 
@@ -17,7 +18,7 @@ export default async function Setup({ searchParams }: { searchParams: Record<str
         title={lang === "hindi" ? "हिंदी टाइपिंग टेस्ट —" : "English Typing Test —"} highlight="सेटिंग चुनें"
         subtitle="Apna exam, keyboard layout, samay aur passage chunein. Test shuru karne se pehle niche ke nirdesh zaroor padhein." compact />
       <Container className="py-10">
-        <SetupForm initial={{ lang, layout: searchParams.layout, pattern: searchParams.pattern, duration: searchParams.duration, passage: searchParams.passage }} passages={passages as any} patterns={patterns} premium={isPremium(await getUser())} />
+        <SetupForm initial={{ lang, layout: searchParams.layout, pattern: searchParams.pattern, duration: searchParams.duration, passage: searchParams.passage }} passages={passages as any} patterns={patterns} premium={canPassages(await getAccess(await getUser()))} />
       </Container>
     </>
   );
