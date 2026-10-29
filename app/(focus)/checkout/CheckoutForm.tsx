@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ClipboardCheck, CreditCard, Landmark, Loader2, Lock, QrCode, Receipt, ShieldCheck, Tag, Smartphone, MessageCircle } from "lucide-react";
 import { rupee } from "@/lib/utils";
+import CouponOffers, { type Offer } from "@/components/CouponOffers";
 
 declare global { interface Window { Razorpay: any } }
 function loadRzp() {
@@ -11,7 +12,7 @@ function loadRzp() {
     const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js"; s.onload = () => res(true); s.onerror = () => res(false); document.body.appendChild(s);
   });
 }
-export default function CheckoutForm({ item, it, mode, user, upi, whatsapp }: { item: string; it: { name: string; price: number; sub: string }; mode?: string; user: { name: string; mobile: string; email: string }; upi: string; whatsapp: string }) {
+export default function CheckoutForm({ item, it, mode, user, upi, whatsapp, showCoupon = true, offers = [] }: { item: string; it: { name: string; price: number; sub: string }; mode?: string; user: { name: string; mobile: string; email: string }; upi: string; whatsapp: string; showCoupon?: boolean; offers?: Offer[] }) {
   const r = useRouter();
   const [f, setF] = useState({ ...user });
   const [method, setMethod] = useState("UPI");
@@ -22,8 +23,9 @@ export default function CheckoutForm({ item, it, mode, user, upi, whatsapp }: { 
   const [err, setErr] = useState("");
   const [manual, setManual] = useState<{ orderId: number; amount: number } | null>(null);
   const total = Math.max(0, it.price - (disc?.discount || 0));
-  const apply = async () => {
-    const x = await fetch(`/api/coupon?item=${item}&code=${encodeURIComponent(code)}`); const j = await x.json();
+  const apply = async (c?: string) => {
+    const use = c ?? code; if (c) setCode(c);
+    const x = await fetch(`/api/coupon?item=${item}&code=${encodeURIComponent(use)}`); const j = await x.json();
     if (x.ok) { setDisc(j); setCmsg(""); } else { setDisc(null); setCmsg(j.error); }
   };
   const pay = async () => {
@@ -87,8 +89,11 @@ export default function CheckoutForm({ item, it, mode, user, upi, whatsapp }: { 
         {disc && <div className="flex justify-between py-2"><span>Coupon {disc.code}</span><b className="text-green-600">- {rupee(disc.discount)}</b></div>}
         <div className="flex justify-between py-2"><span>GST</span><span className="font-semibold text-muted">Included</span></div>
         <div className="mt-2 flex justify-between border-t border-line pt-4 text-xl"><b>Total</b><b>{rupee(total)}</b></div>
-        <div className="mt-5 flex gap-2"><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="input !py-2.5" /><button onClick={apply} className="btn-soft"><Tag className="h-4 w-4" />Apply</button></div>
-        {cmsg && <p className="mt-2 text-sm text-red-600">{cmsg}</p>}
+        {showCoupon && <>
+          {offers.length > 0 && <div className="mt-5"><CouponOffers offers={offers} onApply={(c) => apply(c)} compact /></div>}
+          <div className="mt-5 flex gap-2"><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="input !py-2.5" /><button onClick={() => apply()} className="btn-soft"><Tag className="h-4 w-4" />Apply</button></div>
+          {cmsg && <p className="mt-2 text-sm text-red-600">{cmsg}</p>}
+        </>}
       </aside>
     </div>
   );

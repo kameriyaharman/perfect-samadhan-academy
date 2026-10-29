@@ -39,7 +39,7 @@ export default async function CpctComputer() {
                 <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                   {list.map((p) => {
                     const { label, shift } = splitSession(p.session, p.title);
-                    return <StartButton key={p.id} testId={p.id} loggedIn={!!user} locked={!canTest(acc, { is_free: p.is_free, exam_slug: "cpct", series: p.series })} label={`${label}${shift ? ` – ${shift}` : ""} · ${p.qn} Q`} />;
+                    return <StartButton key={p.id} testId={p.id} loggedIn={!!user} locked={!canTest(acc, { is_free: p.is_free, exam_slug: "cpct", series: p.series, folder_id: p.folder_id })} label={`${label}${shift ? ` – ${shift}` : ""} · ${p.qn} Q`} />;
                   })}
                 </div>
                 {i === 0 && (

@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { Tag, BadgeCheck } from "lucide-react";
-export default function CouponBox() {
+export default function CouponBox({ item = "plan:cpct-test-series" }: { item?: string }) {
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState("");
   const check = async () => {
-    const r = await fetch(`/api/coupon?item=plan:cpct-test-series&code=${encodeURIComponent(code)}`);
+    const r = await fetch(`/api/coupon?item=${item}&code=${encodeURIComponent(code)}`);
     const j = await r.json();
     setMsg(r.ok ? `${j.code} valid hai — checkout par ₹${j.discount} ki chhoot milegi` : j.error);
   };

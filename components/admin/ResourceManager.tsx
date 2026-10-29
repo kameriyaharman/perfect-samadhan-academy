@@ -7,6 +7,15 @@ import { parseCSV, sampleCSV } from "@/lib/csv";
 import WordImport from "./WordImport";
 import PlanIncludes, { incSummary, type IncOpts } from "./PlanIncludes";
 
+type FItem = { id: number; name: string; is_free: boolean; n: number; group: string };
+/** Folder bar / dropdown ke liye ek jaisi list — lesson folders ya folders table (scope) */
+function folderItems(ref: string | undefined, o: IncOpts | null | undefined): FItem[] {
+  if (!o || !ref) return [];
+  if (ref === "lesson_folders") return o.folders.map((f) => ({ id: f.id, name: f.name, is_free: f.is_free, n: f.n, group: f.layout === "english" ? "English Typing" : "हिंदी Typing" }));
+  return (o.cfolders || []).map((f) => ({ id: f.id, name: f.name, is_free: true, n: f.n, group: ref === "folders:passage" ? (f.language === "english" ? "English Passages" : "हिंदी Passages") : f.exam_slug ? f.exam_slug.toUpperCase() : "Sabhi exam" }));
+}
+const isTestRes = (r: Resource) => r.table === "mock_tests";
+
 const PUBLIC: Record<string, (r: any) => string> = {
   exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, posts: (r) => `/blog/${r.slug}`,
   mock_tests: (r) => `/test/${r.id}`, typing_results: (r) => `/typing-test/result/${r.cert_id}`,
@@ -16,7 +25,7 @@ const isImg = (s: string) => /\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(s);
 function fmt(v: any, f: Field, o?: IncOpts | null) {
   if (f.type === "includes") return <span className="text-xs">{incSummary(v, o || null)}</span>;
   if (v === null || v === undefined || v === "") return <span className="text-slate-300">—</span>;
-  if (f.type === "ref") { const fo = o?.folders.find((x) => x.id === Number(v)); return fo ? <span className="hi inline-flex items-center gap-1"><Folder className="h-3.5 w-3.5 text-brand" />{fo.name}</span> : `#${v}`; }
+  if (f.type === "ref") { const fo = folderItems(f.ref, o).find((x) => x.id === Number(v)); return fo ? <span className="hi inline-flex items-center gap-1"><Folder className="h-3.5 w-3.5 text-brand" />{fo.name}</span> : `#${v}`; }
   if (f.type === "bool") return v ? <span className="chip bg-green-50 text-green-700">Yes</span> : <span className="chip bg-slate-100 text-slate-500">No</span>;
   if (f.type === "datetime" || f.type === "date") { const d = new Date(v); return isNaN(+d) ? String(v) : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
   const s = String(v);
@@ -42,7 +51,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const [err, setErr] = useState("");
   const [importing, setImporting] = useState(false);
   const [wordImp, setWordImp] = useState(false);
-  const canWord = r.key === "questions" || r.key === "mock_tests";
+  const canWord = r.key === "questions" || isTestRes(r);
   const canImport = !r.noCreate && !r.readonly;
   const per = 25;
   const [sel, setSel] = useState<Set<number>>(new Set());
@@ -50,9 +59,12 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const [bulkBusy, setBulkBusy] = useState(false);
   const hasFree = r.fields.some((f) => f.name === "is_free");
   const listFields = r.fields.filter((f) => f.list);
-  const needOpts = r.key === "lessons" || r.fields.some((f) => f.type === "ref" || f.type === "includes" || f.type === "series");
+  const needOpts = !!r.folderScope || r.fields.some((f) => f.type === "ref" || f.type === "includes" || f.type === "series");
   const [opts, setOpts] = useState<IncOpts | null>(null);
-  const loadOpts = useCallback(() => { if (needOpts) fetch("/api/admin/options").then((x) => x.json()).then((j) => j.folders && setOpts(j)).catch(() => {}); }, [needOpts]);
+  const scope = r.folderScope && r.folderScope !== "lesson_folders" ? r.folderScope : "";
+  const loadOpts = useCallback(() => { if (needOpts) fetch(`/api/admin/options${scope ? `?scope=${encodeURIComponent(scope)}` : ""}`).then((x) => x.json()).then((j) => j.folders && setOpts(j)).catch(() => {}); }, [needOpts, scope]);
+  const folderRef = r.folderScope === "lesson_folders" ? "lesson_folders" : r.folderScope ? `folders:${r.folderScope}` : undefined;
+  const fItems = folderItems(folderRef, opts);
   useEffect(loadOpts, [loadOpts]);
   const [moveTo, setMoveTo] = useState("");
   const isLessons = r.key === "lessons";
@@ -72,10 +84,10 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   const selCount = allMatch ? total : sel.size;
   const bulk = async (action: "delete" | "lock" | "unlock" | "move") => {
     if (!selCount) return;
-    const fName = action === "move" ? (moveTo === "none" ? "bina folder" : opts?.folders.find((x) => String(x.id) === moveTo)?.name || "") : "";
+    const fName = action === "move" ? (moveTo === "none" ? "bina folder" : fItems.find((x) => String(x.id) === moveTo)?.name || "") : "";
     if (action === "move" && !moveTo) return alert("Pehle folder chunein");
     const what = action === "move" ? `"${fName}" folder me move` : action === "delete" ? "DELETE" : action === "lock" ? "🔒 Premium (lock)" : "Free (unlock)";
-    if (!confirm(`${selCount} records ${what} karne hain?${action === "delete" ? " Yeh wapas nahi aayenge." + (r.key === "mock_tests" ? " In tests ke saare sawal bhi delete ho jayenge." : "") : ""}`)) return;
+    if (!confirm(`${selCount} records ${what} karne hain?${action === "delete" ? " Yeh wapas nahi aayenge." + (isTestRes(r) ? " In tests ke saare sawal bhi delete ho jayenge." : "") : ""}`)) return;
     setBulkBusy(true);
     const extra = action === "move" ? { folder_id: moveTo === "none" ? null : Number(moveTo) } : {};
     const body = allMatch ? { action, all: true, filter: { q: search, ...filters }, ...extra } : { action, ids: Array.from(sel), ...extra };
@@ -97,7 +109,9 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
     for (const f of r.fields) if (f.type === "bool") d[f.name] = ["active", "show_on_home", "published", "is_free", "new_tab"].includes(f.name);
     if (filters.test_id && r.key === "questions") d.test_id = filters.test_id;
     if (r.key === "questions") { d.answer = "A"; d.section = "Computer"; }
-    if (isLessons && filters.folder_id && filters.folder_id !== "none") d.folder_id = Number(filters.folder_id);
+    if (r.defaults) Object.assign(d, r.defaults);
+    for (const f of r.filters || []) if (filters[f.name] && f.name !== "is_free") d[f.name] = filters[f.name];
+    if (r.folderScope && filters.folder_id && filters.folder_id !== "none") d.folder_id = Number(filters.folder_id);
     setErr(""); setEdit(d);
   };
   useEffect(() => { if (initialFilter.new === "1" && !r.noCreate) openNew(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -132,7 +146,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           {!r.noCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" />Add New</button>}
         </div>
       </div>
-      {isLessons && opts && <FolderBar opts={opts} cur={filters.folder_id || ""} onPick={(v) => { const f = { ...filters }; if (v) f.folder_id = v; else delete f.folder_id; setFilters(f); setPage(1); }} />}
+      {r.folderScope && opts && <FolderBar items={fItems} what={r.key === "lessons" ? "lessons" : r.key === "passages" ? "passages" : "tests"} editHref={r.folderScope === "lesson_folders" ? "/admin/r/lesson_folders" : `/admin/r/folders?scope=${encodeURIComponent(r.folderScope)}`} cur={filters.folder_id || ""} onPick={(v) => { const f = { ...filters }; if (v) f.folder_id = v; else delete f.folder_id; setFilters(f); setPage(1); }} />}
       <div className="mt-5 flex flex-wrap gap-2">
         {r.search && <label className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3"><Search className="h-4 w-4 text-muted" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search…" className="w-full bg-transparent py-2.5 outline-none" /></label>}
         {(r.filters || []).map((f) => (
@@ -149,7 +163,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           {allMatch && <span className="text-xs text-muted">(is search/filter ke sabhi records)</span>}
           <button onClick={() => { setSel(new Set()); setAllMatch(false); }} className="text-sm text-muted hover:text-ink">Clear</button>
           <span className="ml-auto flex flex-wrap gap-2">
-            {isLessons && opts && <span className="flex items-center gap-1.5"><select value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className="hi rounded-lg border border-line bg-white px-2 py-1.5 text-sm"><option value="">Folder chunein…</option>{opts.folders.map((f) => <option key={f.id} value={f.id}>{f.layout === "english" ? "EN" : "HI"} · {f.name}</option>)}<option value="none">— Bina folder —</option></select><button disabled={bulkBusy} onClick={() => bulk("move")} className="btn-soft btn-sm"><FolderInput className="h-3.5 w-3.5" />Move</button></span>}
+            {r.folderScope && opts && <span className="flex items-center gap-1.5"><select value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className="hi rounded-lg border border-line bg-white px-2 py-1.5 text-sm"><option value="">Folder chunein…</option>{fItems.map((f) => <option key={f.id} value={f.id}>{f.group} · {f.name}</option>)}<option value="none">— Bina folder —</option></select><button disabled={bulkBusy} onClick={() => bulk("move")} className="btn-soft btn-sm"><FolderInput className="h-3.5 w-3.5" />Move</button></span>}
             {hasFree && <button disabled={bulkBusy} onClick={() => bulk("lock")} className="btn-soft btn-sm"><Lock className="h-3.5 w-3.5" />Lock (Premium)</button>}
             {hasFree && <button disabled={bulkBusy} onClick={() => bulk("unlock")} className="btn-ghost btn-sm"><Unlock className="h-3.5 w-3.5" />Unlock (Free)</button>}
             <button disabled={bulkBusy} onClick={() => bulk("delete")} className="btn-sm inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700">{bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}Delete selected</button>
@@ -172,8 +186,8 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
                     ? <button onClick={() => quickFree(row)} title="Click karke Free / Premium badlein" className={`chip cursor-pointer ${row.is_free ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>{row.is_free ? <><Unlock className="h-3 w-3" />Free</> : <><Lock className="h-3 w-3" />Premium</>}</button>
                     : fmt(row[f.name], f, opts)}</td>)}
                   <td className="whitespace-nowrap text-right">
-                    {r.key === "mock_tests" && <Link href={`/admin/r/questions?test_id=${row.id}`} title="Questions" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand"><ListChecks className="h-4 w-4" /></Link>}
-                    {PUBLIC[r.key] && <a href={PUBLIC[r.key](row)} target="_blank" title="View" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-canvas"><ExternalLink className="h-4 w-4" /></a>}
+                    {isTestRes(r) && <Link href={`/admin/r/questions?test_id=${row.id}`} title="Questions" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand"><ListChecks className="h-4 w-4" /></Link>}
+                    {(PUBLIC[r.key] || (isTestRes(r) && PUBLIC.mock_tests)) && <a href={(PUBLIC[r.key] || PUBLIC.mock_tests)(row)} target="_blank" title="View" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-canvas"><ExternalLink className="h-4 w-4" /></a>}
                     {!r.readonly && <button onClick={() => openEdit(row.id)} title="Edit" className="mr-1 inline-grid h-8 w-8 place-items-center rounded-lg bg-canvas hover:bg-brand-50 hover:text-brand"><Edit3 className="h-4 w-4" /></button>}
                     <button onClick={() => del(row.id)} title="Delete" className="inline-grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600"><Trash2 className="h-4 w-4" /></button>
                   </td>
@@ -188,7 +202,7 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
         <button disabled={page >= pages} onClick={() => setPage(page + 1)} className="btn-ghost btn-sm"><ChevronRight className="h-4 w-4" /></button>
       </div>
 
-      {wordImp && <WordImport testId={filters.test_id || ""} defaultNew={r.key === "mock_tests"} onClose={() => setWordImp(false)} onDone={load} />}
+      {wordImp && <WordImport testId={filters.test_id || ""} defaultNew={isTestRes(r)} kind={r.testKind} folders={isTestRes(r) ? fItems : []} folderId={filters.folder_id && filters.folder_id !== "none" ? filters.folder_id : ""} resKey={isTestRes(r) ? r.key : "questions"} onClose={() => setWordImp(false)} onDone={load} />}
       {importing && <ImportModal r={r} testId={filters.test_id || ""} onClose={() => setImporting(false)} onDone={load} />}
 
       {edit && (
@@ -221,25 +235,25 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   );
 }
 
-function FolderBar({ opts, cur, onPick }: { opts: IncOpts; cur: string; onPick: (v: string) => void }) {
-  const groups: [string, IncOpts["folders"]][] = [["हिंदी Typing", opts.folders.filter((f) => f.layout !== "english")], ["English Typing", opts.folders.filter((f) => f.layout === "english")]];
+function FolderBar({ items, cur, onPick, what, editHref }: { items: FItem[]; cur: string; onPick: (v: string) => void; what: string; editHref: string }) {
+  const groups = Array.from(new Set(items.map((f) => f.group)));
   const chip = (on: boolean) => `hi inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition ${on ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand"}`;
   return (
     <div className="card mt-5 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <b className="flex items-center gap-2 text-navy"><Folder className="h-4 w-4" />Folders</b>
         <span className="flex gap-2">
-          <Link href="/admin/r/lesson_folders" className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Folders edit / lock</Link>
-          <Link href="/admin/r/lesson_folders?new=1" className="btn-soft btn-sm"><FolderPlus className="h-3.5 w-3.5" />Naya folder</Link>
+          <Link href={editHref} className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Folders edit{what === "lessons" ? " / lock" : ""}</Link>
+          <Link href={`${editHref}${editHref.includes("?") ? "&" : "?"}new=1`} className="btn-soft btn-sm"><FolderPlus className="h-3.5 w-3.5" />Naya folder</Link>
         </span>
       </div>
-      <button onClick={() => onPick("")} className={chip(!cur)}>Sabhi lessons</button>
-      {groups.map(([t, list]) => (
+      <button onClick={() => onPick("")} className={chip(!cur)}>Sabhi {what}</button>
+      {!items.length && <p className="mt-3 text-xs text-muted">Abhi koi folder nahi — "Naya folder" se banayein, phir {what} select karke "Move" karein.</p>}
+      {groups.map((t) => (
         <div key={t} className="mt-3">
           <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{t}</div>
           <div className="flex flex-wrap gap-2">
-            {!list.length && <span className="text-xs text-muted">Koi folder nahi</span>}
-            {list.map((f) => <button key={f.id} onClick={() => onPick(String(f.id))} className={chip(cur === String(f.id))}><Folder className="h-4 w-4" />{f.name}<span className="opacity-70">({f.n})</span>{!f.is_free && <Lock className="h-3.5 w-3.5 text-saffron" />}</button>)}
+            {items.filter((f) => f.group === t).map((f) => <button key={f.id} onClick={() => onPick(String(f.id))} className={chip(cur === String(f.id))}><Folder className="h-4 w-4" />{f.name}<span className="opacity-70">({f.n})</span>{!f.is_free && <Lock className="h-3.5 w-3.5 text-saffron" />}</button>)}
           </div>
         </div>
       ))}
@@ -254,7 +268,7 @@ function FieldInput({ f, value, onChange, opts }: { f: Field; value: any; onChan
   if (f.type === "ref") return (
     <select className="input hi" value={value ?? ""} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}>
       <option value="">— Bina folder —</option>
-      {(opts?.folders || []).map((x) => <option key={x.id} value={x.id}>{x.layout === "english" ? "English" : "हिंदी"} · {x.name}{x.is_free ? "" : " 🔒"}</option>)}
+      {folderItems(f.ref, opts).map((x) => <option key={x.id} value={x.id}>{x.group} · {x.name}{x.is_free ? "" : " 🔒"}</option>)}
     </select>
   );
   if (f.type === "series") return (

@@ -133,6 +133,30 @@ async function main() {
     }
     console.log("Lesson folders seeded");
   }
+  // v5: test / passage folders — pehli baar purane tests (subject / saal) aur passages (bhasha + exam) ke hisaab se
+  if (!(await client.query("SELECT 1 FROM settings WHERE key='seed_v5_folders'")).rows.length) {
+    const mk = async (scope, name, extra = {}) => {
+      const r = await client.query("INSERT INTO folders (scope, name, exam_slug, language, sort) VALUES ($1,$2,$3,$4,$5) RETURNING id", [scope, name, extra.exam || null, extra.lang || null, extra.sort || 0]);
+      return r.rows[0].id;
+    };
+    const topic = await client.query("SELECT exam_slug, COALESCE(NULLIF(subject,''),'Others') sub, min(sort) s FROM mock_tests WHERE kind='topic' AND folder_id IS NULL GROUP BY 1,2 ORDER BY 1, 3");
+    for (const [i, t] of topic.rows.entries()) {
+      const id = await mk("test:syllabus", t.sub, { exam: t.exam_slug, sort: i + 1 });
+      await client.query("UPDATE mock_tests SET folder_id=$1 WHERE kind='topic' AND folder_id IS NULL AND exam_slug=$2 AND COALESCE(NULLIF(subject,''),'Others')=$3", [id, t.exam_slug, t.sub]);
+    }
+    const pyq = await client.query("SELECT m.exam_slug, m.year, COALESCE(max(e.code), upper(m.exam_slug)) code FROM mock_tests m LEFT JOIN exams e ON e.slug=m.exam_slug WHERE m.kind='pyq' AND m.folder_id IS NULL GROUP BY 1,2 ORDER BY 1, 2 DESC NULLS LAST");
+    for (const [i, t] of pyq.rows.entries()) {
+      const id = await mk("test:old", `${t.code} ${t.year || ""} Old Paper Tests`.replace(/\s+/g, " "), { exam: t.exam_slug, sort: i + 1 });
+      await client.query("UPDATE mock_tests SET folder_id=$1 WHERE kind='pyq' AND folder_id IS NULL AND exam_slug=$2 AND year IS NOT DISTINCT FROM $3", [id, t.exam_slug, t.year]);
+    }
+    const pas = await client.query("SELECT language, COALESCE(NULLIF(exam,''),'General') ex FROM passages WHERE folder_id IS NULL GROUP BY 1,2 ORDER BY 1,2");
+    for (const [i, p] of pas.rows.entries()) {
+      const id = await mk("passage", `${p.language === "english" ? "English" : "हिंदी"} — ${p.ex} Passages`, { lang: p.language, sort: i + 1 });
+      await client.query("UPDATE passages SET folder_id=$1 WHERE folder_id IS NULL AND language=$2 AND COALESCE(NULLIF(exam,''),'General')=$3", [id, p.language, p.ex]);
+    }
+    await client.query("INSERT INTO settings (key, value) VALUES ('seed_v5_folders','1') ON CONFLICT (key) DO NOTHING");
+    console.log("Test / passage folders seeded");
+  }
   // Software downloads (client list) — naam se check, dobara nahi judega
   const SW = [
     ["Microsoft Indic Input 2 — Hindi", "Windows XP / 7 ke liye Hindi Remington Gail & Inscript typing tool", "Software", "keyboard", "orange", "32 bit", null],

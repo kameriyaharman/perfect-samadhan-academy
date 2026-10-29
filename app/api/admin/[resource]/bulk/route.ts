@@ -14,7 +14,8 @@ export async function POST(req: Request, { params }: { params: { resource: strin
   const b = await req.json().catch(() => ({}));
   const action = String(b.action || "");
   const hasFree = r.fields.some((f) => f.name === "is_free");
-  const isMove = action === "move" && r.key === "lessons";
+  const hasFolder = r.fields.some((f) => f.name === "folder_id");
+  const isMove = action === "move" && hasFolder;
   if (!isMove && (!["delete", "lock", "unlock"].includes(action) || (action !== "delete" && !hasFree))) return NextResponse.json({ error: "Galat action" }, { status: 400 });
 
   let where: string; let args: any[];
@@ -31,12 +32,20 @@ export async function POST(req: Request, { params }: { params: { resource: strin
 
   if (isMove) {
     const fid = Number(b.folder_id) || 0;
-    const fo = fid ? await one("SELECT id, layout FROM lesson_folders WHERE id=$1", [fid]) : null;
-    if (fid && !fo) return NextResponse.json({ error: "Folder nahi mila" }, { status: 400 });
+    if (r.key !== "lessons" && r.where && !b.all) { where += ` AND (${r.where})`; }
+    if (r.key === "lessons") {
+      const fo = fid ? await one("SELECT id, layout FROM lesson_folders WHERE id=$1", [fid]) : null;
+      if (fid && !fo) return NextResponse.json({ error: "Folder nahi mila" }, { status: 400 });
+      args.push(fo ? fo.id : null);
+      const rows = fo
+        ? await q(`UPDATE lessons SET folder_id=$${args.length}, layout='${fo.layout === "english" ? "english" : fo.layout === "inscript" ? "inscript" : "remington"}' ${where} RETURNING id`, args)
+        : await q(`UPDATE lessons SET folder_id=$${args.length} ${where} RETURNING id`, args);
+      return NextResponse.json({ ok: true, n: rows.length });
+    }
+    const fo = fid ? await one("SELECT id, scope, language FROM folders WHERE id=$1", [fid]) : null;
+    if (fid && (!fo || fo.scope !== r.folderScope)) return NextResponse.json({ error: "Folder nahi mila" }, { status: 400 });
     args.push(fo ? fo.id : null);
-    const rows = fo
-      ? await q(`UPDATE lessons SET folder_id=$${args.length}, layout='${fo.layout === "english" ? "english" : fo.layout === "inscript" ? "inscript" : "remington"}' ${where} RETURNING id`, args)
-      : await q(`UPDATE lessons SET folder_id=$${args.length} ${where} RETURNING id`, args);
+    const rows = await q(`UPDATE ${r.table} SET folder_id=$${args.length} ${where} RETURNING id`, args);
     return NextResponse.json({ ok: true, n: rows.length });
   }
   if (action === "delete") {

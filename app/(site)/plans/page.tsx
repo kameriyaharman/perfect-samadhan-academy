@@ -7,11 +7,14 @@ import { rupee } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import CouponBox from "./CouponBox";
+import CouponOffers from "@/components/CouponOffers";
+import { liveOffers } from "@/lib/orders";
 
 export const metadata = { title: "Premium Plans" };
 
 export default async function Plans() {
-  const [plans, s, o] = await Promise.all([q(`SELECT * FROM plans WHERE active ORDER BY sort`), getSettings(), includeOptions()]);
+  const [plans, s, o, offers] = await Promise.all([q(`SELECT * FROM plans WHERE active ORDER BY sort`), getSettings(), includeOptions(), liveOffers("plan")]);
+  const couponPlan = plans.find((p: any) => p.price > 0 && p.show_coupon !== false);
   // plan me chuni hui series ke naam (website par dikhane ke liye)
   const seriesNames = (v: any): string[] => {
     const i = parseIncludes(v);
@@ -32,6 +35,7 @@ export default async function Plans() {
     <>
       <PageHero crumbs={[{ label: "Premium Plans" }]} title="अपना" highlight="प्लान" after=" चुनें" subtitle="Free me shuru karein. Jab zarurat ho, Premium lekar poori test series aur PDFs unlock karein." compact />
       <Container className="py-10">
+        {plans.some((p: any) => p.show_coupon !== false) && <CouponOffers offers={offers as any} />}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {plans.map((p: any) => (
             <div key={p.id} className={`relative flex flex-col rounded-2xl bg-white p-6 ${p.popular ? "border-2 border-brand shadow-lift lg:-translate-y-2" : "border border-line shadow-card"}`}>
@@ -54,7 +58,7 @@ export default async function Plans() {
         </div>
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><CreditCard className="h-5 w-5" />Payment Options</h3><p className="mt-2 text-muted">{s.payment_note}</p></div>
-          <CouponBox />
+          {couponPlan ? <CouponBox item={`plan:${couponPlan.slug}`} /> : <div />}
         </div>
       </Container>
     </>

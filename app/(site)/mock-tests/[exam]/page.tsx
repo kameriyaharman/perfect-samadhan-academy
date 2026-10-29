@@ -9,7 +9,7 @@ import PageHero from "@/components/PageHero";
 import { Container, Empty } from "@/components/Section";
 import AdSlot from "@/components/ads/AdSlot";
 
-const TABS = [["full", "Full Mock"], ["subject", "Subject-wise"], ["topic", "Topic-wise"], ["pyq", "PYQ"]] as const;
+const TABS = [["full", "Full Mock"], ["subject", "Subject-wise"], ["topic", "Syllabus Wise"], ["pyq", "Old Paper"], ["free", "Free Mock"]] as const;
 const PER = 10;
 
 export async function generateMetadata({ params }: { params: { exam: string } }) {

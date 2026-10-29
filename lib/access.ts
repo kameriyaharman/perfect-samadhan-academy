@@ -8,13 +8,14 @@ import { isPremium, type SessionUser } from "./auth";
 export type Includes = {
   all?: boolean;
   folders?: number[];      // lesson_folders.id
+  tfolders?: number[];     // folders.id (test folders)
   series?: string[];       // "series:<naam>" ya "exam:<slug>"
   typing?: string[];       // typing_patterns.category
   passages?: boolean; keywords?: boolean; materials?: boolean;
 };
 export type Access = {
   premium: boolean; all: boolean;
-  folders: Set<number>; series: Set<string>; typing: Set<string>;
+  folders: Set<number>; tfolders: Set<number>; series: Set<string>; typing: Set<string>;
   passages: boolean; keywords: boolean; materials: boolean;
 };
 
@@ -23,11 +24,11 @@ export function parseIncludes(v: any): Includes {
   try { const j = typeof v === "string" ? JSON.parse(v) : v; return j && typeof j === "object" ? j : { all: true }; } catch { return { all: true }; }
 }
 
-const NONE: Access = { premium: false, all: false, folders: new Set(), series: new Set(), typing: new Set(), passages: false, keywords: false, materials: false };
+const NONE: Access = { premium: false, all: false, folders: new Set(), tfolders: new Set(), series: new Set(), typing: new Set(), passages: false, keywords: false, materials: false };
 
 export const getAccess = cache(async (u: SessionUser | null): Promise<Access> => {
   if (!isPremium(u)) return NONE;
-  const full: Access = { premium: true, all: true, folders: new Set(), series: new Set(), typing: new Set(), passages: true, keywords: true, materials: true };
+  const full: Access = { premium: true, all: true, folders: new Set(), tfolders: new Set(), series: new Set(), typing: new Set(), passages: true, keywords: true, materials: true };
   if (u!.role === "admin" || !u!.premium_plan) return full;
   const p = await one("SELECT includes FROM plans WHERE name=$1 OR slug=$1 ORDER BY id LIMIT 1", [u!.premium_plan]).catch(() => null);
   if (!p) return full;
@@ -35,16 +36,16 @@ export const getAccess = cache(async (u: SessionUser | null): Promise<Access> =>
   if (inc.all !== false) return full;
   return {
     premium: true, all: false,
-    folders: new Set((inc.folders || []).map(Number)), series: new Set(inc.series || []), typing: new Set(inc.typing || []),
+    folders: new Set((inc.folders || []).map(Number)), tfolders: new Set((inc.tfolders || []).map(Number)), series: new Set(inc.series || []), typing: new Set(inc.typing || []),
     passages: !!inc.passages, keywords: !!inc.keywords, materials: !!inc.materials,
   };
 });
 
 /** Mock test khul sakta hai? */
-export function canTest(a: Access, t: { is_free?: boolean | null; exam_slug?: string | null; series?: string | null }) {
+export function canTest(a: Access, t: { is_free?: boolean | null; exam_slug?: string | null; series?: string | null; folder_id?: number | null }) {
   if (t.is_free !== false) return true;
   if (!a.premium) return false;
-  return a.all || (!!t.series && a.series.has(`series:${t.series}`)) || (!!t.exam_slug && a.series.has(`exam:${t.exam_slug}`));
+  return a.all || (t.folder_id != null && a.tfolders.has(Number(t.folder_id))) || (!!t.series && a.series.has(`series:${t.series}`)) || (!!t.exam_slug && a.series.has(`exam:${t.exam_slug}`));
 }
 /** Typing lesson — lesson khud lock ho ya uska folder */
 export function canLesson(a: Access, l: { is_free?: boolean | null; folder_id?: number | null; folder_free?: boolean | null }) {
@@ -62,7 +63,7 @@ export const canMaterials = (a: Access) => a.premium && (a.all || a.materials);
 
 /** Admin plan form + plans page ke liye — chunne layak series ki list */
 export async function includeOptions() {
-  const [folders, series, exams, cats] = await Promise.all([
+  const [folders, series, exams, cats, tfolders] = await Promise.all([
     q(`SELECT f.id, f.name, f.layout, f.is_free, (SELECT count(*)::int FROM lessons l WHERE l.folder_id=f.id) n,
          (SELECT count(*)::int FROM lessons l WHERE l.folder_id=f.id AND NOT l.is_free) locked
        FROM lesson_folders f ORDER BY CASE WHEN f.layout='english' THEN 1 ELSE 0 END, f.sort, f.id`),
@@ -70,6 +71,8 @@ export async function includeOptions() {
     q(`SELECT m.exam_slug AS slug, COALESCE(max(e.name), m.exam_slug) AS name, count(*)::int n, count(*) FILTER (WHERE NOT m.is_free)::int locked
        FROM mock_tests m LEFT JOIN exams e ON e.slug=m.exam_slug GROUP BY m.exam_slug ORDER BY 2`),
     q(`SELECT category AS name, count(*)::int n, count(*) FILTER (WHERE NOT is_free)::int locked FROM typing_patterns GROUP BY category ORDER BY category`),
+    q(`SELECT f.id, f.name, f.scope, f.exam_slug, count(m.id)::int n, count(m.id) FILTER (WHERE NOT m.is_free)::int locked
+       FROM folders f LEFT JOIN mock_tests m ON m.folder_id=f.id WHERE f.scope LIKE 'test:%' GROUP BY f.id ORDER BY f.scope, f.sort, f.id`),
   ]);
-  return { folders, series, exams, cats };
+  return { folders, series, exams, cats, tfolders };
 }

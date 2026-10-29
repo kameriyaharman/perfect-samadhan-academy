@@ -6,6 +6,8 @@ import { initials, lines, md, pipeRows, rupee } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import EnrollBox from "./EnrollBox";
+import CouponOffers from "@/components/CouponOffers";
+import { liveOffers } from "@/lib/orders";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const c = await one("SELECT title FROM courses WHERE slug=$1", [params.slug]);
@@ -43,6 +45,7 @@ export default async function Course({ params, searchParams }: { params: { slug:
             {tab === "reviews" && <div className="grid gap-4 sm:grid-cols-2">{reviews.map((r: any) => <div key={r.id} className="card p-5"><p className="italic text-muted">“{r.quote}”</p><b className="mt-2 block">— {r.name}, {r.exam}</b></div>)}</div>}
           </div>
           <aside className="space-y-4">
+            {c.show_coupon !== false && <CouponOffers offers={(await liveOffers("course")) as any} compact />}
             <EnrollBox slug={c.slug} title={c.title} price={c.price} mrp={c.mrp} offer={c.offer_text} mode={c.mode} />
             {c.centre && <div className="card p-6"><h3 className="flex items-center gap-2 text-lg font-bold"><MapPin className="h-5 w-5" />Centre</h3><p className="mt-1 text-sm text-muted">{c.centre}</p></div>}
           </aside>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, ClipboardCheck, FileText, Languages, Layers, PlayCircle, Target } from "lucide-react";
+import { ArrowRight, BarChart3, ClipboardCheck, FileText, Gift, Languages, Layers, PlayCircle, Search } from "lucide-react";
 import { q } from "@/lib/db";
 import { color } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
@@ -25,8 +25,8 @@ export default async function MockTests() {
           <span className="flex-1"><b className="block text-lg md:text-xl">CPCT Previous Year Online Test — <span className="hi">कंप्यूटर (52 प्रश्न)</span></b><span className="text-sm text-white/75">Sirf Computer wala hissa · saal aur shift ke hisaab se · Hindi + English</span></span>
           <span className="btn bg-gold px-5 py-2.5 font-bold text-navy">Test dein →</span>
         </Link>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[[ClipboardCheck, "Full Mock Test", "Poora paper, 75 min", "/mock-tests/cpct", "blue"], [Layers, "Subject-wise", "Computer, Maths, GK…", "/mock-tests/cpct?tab=subject", "orange"], [Target, "Topic-wise", "Ek chapter, chhote tests", "/mock-tests/topic-wise", "green"], [FileText, "PYQ Online Test", "Purane paper online", "/mock-tests/pyq", "red"]].map(([I, t, d, h, c]: any) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {[[ClipboardCheck, "Mock Test", "Poora paper, 75 min", "/mock-tests/cpct", "blue"], [Layers, "Syllabus Wise Test", "Topic-wise, Computer se Excel tak", "/mock-tests/syllabus", "orange"], [FileText, "Old Paper Test", "Saal + shift ke hisaab se", "/mock-tests/pyq", "red"], [Gift, "Free Mock Test", "Turant sahi/galat + awaaz", "/mock-tests/free", "green"], [Search, "Keyword Test", "Kisi bhi topic par test", "/mock-tests/keyword", "purple"]].map(([I, t, d, h, c]: any) => (
             <Link key={t} href={h} className="card flex items-center gap-4 p-5 transition hover:-translate-y-1 hover:shadow-lift">
               <span className={`grid h-12 w-12 place-items-center rounded-xl ${color(c).bg} ${color(c).text}`}><I className="h-5 w-5" /></span>
               <span><span className="block text-lg font-bold">{t}</span><span className="text-sm text-muted">{d}</span></span>

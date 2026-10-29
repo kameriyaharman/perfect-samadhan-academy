@@ -7,8 +7,10 @@ export type IncOpts = {
   series: { name: string; n: number; locked: number }[];
   exams: { slug: string; name: string; n: number; locked: number }[];
   cats: { name: string; n: number; locked: number }[];
+  tfolders?: { id: number; name: string; scope: string; exam_slug: string | null; n: number; locked: number }[];
+  cfolders?: { id: number; name: string; language: string | null; exam_slug: string | null; is_free: boolean; n: number }[];
 };
-type Inc = { all?: boolean; folders?: number[]; series?: string[]; typing?: string[]; passages?: boolean; keywords?: boolean; materials?: boolean };
+type Inc = { all?: boolean; folders?: number[]; tfolders?: number[]; series?: string[]; typing?: string[]; passages?: boolean; keywords?: boolean; materials?: boolean };
 
 export function parseInc(v: any): Inc {
   if (!v) return { all: true };
@@ -19,12 +21,13 @@ export function incSummary(v: any, o: IncOpts | null) {
   if (i.all !== false) return "Sab premium content";
   const parts: string[] = [];
   if (i.folders?.length) parts.push(`${i.folders.length} lesson folder`);
-  const s = i.series?.length || 0; if (s) parts.push(`${s} test series`);
+  const s = (i.series?.length || 0) + (i.tfolders?.length || 0); if (s) parts.push(`${s} test series / folder`);
   if (i.typing?.length) parts.push(`${i.typing.length} typing exam`);
   if (i.passages) parts.push("passages"); if (i.keywords) parts.push("keyword MCQ"); if (i.materials) parts.push("PDFs");
   return parts.join(" · ") || "Kuch nahi chuna";
 }
 
+const SCOPE: Record<string, string> = { "test:mock": "Mock Test", "test:syllabus": "Syllabus Wise", "test:old": "Old Papers", "test:free": "Free Mock" };
 const LAYOUT: Record<string, string> = { remington: "हिंदी Remington", inscript: "हिंदी Inscript", english: "English" };
 
 export default function PlanIncludes({ value, onChange, opts }: { value: any; onChange: (v: string) => void; opts: IncOpts | null }) {
@@ -62,6 +65,10 @@ export default function PlanIncludes({ value, onChange, opts }: { value: any; on
 
             <H icon={<ClipboardCheck className="h-4 w-4" />} t="Mock Test Series" />
             {opts.series.length > 0 && <div className="grid gap-2 sm:grid-cols-2">{opts.series.map((s) => <Box key={s.name} on={!!inc.series?.includes(`series:${s.name}`)} onClick={() => set({ series: toggle(inc.series, `series:${s.name}`) })} title={s.name} sub={`${s.n} tests · ${s.locked} locked`} locked={s.locked > 0} />)}</div>}
+            {(opts.tfolders || []).length > 0 && <>
+              <div className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Test folders</div>
+              <div className="grid gap-2 sm:grid-cols-2">{(opts.tfolders || []).map((f) => <Box key={f.id} on={!!inc.tfolders?.includes(f.id)} onClick={() => set({ tfolders: toggle(inc.tfolders, f.id) })} title={f.name} sub={`${SCOPE[f.scope] || f.scope}${f.exam_slug ? ` · ${f.exam_slug}` : ""} · ${f.n} tests · ${f.locked} locked`} locked={f.locked > 0} />)}</div>
+            </>}
             <div className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Ya poore exam ke saare locked tests</div>
             <div className="grid gap-2 sm:grid-cols-2">{opts.exams.map((e) => <Box key={e.slug} on={!!inc.series?.includes(`exam:${e.slug}`)} onClick={() => set({ series: toggle(inc.series, `exam:${e.slug}`) })} title={`${e.name} — sabhi tests`} sub={`${e.n} tests · ${e.locked} locked`} locked={e.locked > 0} />)}</div>
 

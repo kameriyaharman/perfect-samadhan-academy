@@ -8,7 +8,7 @@ import { parseQuestionDoc } from "@/lib/questionDoc";
 // Test: maujooda Mock Test ID, ya naya Mock Test (title, exam, type, samay…) isi upload me ban jata hai.
 export async function POST(req: Request, { params }: { params: { resource: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  if (params.resource !== "questions" && params.resource !== "mock_tests") return NextResponse.json({ error: "not allowed" }, { status: 400 });
+  if (!["questions", "mock_tests", "tests_syllabus", "tests_old", "tests_free"].includes(params.resource)) return NextResponse.json({ error: "not allowed" }, { status: 400 });
   const fd = await req.formData().catch(() => null);
   const file = fd?.get("file");
   if (!fd || !file || typeof file === "string") return NextResponse.json({ error: "Word (.docx) file chunein" }, { status: 400 });
@@ -43,12 +43,13 @@ export async function POST(req: Request, { params }: { params: { resource: strin
     if (nt) {
       const t = JSON.parse(String(nt));
       if (!String(t.title || "").trim()) throw new Error("Naye Mock Test ka title daalein");
-      const kind = ["full", "subject", "topic", "pyq", "quiz"].includes(t.kind) ? t.kind : "full";
+      const kind = ["full", "subject", "topic", "pyq", "free", "quiz"].includes(t.kind) ? t.kind : "full";
       const r = await c.query(
-        `INSERT INTO mock_tests (title, exam_slug, kind, subject, topic, year, session, duration, marks_per_q, negative, is_free, series, active)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true) RETURNING id`,
+        `INSERT INTO mock_tests (title, exam_slug, kind, subject, topic, year, session, duration, marks_per_q, negative, is_free, series, folder_id, mode, active)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,true) RETURNING id`,
         [String(t.title).trim().slice(0, 200), String(t.exam_slug || "cpct").trim().slice(0, 60) || "cpct", kind, t.subject || null, topic, Number(t.year) || null, t.session || null,
-          Math.max(1, Number(t.duration) || questions.length), Number(t.marks_per_q) || 1, Number(t.negative) || 0, t.is_free !== false, String(t.series || "").trim().slice(0, 120) || null]
+          Math.max(1, Number(t.duration) || questions.length), Number(t.marks_per_q) || 1, Number(t.negative) || 0, t.is_free !== false, String(t.series || "").trim().slice(0, 120) || null,
+          Number(t.folder_id) || null, ["both", "practice", "exam"].includes(t.mode) ? t.mode : kind === "free" ? "practice" : "both"]
       );
       testId = r.rows[0].id;
     } else if (!testId || !(await one("SELECT id FROM mock_tests WHERE id=$1", [testId]))) {

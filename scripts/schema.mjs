@@ -511,4 +511,36 @@ CREATE TABLE IF NOT EXISTS lesson_folders (
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS folder_id INT REFERENCES lesson_folders(id) ON DELETE SET NULL;
 ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS series TEXT;
 ALTER TABLE plans ADD COLUMN IF NOT EXISTS includes TEXT;
+-- v5 (Oct 2026): test / passage folders, practice mode, coupon rules, course coupon toggle
+CREATE TABLE IF NOT EXISTS folders (
+  id SERIAL PRIMARY KEY,
+  scope TEXT NOT NULL,
+  name TEXT NOT NULL,
+  language TEXT,
+  exam_slug TEXT,
+  description TEXT,
+  icon TEXT,
+  color TEXT NOT NULL DEFAULT 'blue',
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS folders_scope ON folders(scope);
+ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS folder_id INT REFERENCES folders(id) ON DELETE SET NULL;
+ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'both';
+ALTER TABLE passages ADD COLUMN IF NOT EXISTS folder_id INT REFERENCES folders(id) ON DELETE SET NULL;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS discount_type TEXT;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS max_discount INT;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS starts_at DATE;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS expires_at DATE;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS show_countdown BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS max_uses INT;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS per_user INT;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS user_type TEXT NOT NULL DEFAULT 'all';
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS on_extension BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE coupons ADD COLUMN IF NOT EXISTS product_type TEXT NOT NULL DEFAULT 'all';
+UPDATE coupons SET discount_type = CASE WHEN is_percent THEN 'percent' ELSE 'flat' END WHERE discount_type IS NULL;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS show_coupon BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE plans ADD COLUMN IF NOT EXISTS show_coupon BOOLEAN NOT NULL DEFAULT true;
 `;

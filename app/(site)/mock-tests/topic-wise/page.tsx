@@ -1,41 +1,5 @@
-import Link from "next/link";
-import { BookOpen, Lock } from "lucide-react";
-import { getUser } from "@/lib/auth";
-import { canTest, getAccess } from "@/lib/access";
-import { q } from "@/lib/db";
-import PageHero from "@/components/PageHero";
-import { Container, Empty } from "@/components/Section";
-import AdSlot from "@/components/ads/AdSlot";
-
-export const metadata = { title: "Topic-wise Test" };
-
-export default async function TopicWise({ searchParams }: { searchParams: { exam?: string } }) {
-  const exam = searchParams.exam || "cpct";
-  const tests = await q(`SELECT m.id, m.subject, m.topic, m.title, m.is_free, m.exam_slug, m.series, (SELECT count(*)::int FROM questions WHERE test_id=m.id) qn FROM mock_tests m WHERE kind='topic' AND active AND exam_slug=$1 ORDER BY sort, id`, [exam]);
-  const acc = await getAccess(await getUser());
-  const groups: Record<string, any[]> = {};
-  for (const t of tests) (groups[t.subject || "Others"] ||= []).push(t);
-  return (
-    <>
-      <PageHero crumbs={[{ label: "Mock Tests", href: "/mock-tests" }, { label: "Topic-wise Test" }]} title="सिलेबस अनुसार" highlight="टॉपिक-वाइज़ टेस्ट" subtitle="Official syllabus ke har chapter par chhote tests. Weak topic ko target karein aur turant sudharein." compact />
-      <Container className="py-10">
-        <AdSlot place="Mock Test" />
-        {!tests.length ? <Empty /> : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(groups).map(([sub, list]) => (
-              <div key={sub} className="card p-5">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-bold text-navy"><BookOpen className="h-5 w-5" />{sub}</h3>
-                {list.map((t) => (
-                  <Link key={t.id} href={`/test/${t.id}`} className="flex items-center justify-between border-b border-dashed border-line py-3 text-[15px] last:border-0 hover:text-brand">
-                    <span>{t.topic}</span><span className="flex items-center gap-1.5">{!canTest(acc, t) && <Lock className="h-4 w-4 text-saffron" />}<span className="chip bg-brand-50 text-brand py-1.5">{t.qn} Q</span></span>
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-        <AdSlot place="Mock Test" pos="bottom" />
-      </Container>
-    </>
-  );
+import { redirect } from "next/navigation";
+// purana link — ab Syllabus Wise Test page
+export default function TopicWise({ searchParams }: { searchParams: { exam?: string } }) {
+  redirect(`/mock-tests/syllabus${searchParams.exam ? `?exam=${searchParams.exam}` : ""}`);
 }

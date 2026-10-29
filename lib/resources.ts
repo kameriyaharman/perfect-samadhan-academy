@@ -9,7 +9,7 @@ export type Field = {
   help?: string;
   rows?: number;
   full?: boolean; // full width in form
-  ref?: "lesson_folders"; // type "ref": dusri table se dropdown
+  ref?: string; // type "ref": "lesson_folders" ya "folders:<scope>" (dusri table se dropdown)
 };
 export type Resource = {
   key: string;
@@ -23,11 +23,41 @@ export type Resource = {
   filters?: { name: string; options: string[] }[];
   readonly?: boolean;
   noCreate?: boolean;
+  where?: string;                      // hamesha lagne wali shart (ek hi table ke alag-alag section)
+  defaults?: Record<string, any>;      // Add New par pehle se bhare
+  folderScope?: string;                // "lesson_folders" ya folders.scope — upar folder bar
+  hidden?: boolean;                    // sidebar me nahi
+  testKind?: string;                   // Word upload me naye test ka type
 };
 
 const COLOR_OPTS = ["blue", "navy", "orange", "amber", "green", "red", "purple", "teal"];
 export const AD_PLACES = ["All Sections", "Blog Post", "Questions Making", "Mock Test", "Upcoming Exams", "Download", "Notice"];
-const EXAM_KIND = ["full", "subject", "topic", "pyq", "quiz"];
+const EXAM_KIND = ["full", "subject", "topic", "pyq", "free", "quiz"];
+const MODE_OPTS = ["both", "practice", "exam"];
+const testFields = (scope: string): Field[] => [
+  { name: "title", label: "Title", required: true, list: true },
+  { name: "folder_id", label: "Folder", type: "ref", ref: `folders:${scope}`, list: true, help: "Folder bar se naya folder banayein. Website par test isi folder me dikhega." },
+  { name: "exam_slug", label: "Exam slug (cpct, ssc-chsl…)", required: true, list: true },
+  { name: "series", label: "Test Series (optional) — jaise CPCT Premium Test Series 2026", type: "series", list: true, help: "Ek series ke saare tests ek saath Premium Plan me jud jate hain. Purani series list me se chunein ya naya naam likhein." },
+  { name: "kind", label: "Type", type: "select", options: EXAM_KIND, list: true, help: "full / subject / quiz = Mock Test · topic = Syllabus Wise · pyq = Old Paper · free = Free Mock Test" },
+  { name: "mode", label: "Test kaise chale", type: "select", options: MODE_OPTS, help: "practice = ek-ek sawal, turant sahi/galat + awaaz · exam = asli CBT timer wala · both = student dono me se chune" },
+  { name: "subject", label: "Subject (subject/topic tests)" },
+  { name: "topic", label: "Topic (topic tests)" },
+  { name: "year", label: "Year (PYQ)", type: "number" },
+  { name: "session", label: "Session (PYQ, e.g. 08 September 2026 · Shift 2)" },
+  { name: "duration", label: "Duration (minutes)", type: "number", list: true },
+  { name: "marks_per_q", label: "Marks per question", type: "number" },
+  { name: "negative", label: "Negative marks per wrong", type: "number" },
+  { name: "pass_marks", label: "Pass marks", type: "number" },
+  { name: "is_free", label: "Free", type: "bool", list: true },
+  { name: "pdf_url", label: "PDF (for PYQ download)", type: "file" },
+  { name: "instructions", label: "Instructions (one per line)", type: "textarea", full: true },
+  { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+];
+const testRes = (key: string, label: string, icon: string, scope: string, where: string, kind: string, extra: Partial<Resource> = {}): Resource => ({
+  key, table: "mock_tests", label, group: "Tests", icon, order: "exam_slug, folder_id NULLS LAST, sort, id", search: ["title", "subject", "topic", "session"],
+  filters: [{ name: "is_free", options: ["true", "false"] }], where, folderScope: scope, testKind: kind, defaults: { kind }, fields: testFields(scope), ...extra,
+});
 
 export const RESOURCES: Resource[] = [
   {
@@ -59,25 +89,18 @@ export const RESOURCES: Resource[] = [
       { name: "sort", label: "Sort order", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
+  testRes("mock_tests", "Mock Test", "ClipboardCheck", "test:mock", "kind IN ('full','subject','quiz')", "full", { filters: [{ name: "kind", options: ["full", "subject", "quiz"] }, { name: "is_free", options: ["true", "false"] }] }),
+  testRes("tests_syllabus", "Syllabus Wise Test", "Layers", "test:syllabus", "kind='topic'", "topic"),
+  testRes("tests_old", "Old Papers Test", "History", "test:old", "kind='pyq'", "pyq", { order: "exam_slug, folder_id NULLS LAST, year DESC NULLS LAST, sort, id" }),
+  testRes("tests_free", "Free Mock Test", "Gift", "test:free", "kind='free'", "free", { defaults: { kind: "free", mode: "practice", is_free: true } }),
   {
-    key: "mock_tests", table: "mock_tests", label: "Mock Tests", group: "Tests", icon: "ClipboardCheck", order: "exam_slug, kind, sort, id", search: ["title", "subject", "topic", "session"],
-    filters: [{ name: "kind", options: EXAM_KIND }, { name: "is_free", options: ["true", "false"] }],
+    key: "keywords", table: "keywords", label: "Keyword Test Topic", group: "Tests", icon: "Tags", order: "kind, sort, id", search: ["label", "terms"],
+    filters: [{ name: "kind", options: ["topic", "popular"] }],
     fields: [
-      { name: "title", label: "Title", required: true, list: true },
-      { name: "exam_slug", label: "Exam slug (cpct, ssc-chsl…)", required: true, list: true },
-      { name: "series", label: "Test Series (optional) — jaise CPCT Premium Test Series 2026", type: "series", list: true, help: "Ek series ke saare tests ek saath Premium Plan me jud jate hain. Purani series list me se chunein ya naya naam likhein." },
-      { name: "kind", label: "Type", type: "select", options: EXAM_KIND, list: true },
-      { name: "subject", label: "Subject (subject/topic tests)" },
-      { name: "topic", label: "Topic (topic tests)" },
-      { name: "year", label: "Year (PYQ)", type: "number" },
-      { name: "session", label: "Session (PYQ, e.g. Nov 2025 · Shift 1)" },
-      { name: "duration", label: "Duration (minutes)", type: "number", list: true },
-      { name: "marks_per_q", label: "Marks per question", type: "number" },
-      { name: "negative", label: "Negative marks per wrong", type: "number" },
-      { name: "pass_marks", label: "Pass marks", type: "number" },
-      { name: "is_free", label: "Free", type: "bool", list: true },
-      { name: "pdf_url", label: "PDF (for PYQ download)", type: "file" },
-      { name: "instructions", label: "Instructions (one per line)", type: "textarea", full: true },
+      { name: "label", label: "Dikhne wala naam (jaise कम्प्यूटर मेमोरी / Computer Memory)", required: true, list: true, full: true },
+      { name: "terms", label: "Search shabd — | se alag (jaise Memory|मेमोरी|RAM|ROM)", list: true, full: true, help: "In me se koi bhi shabd sawal, topic ya keywords me ho to sawal test me aayega. Khaali = naam hi search hoga." },
+      { name: "kind", label: "Kahan dikhe", type: "select", options: ["topic", "popular"], list: true, help: "topic = Topic list (grid) · popular = search box ke neeche chhote chips" },
+      { name: "is_free", label: "Free (band karne par is topic ka MCQ test sirf Premium — 🔒)", type: "bool", list: true },
       { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -102,21 +125,25 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
-    key: "keywords", table: "keywords", label: "Keyword Test Topics", group: "Tests", icon: "Tags", order: "kind, sort, id", search: ["label", "terms"],
-    filters: [{ name: "kind", options: ["topic", "popular"] }],
+    key: "folders", table: "folders", label: "Folders (Tests / Passages)", group: "Tests", icon: "FolderOpen", order: "scope, sort, id", search: ["name"], hidden: true,
+    filters: [{ name: "scope", options: ["test:mock", "test:syllabus", "test:old", "test:free", "passage"] }],
     fields: [
-      { name: "label", label: "Dikhne wala naam (jaise कम्प्यूटर मेमोरी / Computer Memory)", required: true, list: true, full: true },
-      { name: "terms", label: "Search shabd — | se alag (jaise Memory|मेमोरी|RAM|ROM)", list: true, full: true, help: "In me se koi bhi shabd sawal, topic ya keywords me ho to sawal test me aayega. Khaali = naam hi search hoga." },
-      { name: "kind", label: "Kahan dikhe", type: "select", options: ["topic", "popular"], list: true, help: "topic = Topic list (grid) · popular = search box ke neeche chhote chips" },
-      { name: "is_free", label: "Free (band karne par is topic ka MCQ test sirf Premium — 🔒)", type: "bool", list: true },
-      { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
+      { name: "name", label: "Folder ka naam (jaise Computer Basics, CPCT 2026 Old Paper Tests, Hindi — CPCT Passages)", required: true, list: true, full: true },
+      { name: "scope", label: "Kiska folder", type: "select", options: ["test:mock", "test:syllabus", "test:old", "test:free", "passage"], required: true, list: true, help: "test:mock = Mock Test · test:syllabus = Syllabus Wise · test:old = Old Papers · test:free = Free Mock · passage = Typing Passages" },
+      { name: "exam_slug", label: "Exam slug (tests ke liye — cpct, ssc…; khaali = sabhi exam)", list: true },
+      { name: "language", label: "Bhasha (passages ke liye)", type: "select", options: ["hindi", "english"], list: true },
+      { name: "description", label: "Short description (website par card me) — optional", full: true },
+      { name: "icon", label: "Icon (website card)", type: "select", options: ["monitor", "cpu", "file-spreadsheet", "file-text", "presentation", "globe", "shield", "calculator", "brain", "book-open", "languages", "landmark", "keyboard", "folder"] },
+      { name: "color", label: "Colour", type: "select", options: COLOR_OPTS },
+      { name: "sort", label: "Sort (1 = pehle)", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
   {
-    key: "passages", table: "passages", label: "Typing Passages", group: "Typing", icon: "Keyboard", order: "language, year DESC NULLS FIRST, id", search: ["title", "text", "session"],
-    filters: [{ name: "language", options: ["hindi", "english"] }],
+    key: "passages", table: "passages", label: "Typing Passages", group: "Typing", icon: "Keyboard", order: "language, folder_id NULLS LAST, year DESC NULLS FIRST, id", search: ["title", "text", "session"],
+    filters: [{ name: "language", options: ["hindi", "english"] }], folderScope: "passage",
     fields: [
       { name: "title", label: "Title", required: true, list: true },
+      { name: "folder_id", label: "Folder", type: "ref", ref: "folders:passage", list: true, help: "Folder ki bhasha jaisi hi passage ki bhasha rakhein" },
       { name: "language", label: "Language", type: "select", options: ["hindi", "english"], list: true },
       { name: "level", label: "Level", type: "select", options: ["easy", "medium", "hard", "exam"], list: true },
       { name: "exam", label: "Exam (CPCT etc. — for paragraphs page)", list: true },
@@ -138,7 +165,7 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
-    key: "lessons", table: "lessons", label: "Typing Lessons", group: "Typing", icon: "BookOpen", order: "layout, number",
+    key: "lessons", table: "lessons", label: "Typing Lessons", group: "Typing", icon: "BookOpen", order: "layout, number", folderScope: "lesson_folders",
     filters: [{ name: "layout", options: ["remington", "inscript", "english"] }],
     fields: [
       { name: "folder_id", label: "Folder", type: "ref", ref: "lesson_folders", list: true, help: "Folder chunne par layout apne aap folder wala lag jayega" },
@@ -275,6 +302,7 @@ export const RESOURCES: Resource[] = [
       { name: "plan", label: "Course plan — Label | Title | Description (one per line)", type: "textarea", full: true },
       { name: "syllabus", label: "Syllabus (markdown)", type: "textarea", full: true },
       { name: "faculty", label: "Faculty name" }, { name: "centre", label: "Centre / address" },
+      { name: "show_coupon", label: "Checkout par Coupon Code box dikhaye (band = is course par coupon nahi lagega)", type: "bool", list: true },
       { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -392,14 +420,28 @@ export const RESOURCES: Resource[] = [
       { name: "subtitle", label: "Subtitle" }, { name: "validity_days", label: "Validity (days)", type: "number", list: true },
       { name: "features", label: "Features: '+included' or '-not included', one per line", type: "textarea", full: true },
       { name: "includes", label: "Is plan me kya-kya unlock hoga (locked series)", type: "includes", full: true, list: true },
+      { name: "show_coupon", label: "Checkout par Coupon Code box dikhaye", type: "bool" },
       { name: "popular", label: "Most popular", type: "bool" }, { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
   {
-    key: "coupons", table: "coupons", label: "Coupons", group: "Sales", icon: "Ticket", order: "id",
+    key: "coupons", table: "coupons", label: "Coupons", group: "Sales", icon: "Ticket", order: "id DESC", search: ["code", "title"],
+    defaults: { discount_type: "percent", user_type: "all", product_type: "all", on_extension: true },
     fields: [
-      { name: "code", label: "Code", required: true, list: true }, { name: "discount", label: "Discount", type: "number", list: true },
-      { name: "is_percent", label: "Discount is %", type: "bool", list: true }, { name: "active", label: "Active", type: "bool", list: true },
+      { name: "code", label: "Coupon Code", required: true, list: true },
+      { name: "title", label: "Offer text (optional — jaise Diwali Offer, website par countdown ke saath)" },
+      { name: "discount_type", label: "Discount Type", type: "select", options: ["percent", "flat"], required: true, list: true, help: "percent = % chhoot · flat = seedha ₹ chhoot" },
+      { name: "discount", label: "Discount (% ya ₹)", type: "number", required: true, list: true },
+      { name: "max_discount", label: "Max. Discount Upto (₹) — khaali = koi limit nahi", type: "number" },
+      { name: "starts_at", label: "Start date — optional", type: "date" },
+      { name: "expires_at", label: "Expiration Date — optional (is din ke baad band)", type: "date", list: true },
+      { name: "show_countdown", label: "Show Countdown Timer (website par coupon ke expire hone tak live countdown)", type: "bool" },
+      { name: "max_uses", label: "Max Use Count — khaali = koi limit nahi", type: "number" },
+      { name: "per_user", label: "Usages Per User — khaali = koi limit nahi", type: "number" },
+      { name: "user_type", label: "Type (kaun use kar sake)", type: "select", options: ["all", "new", "existing"], help: "all = sabhi · new = jinhone abhi tak kuch nahi khareeda · existing = jo pehle khareed chuke" },
+      { name: "on_extension", label: "Apply on Validity Extension (premium chalu hote hue plan dobara lene par bhi lage)", type: "bool" },
+      { name: "product_type", label: "Product Type", type: "select", options: ["all", "plan", "course", "material"], list: true, help: "all = sab par · plan = Premium Plans · course = Courses · material = PDFs" },
+      { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
   {

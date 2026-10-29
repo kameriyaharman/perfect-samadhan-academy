@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Check, Download, Info, Keyboard, PlayCircle } from "lucide-react";
 
-type P = { id: number; title: string; language: string; level: string; exam: string | null; year: number | null; session: string | null; shift: string | null };
+type P = { id: number; title: string; language: string; level: string; exam: string | null; year: number | null; session: string | null; shift: string | null; folder?: string | null };
 const HINDI_LAYOUTS = [
   { v: "remington", t: "REMINGTON GAIL MANGAL", d: "(CPCT, MP GOVT. EXAM)" },
   { v: "remington-cbi", t: "Remington CBI", d: "Kuch central exams" },
@@ -128,7 +128,11 @@ export default function SetupForm({ initial, passages, patterns, premium = false
               {pmode === "choose" && (
                 <select value={passage} onChange={(e) => setPassage(e.target.value)} className="input mt-2.5">
                   <option value="">— Passage chunein —</option>
-                  {list.map((p: any) => <option key={p.id} value={p.id}>{p.is_free === false ? "🔒 " : ""}{p.title} {p.level ? `(${p.level})` : ""}{p.is_free === false ? " — Premium" : ""}</option>)}
+                  {Array.from(new Set(list.map((p) => p.folder || "Aur passages"))).map((g) => (
+                    <optgroup key={g} label={g}>
+                      {list.filter((p) => (p.folder || "Aur passages") === g).map((p: any) => <option key={p.id} value={p.id}>{p.is_free === false ? "🔒 " : ""}{p.title} {p.level ? `(${p.level})` : ""}{p.is_free === false ? " — Premium" : ""}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
               )}
             </div>

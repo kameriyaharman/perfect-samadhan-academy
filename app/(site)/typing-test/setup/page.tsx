@@ -11,7 +11,7 @@ export const metadata = { title: "Typing Test — Setting chunein" };
 export default async function Setup({ searchParams }: { searchParams: Record<string, string> }) {
   const lang = searchParams.lang === "english" ? "english" : "hindi";
   const patterns = await getPatterns();
-  const passages = await q(`SELECT id, title, language, level, exam, year, session, shift, is_free FROM passages WHERE active ORDER BY year DESC NULLS FIRST, id`);
+  const passages = await q(`SELECT p.id, p.title, p.language, p.level, p.exam, p.year, p.session, p.shift, p.is_free, f.name AS folder FROM passages p LEFT JOIN folders f ON f.id=p.folder_id AND f.active WHERE p.active ORDER BY f.sort NULLS LAST, f.id NULLS LAST, p.year DESC NULLS FIRST, p.id`);
   return (
     <>
       <PageHero crumbs={[{ label: "Typing Test", href: "/typing-test" }, { label: lang === "hindi" ? "Hindi Typing Test" : "English Typing Test" }]}

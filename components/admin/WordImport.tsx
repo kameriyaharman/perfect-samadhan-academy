@@ -4,17 +4,17 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Download, Eye, FileText, FileUp, Layers, Loader2, X } from "lucide-react";
 
 const SECTIONS = ["Computer", "Reading Comprehension", "Maths", "Reasoning", "General Awareness", "Hindi", "English", "GK"];
-const KINDS = [["full", "Full Mock"], ["subject", "Subject-wise"], ["topic", "Topic-wise"], ["pyq", "PYQ (Previous Year)"], ["quiz", "Quiz"]];
+const KINDS = [["full", "Mock Test (Full)"], ["subject", "Subject-wise"], ["topic", "Syllabus Wise (Topic)"], ["pyq", "Old Paper (PYQ)"], ["free", "Free Mock Test"], ["quiz", "Quiz"]];
 
 type PQ = { no: number; text_hi: string; text_en: string | null; opts: { hi: string; en: string | null }[]; answer: string; explanation: string | null; section?: string | null };
 type Rg = { name: string; from: string; to: string };
 
-export default function WordImport({ testId: tid, defaultNew, onClose, onDone }: { testId: string; defaultNew: boolean; onClose: () => void; onDone: () => void }) {
+export default function WordImport({ testId: tid, defaultNew, onClose, onDone, kind, folders = [], folderId = "" }: { testId: string; defaultNew: boolean; onClose: () => void; onDone: () => void; kind?: string; folders?: { id: number; name: string; group: string }[]; folderId?: string; resKey?: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [mode, setMode] = useState<"new" | "old">(defaultNew && !tid ? "new" : "old");
   const [testId, setTestId] = useState(tid);
-  const [t, setT] = useState({ title: "", exam_slug: "cpct", kind: "full", session: "", year: "", duration: "", marks_per_q: "1", negative: "0", is_free: true, series: "" });
+  const [t, setT] = useState({ title: "", exam_slug: "cpct", kind: kind || "full", session: "", year: "", duration: "", marks_per_q: "1", negative: "0", is_free: true, series: "", folder_id: folderId, mode: kind === "free" ? "practice" : "both" });
   // ek ya kai sections — "All Subjects" = sabhi sections
   const [secs, setSecs] = useState<string[]>(["GK"]);
   const section = secs[0] || "GK";
@@ -116,6 +116,8 @@ export default function WordImport({ testId: tid, defaultNew, onClose, onDone }:
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
                     <div className="md:col-span-2"><label className="label">Test ka naam *</label><input value={t.title} onChange={(e) => setT({ ...t, title: e.target.value })} placeholder="e.g. Bihar GK Mock Test 01" className="input" /></div>
                     <div><label className="label">Exam slug</label><input value={t.exam_slug} onChange={(e) => setT({ ...t, exam_slug: e.target.value })} placeholder="cpct, ssc-chsl, bihar-police…" className="input" /></div>
+                    {folders.length > 0 && <div><label className="label">Folder</label><select value={t.folder_id} onChange={(e) => setT({ ...t, folder_id: e.target.value })} className="input hi"><option value="">— Bina folder —</option>{folders.map((f) => <option key={f.id} value={f.id}>{f.group} · {f.name}</option>)}</select></div>}
+                    <div><label className="label">Test kaise chale</label><select value={t.mode} onChange={(e) => setT({ ...t, mode: e.target.value })} className="input"><option value="both">Dono — Practice + Exam</option><option value="practice">Practice (turant sahi/galat + awaaz)</option><option value="exam">Exam (CBT timer)</option></select></div>
                     <div><label className="label">Type</label><select value={t.kind} onChange={(e) => setT({ ...t, kind: e.target.value })} className="input">{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
                     {t.kind === "pyq" && <>
                       <div><label className="label">Session (PYQ)</label><input value={t.session} onChange={(e) => setT({ ...t, session: e.target.value })} placeholder="Sep 2025 · Shift 2" className="input" /></div>

@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, Lock } from "lucide-react";
+import { ArrowRight, Loader2, Lock, Zap } from "lucide-react";
 
-export default function StartTest({ testId, loggedIn, locked, empty }: { testId: number; loggedIn: boolean; locked: boolean; empty: boolean }) {
+export default function StartTest({ testId, loggedIn, locked, empty, practice = false }: { testId: number; loggedIn: boolean; locked: boolean; empty: boolean; practice?: boolean }) {
   const r = useRouter();
   const [lang, setLang] = useState("hi");
   const [ok, setOk] = useState(true);
@@ -27,7 +27,10 @@ export default function StartTest({ testId, loggedIn, locked, empty }: { testId:
       <div className="mt-7 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} className="h-4 w-4 accent-[#1f35b8]" />Maine sabhi nirdesh padh kar samajh liye hain</label>
         {locked ? <Link href="/plans" className="btn-orange !py-3.5"><Lock className="h-4 w-4" />Premium se Unlock karein</Link>
-          : <button disabled={!ok || busy || empty} onClick={go} className="btn-primary !py-3.5 !px-7 text-base">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{loggedIn ? "Test Shuru Karein" : "Login karke Shuru Karein"} <ArrowRight className="h-4 w-4" /></button>}
+          : <span className="flex flex-wrap gap-2">
+            {practice && !empty && <Link href={`/test/practice/${testId}`} className="btn-soft !py-3.5 !px-5 text-base" title="Ek-ek sawal, turant sahi/galat + awaaz"><Zap className="h-4 w-4" />Practice Mode</Link>}
+            <button disabled={!ok || busy || empty} onClick={go} className="btn-primary !py-3.5 !px-7 text-base">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{loggedIn ? "Test Shuru Karein" : "Login karke Shuru Karein"} <ArrowRight className="h-4 w-4" /></button>
+          </span>}
       </div>
     </>
   );

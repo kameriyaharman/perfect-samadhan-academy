@@ -12,7 +12,8 @@ export async function POST(req: Request) {
   if (!it) return NextResponse.json({ error: "Item nahi mila" }, { status: 404 });
   const name = String(b.name || user.name).slice(0, 80);
   const mobile = String(b.mobile || user.mobile).replace(/\D/g, "").slice(-10);
-  const c = await applyCoupon(b.coupon, it.price);
+  const c = await applyCoupon(b.coupon, it.price, { kind: it.kind, showCoupon: it.showCoupon, userId: user.id, premiumTill: user.premium_till });
+  if (c.error) return NextResponse.json({ error: c.error }, { status: 400 });
   const amount = Math.max(0, it.price - c.discount);
   const o = await one(`INSERT INTO orders (user_id, item, item_name, name, mobile, email, amount, coupon, method, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending') RETURNING id`,
     [user.id, `${it.kind}:${it.slug}`, it.name + (b.mode ? ` (${b.mode})` : ""), name, mobile, b.email || user.email, amount, c.code, String(b.method || "UPI").slice(0, 20)]);

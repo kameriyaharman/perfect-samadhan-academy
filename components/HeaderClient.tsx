@@ -9,7 +9,7 @@ import { initials } from "@/lib/utils";
 export const NAV = [
   { href: "/", label: "Home" },
   { href: "/typing-test", label: "Typing Test" },
-  { href: "/mock-tests", label: "Mock Tests" },
+  { href: "/mock-tests", label: "Mock Tests", sub: [["/mock-tests/cpct", "Mock Test"], ["/mock-tests/syllabus", "Syllabus Wise Test"], ["/mock-tests/pyq", "Old Paper Test"], ["/mock-tests/free", "Free Mock Test"], ["/mock-tests/keyword", "Keyword Test"]] },
   { href: "/study-material", label: "Study Material" },
   { href: "/exams", label: "Exams" },
   { href: "/notices", label: "Notices" },
@@ -50,11 +50,20 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 sm:px-4 md:px-8 py-2.5">
           <Logo />
           <nav className="ml-auto hidden shrink-0 xl:flex items-center">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className={`relative whitespace-nowrap px-1.5 py-2 text-[14px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
-                {n.label}
-                {active(n.href) && <span className="absolute left-1.5 right-1.5 -bottom-[13px] h-[3px] rounded-full bg-saffron" />}
-              </Link>
+            {NAV.map((n: any) => (
+              <div key={n.href} className="group relative">
+                <Link href={n.href} className={`relative flex items-center gap-0.5 whitespace-nowrap px-1.5 py-2 text-[14px] font-medium transition ${active(n.href) ? "text-brand" : "text-ink hover:text-brand"}`}>
+                  {n.label}{n.sub && <ChevronDown className="h-3.5 w-3.5 transition group-hover:rotate-180" />}
+                  {active(n.href) && <span className="absolute left-1.5 right-1.5 -bottom-[13px] h-[3px] rounded-full bg-saffron" />}
+                </Link>
+                {n.sub && (
+                  <div className="invisible absolute left-0 top-full z-50 pt-3 opacity-0 transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                    <div className="w-56 rounded-xl border border-line bg-white p-1.5 shadow-lift">
+                      {n.sub.map(([h, l]: string[]) => <Link key={h} href={h} className={`block rounded-lg px-3 py-2 text-sm ${path === h ? "bg-brand-50 font-semibold text-brand" : "hover:bg-canvas hover:text-brand"}`}>{l}</Link>)}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
           <div className="ml-auto xl:ml-3 flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -94,8 +103,11 @@ export default function HeaderClient({ user, phone, email, hours, ticker }: { us
           <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm overflow-y-auto bg-white p-5 shadow-2xl reveal">
             <div className="mb-4 flex items-center justify-between"><Logo compact /><button onClick={() => setOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl border border-line"><X className="h-5 w-5" /></button></div>
             <nav className="flex flex-col">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className={`rounded-xl px-4 py-3 text-base font-semibold ${active(n.href) ? "bg-brand-50 text-brand" : "text-ink"}`}>{n.label}</Link>
+              {NAV.map((n: any) => (
+                <div key={n.href}>
+                  <Link href={n.href} className={`block rounded-xl px-4 py-3 text-base font-semibold ${active(n.href) ? "bg-brand-50 text-brand" : "text-ink"}`}>{n.label}</Link>
+                  {n.sub && <div className="mb-1 ml-4 border-l-2 border-line pl-2">{n.sub.map(([h, l]: string[]) => <Link key={h} href={h} className={`block rounded-lg px-3 py-2 text-[15px] ${path === h ? "font-semibold text-brand" : "text-muted"}`}>{l}</Link>)}</div>}
+                </div>
               ))}
               <div className="my-3 h-px bg-line" />
               {[["/selections", "Selections / Results"], ["/typing-test/leaderboard", "Leaderboard"], ["/plans", "Premium Plans"], ["/blog", "Blog"], ["/downloads", "Downloads"], ["/verify", "Certificate Verify"], ["/about", "About Us"], ["/contact", "Contact"], ["/faq", "FAQ"]].map(([h, l]) => (
