@@ -6,14 +6,14 @@ export type TypingPattern = {
   language: "hindi" | "english" | "both";
   hindi_layout: "any" | "remington" | "remington-cbi" | "krutidev" | "inscript" | "system";
   duration: number; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none";
-  hindi_speed: number; english_speed: number; words: number; lock_rules: boolean; description: string | null; sort: number; is_free: boolean;
+  hindi_speed: number; english_speed: number; words: number; lock_rules: boolean; error_penalty: number; backspace_penalty: number; description: string | null; sort: number; is_free: boolean;
 };
 
 const BS = ["full", "word", "prev", "off"], HL = ["word", "error", "none"], LANG = ["hindi", "english", "both"];
 const LAY = ["any", "remington", "remington-cbi", "krutidev", "inscript", "system"];
 
 // table na ho (migration se pehle) to bhi site chale
-const FALLBACK: Omit<TypingPattern, "id" | "is_free">[] = [
+const FALLBACK: Omit<TypingPattern, "id" | "is_free" | "error_penalty" | "backspace_penalty">[] = [
   { name: "CPCT", slug: "cpct", category: "MP State", language: "both", hindi_layout: "remington", duration: 15, backspace: "full", highlight: "error", hindi_speed: 20, english_speed: 30, words: 0, lock_rules: false, description: null, sort: 1 },
   { name: "SSC DEST (CHSL / CGL)", slug: "ssc", category: "SSC", language: "both", hindi_layout: "remington", duration: 15, backspace: "full", highlight: "error", hindi_speed: 30, english_speed: 35, words: 0, lock_rules: false, description: null, sort: 2 },
   { name: "High Court", slug: "highcourt", category: "Court", language: "both", hindi_layout: "remington", duration: 10, backspace: "full", highlight: "none", hindi_speed: 25, english_speed: 30, words: 0, lock_rules: false, description: null, sort: 3 },
@@ -30,7 +30,9 @@ function clean(r: any): TypingPattern {
     highlight: HL.includes(r.highlight) ? r.highlight : "error",
     hindi_speed: Number(r.hindi_speed) || 25, english_speed: Number(r.english_speed) || 30,
     words: [100, 150, 200, 250, 300].includes(Number(r.words)) ? Number(r.words) : 0,
-    lock_rules: !!r.lock_rules, description: r.description || null, sort: Number(r.sort) || 0, is_free: r.is_free !== false,
+    lock_rules: !!r.lock_rules,
+    error_penalty: r.error_penalty == null || r.error_penalty === "" || !Number.isFinite(Number(r.error_penalty)) ? 1 : Math.max(0, Number(r.error_penalty)),
+    backspace_penalty: Number.isFinite(Number(r.backspace_penalty)) ? Math.max(0, Number(r.backspace_penalty || 0)) : 0, description: r.description || null, sort: Number(r.sort) || 0, is_free: r.is_free !== false,
   };
 }
 

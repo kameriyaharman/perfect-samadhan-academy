@@ -42,6 +42,16 @@ export default async function Result({ params }: { params: { cert: string } }) {
               </div>
             ))}
           </div>
+          {(() => {
+            const ep = r.error_penalty == null ? 1 : Number(r.error_penalty), bp = Number(r.backspace_penalty || 0), bs = Number(r.backspaces || 0);
+            const ded = Math.round((r.errors * ep + bs * bp) * 100) / 100;
+            return (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/85">
+                <b className="text-white">Speed ki ganana:</b> {r.typed_words} shabd type kiye − galtiyan {r.errors} × {ep}{bp > 0 ? <> − backspace {bs} × {bp}</> : null} = <b className="text-gold">{Math.max(0, Math.round((r.typed_words - ded) * 100) / 100)} net shabd</b> ÷ {Math.round((r.duration / 60) * 100) / 100} min = <b className="text-gold">{Math.round(r.net_wpm)} Net WPM</b>
+                <span className="mt-1 block text-xs text-white/60">Kul katauti: {ded} · Backspace dabaye: {bs}{ep !== 1 || bp > 0 ? " · Is exam pattern me negative marking lagti hai" : ""}</span>
+              </div>
+            );
+          })()}
           <div className="mt-6 flex flex-wrap gap-3 no-print">
             <PrintButton className="btn-orange"><Download className="h-4 w-4" />Result PDF</PrintButton>
             <Link href={`/certificate/${r.cert_id}`} className="btn border border-white/30 bg-white/10 px-5 py-2.5 text-white hover:bg-white/20"><Award className="h-4 w-4" />Certificate</Link>

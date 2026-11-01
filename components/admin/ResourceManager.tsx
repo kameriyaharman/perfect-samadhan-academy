@@ -146,7 +146,9 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
           {!r.noCreate && <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" />Add New</button>}
         </div>
       </div>
-      {r.folderScope && opts && <FolderBar items={fItems} what={r.key === "lessons" ? "lessons" : r.key === "passages" ? "passages" : "tests"} editHref={r.folderScope === "lesson_folders" ? "/admin/r/lesson_folders" : `/admin/r/folders?scope=${encodeURIComponent(r.folderScope)}`} cur={filters.folder_id || ""} onPick={(v) => { const f = { ...filters }; if (v) f.folder_id = v; else delete f.folder_id; setFilters(f); setPage(1); }} />}
+      {r.folderScope && opts && <FolderBar items={fItems} scope={r.folderScope} what={r.key === "lessons" ? "lessons" : r.key === "passages" ? "passages" : "tests"} editHref={r.folderScope === "lesson_folders" ? "/admin/r/lesson_folders" : r.folderScope === "passage" ? "/admin/r/passage_folders" : `/admin/r/folders?scope=${encodeURIComponent(r.folderScope)}`} cur={filters.folder_id || ""}
+        onPick={(v) => { const f = { ...filters }; if (v) f.folder_id = v; else delete f.folder_id; setFilters(f); setPage(1); }}
+        onChanged={(gone) => { loadOpts(); if (gone && filters.folder_id === String(gone)) { const f = { ...filters }; delete f.folder_id; setFilters(f); } load(); }} />}
       <div className="mt-5 flex flex-wrap gap-2">
         {r.search && <label className="flex min-w-[240px] flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3"><Search className="h-4 w-4 text-muted" /><input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search…" className="w-full bg-transparent py-2.5 outline-none" /></label>}
         {(r.filters || []).map((f) => (
@@ -235,18 +237,68 @@ export default function ResourceManager({ resource: r, initialFilter }: { resour
   );
 }
 
-function FolderBar({ items, cur, onPick, what, editHref }: { items: FItem[]; cur: string; onPick: (v: string) => void; what: string; editHref: string }) {
+function FolderBar({ items, cur, onPick, what, editHref, scope, onChanged }: { items: FItem[]; cur: string; onPick: (v: string) => void; what: string; editHref: string; scope: string; onChanged: (deletedId?: number) => void }) {
   const groups = Array.from(new Set(items.map((f) => f.group)));
   const chip = (on: boolean) => `hi inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition ${on ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand"}`;
+  // folder kis table me hai: lesson folders alag table, baaki "folders" (scope ke saath)
+  const isLesson = scope === "lesson_folders";
+  const resKey = isLesson ? "lesson_folders" : scope === "passage" ? "passage_folders" : "folders";
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [sub, setSub] = useState(isLesson ? "remington" : scope === "passage" ? "hindi" : "");
+  const [busy, setBusy] = useState(false);
+  const curItem = items.find((f) => String(f.id) === cur);
+  const api = async (url: string, method: string, body?: any) => {
+    setBusy(true);
+    const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    setBusy(false);
+    if (!r.ok) { alert(j.error || "Kuch galat hua"); return null; }
+    return j;
+  };
+  const create = async () => {
+    if (!name.trim()) return;
+    const body: any = { name: name.trim(), active: true, sort: 0 };
+    if (isLesson) { body.layout = sub; body.is_free = true; }
+    else if (scope === "passage") body.language = sub;
+    else { body.scope = scope; if (sub.trim()) body.exam_slug = sub.trim().toLowerCase(); }
+    const j = await api(`/api/admin/${resKey}`, "POST", body);
+    if (j) { setName(""); setAdding(false); onChanged(); }
+  };
+  const rename = async () => {
+    if (!curItem) return;
+    const n = prompt("Folder ka naya naam", curItem.name);
+    if (!n || !n.trim() || n.trim() === curItem.name) return;
+    if (await api(`/api/admin/${resKey}/${curItem.id}`, "PUT", { name: n.trim() })) onChanged();
+  };
+  const toggleLock = async () => {
+    if (!curItem || !isLesson) return;
+    if (await api(`/api/admin/${resKey}/${curItem.id}`, "PUT", { is_free: !curItem.is_free })) onChanged();
+  };
+  const remove = async () => {
+    if (!curItem) return;
+    if (!confirm(`"${curItem.name}" folder DELETE karein?\n\nIske andar ke ${curItem.n} ${what} delete NAHI honge — wo "Bina folder wale" me chale jayenge.`)) return;
+    if (await api(`/api/admin/${resKey}/${curItem.id}`, "DELETE")) onChanged(curItem.id);
+  };
   return (
     <div className="card mt-5 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <b className="flex items-center gap-2 text-navy"><Folder className="h-4 w-4" />Folders</b>
-        <span className="flex gap-2">
-          <Link href={editHref} className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Folders edit{what === "lessons" ? " / lock" : ""}</Link>
-          <Link href={`${editHref}${editHref.includes("?") ? "&" : "?"}new=1`} className="btn-soft btn-sm"><FolderPlus className="h-3.5 w-3.5" />Naya folder</Link>
+        <span className="flex flex-wrap gap-2">
+          <Link href={editHref} className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Sabhi folders (list)</Link>
+          <button type="button" onClick={() => setAdding(!adding)} className="btn-soft btn-sm"><FolderPlus className="h-3.5 w-3.5" />Naya folder</button>
         </span>
       </div>
+      {adding && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-brand/30 bg-brand-50/50 p-3">
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && create()} placeholder="Folder ka naam" className="input hi !py-2 min-w-[220px] flex-1" />
+          {isLesson && <select value={sub} onChange={(e) => setSub(e.target.value)} className="input !w-auto !py-2"><option value="remington">हिंदी Remington</option><option value="inscript">हिंदी Inscript</option><option value="english">English</option></select>}
+          {scope === "passage" && <select value={sub} onChange={(e) => setSub(e.target.value)} className="input !w-auto !py-2"><option value="hindi">हिंदी passages</option><option value="english">English passages</option></select>}
+          {!isLesson && scope !== "passage" && <input value={sub} onChange={(e) => setSub(e.target.value)} placeholder="Exam slug (cpct…) — khaali = sabhi" className="input !w-56 !py-2" />}
+          <button type="button" disabled={busy || !name.trim()} onClick={create} className="btn-primary btn-sm">{busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}Banayein</button>
+          <button type="button" onClick={() => setAdding(false)} className="btn-ghost btn-sm"><X className="h-3.5 w-3.5" /></button>
+        </div>
+      )}
       <button onClick={() => onPick("")} className={chip(!cur)}>Sabhi {what}</button>
       {!items.length && <p className="mt-3 text-xs text-muted">Abhi koi folder nahi — "Naya folder" se banayein, phir {what} select karke "Move" karein.</p>}
       {groups.map((t) => (
@@ -258,6 +310,14 @@ function FolderBar({ items, cur, onPick, what, editHref }: { items: FItem[]; cur
         </div>
       ))}
       <button onClick={() => onPick("none")} className={`${chip(cur === "none")} mt-3`}>Bina folder wale</button>
+      {curItem && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-sm">
+          <span className="hi mr-1 text-muted">Chuna hua folder: <b className="text-ink">{curItem.name}</b></span>
+          <button type="button" disabled={busy} onClick={rename} className="btn-ghost btn-sm"><Edit3 className="h-3.5 w-3.5" />Naam badlein</button>
+          {isLesson && <button type="button" disabled={busy} onClick={toggleLock} className="btn-ghost btn-sm">{curItem.is_free ? <><Lock className="h-3.5 w-3.5" />Lock (Premium)</> : <><Unlock className="h-3.5 w-3.5" />Unlock (Free)</>}</button>}
+          <button type="button" disabled={busy} onClick={remove} className="btn-sm inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white hover:bg-red-700"><Trash2 className="h-3.5 w-3.5" />Folder delete</button>
+        </div>
+      )}
     </div>
   );
 }

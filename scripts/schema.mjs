@@ -543,4 +543,26 @@ ALTER TABLE coupons ADD COLUMN IF NOT EXISTS product_type TEXT NOT NULL DEFAULT 
 UPDATE coupons SET discount_type = CASE WHEN is_percent THEN 'percent' ELSE 'flat' END WHERE discount_type IS NULL;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS show_coupon BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE plans ADD COLUMN IF NOT EXISTS show_coupon BOOLEAN NOT NULL DEFAULT true;
+-- v6 (Nov 2026): typing negative marking, bina-login content, password reset (OTP)
+ALTER TABLE typing_patterns ADD COLUMN IF NOT EXISTS error_penalty NUMERIC DEFAULT 1;
+ALTER TABLE typing_patterns ADD COLUMN IF NOT EXISTS backspace_penalty NUMERIC DEFAULT 0;
+ALTER TABLE typing_results ADD COLUMN IF NOT EXISTS backspaces INT NOT NULL DEFAULT 0;
+ALTER TABLE typing_results ADD COLUMN IF NOT EXISTS error_penalty NUMERIC NOT NULL DEFAULT 1;
+ALTER TABLE typing_results ADD COLUMN IF NOT EXISTS backspace_penalty NUMERIC NOT NULL DEFAULT 0;
+ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS guest BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE passages ADD COLUMN IF NOT EXISTS guest BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS guest BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE lesson_folders ADD COLUMN IF NOT EXISTS guest BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS guest BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE IF NOT EXISTS password_resets (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  mobile TEXT NOT NULL,
+  otp_hash TEXT,
+  tries INT NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'otp',
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS password_resets_mobile ON password_resets(mobile, created_at DESC);
 `;

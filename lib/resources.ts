@@ -50,6 +50,7 @@ const testFields = (scope: string): Field[] => [
   { name: "negative", label: "Negative marks per wrong", type: "number" },
   { name: "pass_marks", label: "Pass marks", type: "number" },
   { name: "is_free", label: "Free", type: "bool", list: true },
+  { name: "guest", label: "Bina login chalega (band = test dene ke liye login zaroori)", type: "bool", list: true },
   { name: "pdf_url", label: "PDF (for PYQ download)", type: "file" },
   { name: "instructions", label: "Instructions (one per line)", type: "textarea", full: true },
   { name: "sort", label: "Sort", type: "number" }, { name: "active", label: "Active", type: "bool", list: true },
@@ -135,6 +136,7 @@ export const RESOURCES: Resource[] = [
       { name: "description", label: "Short description (website par card me) — optional", full: true },
       { name: "icon", label: "Icon (website card)", type: "select", options: ["monitor", "cpu", "file-spreadsheet", "file-text", "presentation", "globe", "shield", "calculator", "brain", "book-open", "languages", "landmark", "keyboard", "folder"] },
       { name: "color", label: "Colour", type: "select", options: COLOR_OPTS },
+      { name: "guest", label: "Bina login chalega (folder ke sabhi tests / passages bina login)", type: "bool", list: true },
       { name: "sort", label: "Sort (1 = pehle)", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -150,7 +152,19 @@ export const RESOURCES: Resource[] = [
       { name: "year", label: "Year", type: "number" }, { name: "session", label: "Session (e.g. Nov 2025)" }, { name: "shift", label: "Shift" },
       { name: "text", label: "Passage text (Hindi in Unicode/Mangal)", type: "textarea", required: true, full: true, rows: 8 },
       { name: "is_free", label: "Free (band karne par sirf Premium students — 🔒 lock dikhega)", type: "bool", list: true },
+      { name: "guest", label: "Bina login chalega (band = type karne ke liye login zaroori)", type: "bool", list: true },
       { name: "active", label: "Active", type: "bool", list: true },
+    ],
+  },
+  {
+    key: "passage_folders", table: "folders", label: "Typing Passage Folders", group: "Typing", icon: "FolderOpen", order: "language, sort, id", search: ["name"],
+    where: "scope='passage'", defaults: { scope: "passage" }, filters: [{ name: "language", options: ["hindi", "english"] }],
+    fields: [
+      { name: "name", label: "Folder ka naam (jaise हिंदी — CPCT Passages, English — SSC Passages)", required: true, list: true, full: true },
+      { name: "language", label: "Bhasha", type: "select", options: ["hindi", "english"], required: true, list: true, help: "Folder ki bhasha jaisi hi passage ki bhasha rakhein" },
+      { name: "description", label: "Short description — optional", full: true },
+      { name: "guest", label: "Bina login chalega (is folder ke passages bina login ke type ho sakenge)", type: "bool", list: true },
+      { name: "sort", label: "Sort (1 = pehle)", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
   {
@@ -161,6 +175,7 @@ export const RESOURCES: Resource[] = [
       { name: "layout", label: "Kis typing ka folder", type: "select", options: ["remington", "inscript", "english"], required: true, list: true, help: "remington / inscript = Hindi typing · english = English typing. Folder ke saare lessons isi layout par chalenge." },
       { name: "description", label: "Short description (website par folder ke neeche) — optional", type: "textarea", full: true, rows: 2 },
       { name: "is_free", label: "Free (band karne par poora folder 🔒 Premium — Premium Plan me ye folder chun sakte hain)", type: "bool", list: true },
+      { name: "guest", label: "Bina login chalega (folder ke sabhi lessons bina login)", type: "bool", list: true },
       { name: "sort", label: "Sort (1 = pehle)", type: "number", list: true }, { name: "active", label: "Active", type: "bool", list: true },
     ],
   },
@@ -175,6 +190,7 @@ export const RESOURCES: Resource[] = [
       { name: "subtitle", label: "Subtitle" },
       { name: "content", label: "Practice text (space separated)", type: "textarea", required: true, full: true },
       { name: "is_free", label: "Free (band karne par sirf Premium students — 🔒 lock dikhega)", type: "bool", list: true },
+      { name: "guest", label: "Bina login chalega (band = lesson ke liye login zaroori)", type: "bool", list: true },
       { name: "active", label: "Active", type: "bool" },
     ],
   },
@@ -192,6 +208,8 @@ export const RESOURCES: Resource[] = [
       { name: "hindi_speed", label: "Hindi qualifying speed (NWPM)", type: "number" },
       { name: "english_speed", label: "English qualifying speed (NWPM)", type: "number" },
       { name: "words", label: "Passage words (0 = poora, ya 100/150/200/250/300)", type: "number" },
+      { name: "error_penalty", label: "Negative marking — har galti par kitne shabd/ank katein (normal = 1, jaise 0.50)", type: "number", help: "Net WPM = (Type kiye shabd − Galtiyan × ye ank − Backspace × neeche wala ank) ÷ Minute" },
+      { name: "backspace_penalty", label: "Har Backspace par kitne katein (0 = koi katauti nahi, jaise 0.10)", type: "number", help: "Backspace dabane ki ginti test me apne aap hoti hai" },
       { name: "lock_rules", label: "Exam rules lock (student backspace/highlight badal na sake)", type: "bool" },
       { name: "is_free", label: "Free (band karne par ye exam test sirf Premium students ke liye — 🔒)", type: "bool", list: true },
       { name: "description", label: "Short description", type: "textarea", full: true },
@@ -467,6 +485,16 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "password_resets", table: "password_resets", label: "Password Reset Requests", group: "Users", icon: "KeyRound", order: "created_at DESC", search: ["mobile"], noCreate: true,
+    filters: [{ name: "status", options: ["request", "otp", "used", "done"] }],
+    fields: [
+      { name: "mobile", label: "Mobile", list: true },
+      { name: "status", label: "Status", type: "select", options: ["request", "otp", "used", "done"], list: true, help: "request = student ne password bhoola (SMS band tha) — Students / Users me us mobile ka naya password daal kar student ko batayein, phir 'done' karein · otp = OTP bheja · used = student ne khud badal liya" },
+      { name: "tries", label: "Galat OTP koshish", type: "number", list: true },
+      { name: "created_at", label: "Kab", type: "datetime", list: true },
+    ],
+  },
+  {
     key: "users", table: "users", label: "Students / Users", group: "Users", icon: "UserRound", order: "created_at DESC", search: ["name", "mobile", "email", "city"],
     filters: [{ name: "role", options: ["student", "admin"] }],
     fields: [
@@ -489,6 +517,7 @@ export function getResource(key: string) {
 export type SettingType = "text" | "textarea" | "secret" | "toggle" | "file";
 export const SETTING_GROUPS: { title: string; note?: string; keys: [string, string, SettingType?][] }[] = [
   { title: "Payment (Razorpay)", note: "Razorpay Dashboard → Account & Settings → API Keys se Key ID aur Key Secret yahan dalein. Test keys (rzp_test_…) se pehle check karein, phir Live keys (rzp_live_…) dalein. Secret save hone ke baad dobara nahi dikhega.", keys: [["razorpay_enabled", "Online payment (Razorpay) chalu", "toggle"], ["razorpay_key_id", "Razorpay Key ID (rzp_live_… / rzp_test_…)"], ["razorpay_key_secret", "Razorpay Key Secret", "secret"]] },
+  { title: "Forgot Password (SMS OTP)", note: "Student 'Password bhool gaye?' par apna mobile daalega, OTP SMS aayega, naya password bana lega. Fast2SMS (fast2sms.com) par account banayein → Dev API → API Key copy karke yahan dalein aur wallet me thoda balance rakhein. Band ho ya SMS na jaye to student ki request Admin → Password Reset Requests me aayegi.", keys: [["sms_otp_enabled", "OTP SMS se password reset chalu", "toggle"], ["sms_api_key", "Fast2SMS API Key", "secret"]] },
   { title: "Contact & Brand", keys: [["site_name", "Site name (Hindi)"], ["site_name_en", "Site name (English)"], ["tagline", "Tagline"], ["phone", "Phone"], ["whatsapp", "WhatsApp number (with 91, digits only)"], ["whatsapp_group", "WhatsApp group link"], ["email", "Email"], ["hours", "Hours (top bar)"], ["hours_full", "Hours (contact page)"], ["address", "Address", "textarea"], ["map_embed", "Google Map embed URL (src of iframe)", "textarea"], ["upi_id", "UPI ID for manual payment (optional)"]] },
   { title: "Social & App", keys: [["facebook", "Facebook URL"], ["youtube", "YouTube URL"], ["instagram", "Instagram URL"], ["telegram", "Telegram URL"], ["android_app", "Android app URL"]] },
   { title: "Home page", keys: [["hero_badge", "Hero badge"], ["hero_title_1", "Hero title line 1"], ["hero_title_2", "Hero title line 2 (white)"], ["hero_title_3", "Hero title line 2 (orange)"], ["hero_subtitle", "Hero subtitle", "textarea"], ["stat_1", "Stat 1 (value|label)"], ["stat_2", "Stat 2"], ["stat_3", "Stat 3"], ["stat_4", "Stat 4"], ["cta_title", "Bottom CTA title"], ["cta_subtitle", "Bottom CTA subtitle"], ["footer_about", "Footer about", "textarea"]] },

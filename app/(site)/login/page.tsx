@@ -6,7 +6,7 @@ import LoginForm from "./LoginForm";
 
 export const metadata = { title: "Login / Register" };
 
-export default async function Login({ searchParams }: { searchParams: { tab?: string; next?: string } }) {
+export default async function Login({ searchParams }: { searchParams: { tab?: string; next?: string; why?: string } }) {
   const u = await getUser();
   const next = searchParams.next && searchParams.next.startsWith("/") ? searchParams.next : "/dashboard";
   if (u) redirect(next);
@@ -31,7 +31,7 @@ export default async function Login({ searchParams }: { searchParams: { tab?: st
         )}
       </div>
       <div className="flex items-start justify-center bg-white px-4 py-10 md:py-16">
-        <LoginForm initialTab={searchParams.tab === "register" ? "register" : "login"} next={next} exams={exams.map((e: any) => e.name)} />
+        <LoginForm why={searchParams.why} initialTab={searchParams.tab === "register" ? "register" : searchParams.tab === "forgot" ? "forgot" : "login"} next={next} exams={exams.map((e: any) => e.name)} />
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import AdminPreviewBar from "@/components/AdminPreviewBar";
+
 export default function FocusLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-canvas">{children}</div>;
+  return <div className="min-h-screen bg-canvas">{children}<AdminPreviewBar /></div>;
 }

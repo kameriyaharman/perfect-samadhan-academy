@@ -2,7 +2,7 @@
 // Practice test: ek-ek sawal, option chunte hi turant sahi/galat (rang + awaaz), vyakhya, aakhir me result.
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flag, Home, Languages, RotateCcw, Trophy, Volume2, VolumeX, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpenCheck, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flag, Home, Languages, MinusCircle, RotateCcw, Trophy, Volume2, VolumeX, XCircle } from "lucide-react";
 import { playCorrect, playFinish, playWrong } from "@/lib/answerSound";
 
 export type PQ = { id: number; section: string; text_hi: string; text_en: string | null; opts: { hi: string; en: string | null }[]; answer: string; explanation: string | null };
@@ -22,6 +22,9 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
   const [now, setNow] = useState(() => Date.now());
   const [done, setDone] = useState(false);
   const [review, setReview] = useState(false);
+  // Solution: test ke baad saare sawal ek saath — apna uttar, sahi uttar, vyakhya
+  const [sol, setSol] = useState(false);
+  const [solF, setSolF] = useState<"all" | "w" | "s" | "c">("all");
   const q = questions[idx];
   const total = questions.length;
 
@@ -40,7 +43,7 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
     return { c, w, s: total - c - w };
   }, [picked, questions, total]);
 
-  const finish = useCallback(() => { if (done) return; setDone(true); setReview(false); if (sound) playFinish(); window.scrollTo({ top: 0, behavior: "smooth" }); }, [done, sound]);
+  const finish = useCallback(() => { if (done) return; setDone(true); setReview(false); setSol(false); if (sound) playFinish(); window.scrollTo({ top: 0, behavior: "smooth" }); }, [done, sound]);
   useEffect(() => { if (limit && left <= 0 && !done) finish(); }, [left, limit, done, finish]);
 
   const choose = (letter: string) => {
@@ -74,7 +77,7 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
 
   const score = Math.round((stats.c * (test.marks_per_q || 1) - stats.w * (test.negative || 0)) * 100) / 100;
   const acc = stats.c + stats.w ? Math.round((stats.c / (stats.c + stats.w)) * 100) : 0;
-  const reset = () => { setPicked({}); setIdx(0); setDone(false); setReview(false); };
+  const reset = () => { setPicked({}); setIdx(0); setDone(false); setReview(false); setSol(false); };
 
   const NavBtns = (
     <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -83,6 +86,66 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
       <Link href={back} className="inline-flex items-center gap-2 rounded-xl bg-slate-600 px-5 py-3 font-semibold text-white shadow hover:bg-slate-700"><Home className="h-4 w-4" />{backLabel}</Link>
     </div>
   );
+
+  if (done && sol) {
+    const st = (x: PQ) => { const p = picked[x.id]; return !p ? "s" : p === x.answer ? "c" : "w"; };
+    const list = questions.map((x, i) => ({ x, i })).filter(({ x }) => solF === "all" || st(x) === solF);
+    const opt = (x: PQ, l: string) => { const o = x.opts[L.indexOf(l)]; return o ? (lang === "en" && o.en ? o.en : o.hi) : ""; };
+    return (
+      <div className="mx-auto max-w-4xl px-3 py-6 md:px-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-xl font-bold text-navy md:text-2xl"><BookOpenCheck className="h-6 w-6" />Solution</h1>
+            <p className="hi truncate text-sm text-muted">{test.title} · Score {score} / {total * (test.marks_per_q || 1)} · Accuracy {acc}%</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="seg !p-1 text-sm">
+              {([["both", "दोनों"], ["hi", "हिंदी"], ["en", "English"]] as [Lang, string][]).map(([k, l]) => <button key={k} className={`${lang === k ? "on" : ""} ${k !== "en" ? "hi" : ""} !px-3 !py-1.5`} onClick={() => { setLang(k); savePrefs(k, sound); }}>{l}</button>)}
+            </div>
+            <button onClick={() => setSol(false)} className="btn-soft btn-sm"><Trophy className="h-4 w-4" />Result</button>
+          </div>
+        </div>
+        <div className="seg seg-wrap mb-4 text-sm">
+          {([["all", `Sabhi (${total})`], ["w", `Galat (${stats.w})`], ["s", `Chhode (${stats.s})`], ["c", `Sahi (${stats.c})`]] as const).map(([k, l]) => <button key={k} className={solF === k ? "on" : ""} onClick={() => setSolF(k)}>{l}</button>)}
+        </div>
+        {!list.length && <div className="card p-8 text-center text-muted">Is shreni me koi sawal nahi.</div>}
+        <div className="space-y-4">
+          {list.map(({ x, i }) => {
+            const p = picked[x.id], s0 = st(x);
+            return (
+              <div key={x.id} className={`card border-l-4 p-5 ${s0 === "c" ? "border-l-green-500" : s0 === "w" ? "border-l-red-500" : "border-l-slate-300"}`}>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-muted">Q{i + 1} · {x.section}</span>
+                  <span className={`chip py-1 ${s0 === "c" ? "bg-green-50 text-green-700" : s0 === "w" ? "bg-red-50 text-red-600" : "bg-canvas text-muted"}`}>
+                    {s0 === "c" ? <><CheckCircle2 className="h-3.5 w-3.5" />Sahi</> : s0 === "w" ? <><XCircle className="h-3.5 w-3.5" />Galat</> : <><MinusCircle className="h-3.5 w-3.5" />Chhoda</>}
+                  </span>
+                </div>
+                <h3 className="whitespace-pre-line font-semibold leading-relaxed text-ink">{lang === "en" && x.text_en ? x.text_en : <span className="hi">{x.text_hi}</span>}{lang === "both" && x.text_en && x.text_en.trim() !== x.text_hi.trim() && <span className="mt-1 block font-normal text-muted">{x.text_en}</span>}</h3>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {x.opts.map((o, j) => {
+                    const l = L[j], isA = l === x.answer, isM = l === p;
+                    return (
+                      <div key={j} className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-[15px] ${isA ? "border-green-400 bg-green-50" : isM ? "border-red-400 bg-red-50" : "border-line"}`}>
+                        <b className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs ${isA ? "bg-green-600 text-white" : isM ? "bg-red-600 text-white" : "bg-canvas text-muted"}`}>{isA ? "✓" : isM ? "✕" : l}</b>
+                        <span className="hi">{lang === "en" && o.en ? o.en : o.hi}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="hi mt-3 text-sm"><b className="text-green-700">Sahi uttar: {x.answer}) {opt(x, x.answer)}</b>{p && p !== x.answer && <span className="text-red-600"> · Aapka uttar: {p}) {opt(x, p)}</span>}{!p && <span className="text-muted"> · Aapne ye sawal chhoda tha</span>}</p>
+                {x.explanation && <div className="hi mt-2 whitespace-pre-line rounded-xl bg-amber-50 px-4 py-3 text-[15px] text-ink"><b className="text-amber-800">Vyakhya: </b>{x.explanation}</div>}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button onClick={() => { setSol(false); window.scrollTo({ top: 0 }); }} className="btn-primary"><Trophy className="h-4 w-4" />Result</button>
+          <button onClick={reset} className="btn-ghost"><RotateCcw className="h-4 w-4" />Dobara dein</button>
+        </div>
+        {NavBtns}
+      </div>
+    );
+  }
 
   if (done && !review) return (
     <div className="mx-auto max-w-3xl px-3 py-8 md:px-6">
@@ -98,7 +161,8 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
         </div>
         <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-white/60"><Clock className="h-4 w-4" />Samay: {mmss(Math.min(secs, limit || secs))}{test.negative ? ` · Negative ${test.negative} / galat` : ""}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <button onClick={() => { setReview(true); setIdx(0); }} className="btn bg-white px-5 py-3 font-semibold text-navy"><CheckCircle2 className="h-4 w-4" />Answers dekhein</button>
+          <button onClick={() => { setSol(true); setSolF(stats.w ? "w" : "all"); window.scrollTo({ top: 0 }); }} className="btn bg-gold px-5 py-3 font-semibold text-navy"><BookOpenCheck className="h-4 w-4" />Solution dekhein</button>
+          <button onClick={() => { setReview(true); setIdx(0); }} className="btn bg-white px-5 py-3 font-semibold text-navy"><CheckCircle2 className="h-4 w-4" />Ek-ek karke dekhein</button>
           <button onClick={reset} className="btn border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"><RotateCcw className="h-4 w-4" />Dobara dein</button>
         </div>
       </div>
@@ -134,10 +198,10 @@ export default function PracticePlayer({ test, questions, prev, next, back, back
           {q.opts.map((o, i) => {
             const letter = L[i];
             const isAns = letter === q.answer, isMine = letter === my;
-            const cls = !my ? "border-white/20 hover:border-gold hover:bg-white/5 cursor-pointer" : isAns ? "border-green-400 bg-green-500/20" : isMine ? "border-red-400 bg-red-500/20" : "border-white/10 opacity-60";
+            const cls = !my && !review ? "border-white/20 hover:border-gold hover:bg-white/5 cursor-pointer" : review && !my ? (isAns ? "border-green-400 bg-green-500/20" : "border-white/10 opacity-60") : isAns ? "border-green-400 bg-green-500/20" : isMine ? "border-red-400 bg-red-500/20" : "border-white/10 opacity-60";
             return (
               <button key={i} disabled={!!my || review} onClick={() => choose(letter)} className={`flex w-full items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${cls}`}>
-                <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 text-xs font-bold ${my && isAns ? "border-green-400 bg-green-500 text-white" : my && isMine ? "border-red-400 bg-red-500 text-white" : "border-white/40"}`}>{my && isAns ? "✓" : my && isMine ? "✕" : letter}</span>
+                <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 text-xs font-bold ${(my || review) && isAns ? "border-green-400 bg-green-500 text-white" : my && isMine ? "border-red-400 bg-red-500 text-white" : "border-white/40"}`}>{(my || review) && isAns ? "✓" : my && isMine ? "✕" : letter}</span>
                 <span className="flex-1 text-[15.5px]">{txt(o.hi, o.en)}</span>
               </button>
             );

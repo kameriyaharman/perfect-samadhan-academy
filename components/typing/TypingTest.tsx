@@ -22,7 +22,7 @@ type Props = {
   passages: PassageLite[];
   userName: string | null;
   lang: "hindi" | "english"; layout: Layout; layoutName: string; pattern: string; duration: number; mode: "practice" | "exam"; limit: number;
-  rules?: { name: string; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none"; locked: boolean; qualify: number };
+  rules?: { name: string; backspace: "full" | "word" | "prev" | "off"; highlight: "word" | "error" | "none"; locked: boolean; qualify: number; errPen?: number; bsPen?: number };
 };
 type BsMode = "full" | "word" | "prev" | "off";
 type HlMode = "word" | "error" | "none";
@@ -125,7 +125,8 @@ export default function TypingTest(p: Props) {
   const doneCount = endsSpace ? tw.length : Math.max(0, tw.length - 1);
   const curIdx = endsSpace ? tw.length : tw.length - 1;
   const partial = endsSpace ? "" : tw[tw.length - 1] || "";
-  const live = useMemo(() => scoreTyping(text, typed, Math.max(elapsed, 15), p.lang, false), [typed, elapsed, text, p.lang]);
+  const pen = { error: p.rules?.errPen ?? 1, backspace: p.rules?.bsPen ?? 0, backspaces: backs };
+  const live = useMemo(() => scoreTyping(text, typed, Math.max(elapsed, 15), p.lang, false, pen), [typed, elapsed, text, p.lang, backs]); // eslint-disable-line
   const nonSpace = useMemo(() => Array.from(text.replace(/\s+/g, "")).length, [text]);
   const wordLen = pw.length ? (nonSpace / pw.length).toFixed(2) : "0";
   const timeLeft = Math.max(0, total - elapsed);
@@ -148,7 +149,7 @@ export default function TypingTest(p: Props) {
     setSubmitting(true);
     const secs = Math.max(1, Math.min(total, startAt.current ? Math.floor((Date.now() - startAt.current) / 1000) : elapsed));
     if (custom) {
-      setLocalResult(scoreTyping(text, st.text, Math.max(secs, 15), p.lang, true));
+      setLocalResult(scoreTyping(text, st.text, Math.max(secs, 15), p.lang, true, pen));
       setSubmitting(false);
       return;
     }
@@ -159,7 +160,7 @@ export default function TypingTest(p: Props) {
     try {
       const r = await fetch("/api/typing/submit", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passageId: p.passage.id, limit, lang: p.lang, layout: p.layoutName, pattern: p.pattern, mode: p.mode, seconds: secs, typed: st.text, perMinute: speeds, keystrokes: keys }),
+        body: JSON.stringify({ passageId: p.passage.id, limit, lang: p.lang, layout: p.layoutName, pattern: p.pattern, mode: p.mode, seconds: secs, typed: st.text, perMinute: speeds, keystrokes: keys, backspaces: backs }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Submit failed");
@@ -168,7 +169,7 @@ export default function TypingTest(p: Props) {
     } catch (e: any) {
       setErr(e.message); setSubmitting(false); finished.current = false;
     }
-  }, [custom, elapsed, keys, limit, p, router, st.text, text, total]);
+  }, [custom, elapsed, keys, limit, p, router, st.text, text, total, backs]); // eslint-disable-line
 
   useEffect(() => { if (started && elapsed >= total) submit(); }, [elapsed, started, submit, total]);
   useEffect(() => { if (started && doneCount >= pw.length && pw.length > 0) submit(); }, [doneCount, pw.length, started, submit]);
@@ -555,7 +556,7 @@ export default function TypingTest(p: Props) {
             <div className="text-lg font-bold">Result — <span className={hiFont}>{title}</span></div>
             <p className="text-sm text-muted">My passage practice (server par save nahi hota)</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              {([["Net WPM", Math.round(localResult.net)], ["Gross WPM", Math.round(localResult.gross)], ["Accuracy", `${localResult.accuracy}%`], ["Errors", localResult.errors], ["Typed Words", localResult.typedWords], ["Keystrokes", keys]] as [string, string | number][]).map(([k, v]) => (
+              {([["Net WPM", Math.round(localResult.net)], ["Gross WPM", Math.round(localResult.gross)], ["Accuracy", `${localResult.accuracy}%`], ["Errors", localResult.errors], ["Typed Words", localResult.typedWords], ["Backspace", backs]] as [string, string | number][]).map(([k, v]) => (
                 <div key={k} className="rounded-lg bg-canvas p-3"><div className="text-xs text-muted">{k}</div><div className="text-2xl font-bold">{v}</div></div>
               ))}
             </div>

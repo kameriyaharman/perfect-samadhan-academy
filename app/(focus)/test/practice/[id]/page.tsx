@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { one, q } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { canTest, getAccess } from "@/lib/access";
+import { canTest, getAccess, isGuest, loginHref } from "@/lib/access";
 import { listHref, KIND_PAGE } from "@/lib/testNav";
 import FocusBar from "@/components/FocusBar";
 import LockedNotice from "@/components/typing/LockedNotice";
@@ -10,11 +10,12 @@ import PracticePlayer from "@/components/test/PracticePlayer";
 export const dynamic = "force-dynamic";
 
 export default async function Practice({ params }: { params: { id: string } }) {
-  const t = await one(`SELECT m.*, f.name AS folder_name FROM mock_tests m LEFT JOIN folders f ON f.id=m.folder_id WHERE m.id=$1 AND m.active`, [Number(params.id) || 0]);
+  const t = await one(`SELECT m.*, f.name AS folder_name, f.guest AS folder_guest FROM mock_tests m LEFT JOIN folders f ON f.id=m.folder_id WHERE m.id=$1 AND m.active`, [Number(params.id) || 0]);
   if (!t) notFound();
   if (t.mode === "exam") redirect(`/test/${t.id}`);
   const back = listHref(t);
   const user = await getUser();
+  if (!user && !isGuest(t)) redirect(loginHref(`/test/practice/${t.id}`));
   if (!canTest(await getAccess(user), t)) return <LockedNotice title={t.title} loggedIn={!!user} back={back} next={`/test/practice/${t.id}`} />;
   const rows = await q(`SELECT id, section, text_hi, text_en, opt_a_hi, opt_a_en, opt_b_hi, opt_b_en, opt_c_hi, opt_c_en, opt_d_hi, opt_d_en, opt_e_hi, opt_e_en, answer, explanation
     FROM questions WHERE test_id=$1 ORDER BY sort, id`, [t.id]);

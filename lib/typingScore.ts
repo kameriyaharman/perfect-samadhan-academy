@@ -5,13 +5,15 @@ export function splitWords(s: string) {
 }
 
 export type Score = {
-  typedWords: number; totalWords: number; errors: number; correct: number;
+  typedWords: number; totalWords: number; errors: number; correct: number; deduction: number;
   gross: number; net: number; accuracy: number;
   mistakes: { expected: string; typed: string; type: string }[];
 };
 
 /** word-by-word comparison (CPCT style). includePartial = count the last unfinished word too */
-export function scoreTyping(passage: string, typed: string, seconds: number, lang: string, includePartial = true): Score {
+export type Penalty = { error?: number; backspace?: number; backspaces?: number };
+/** Negative marking (exam pattern): har galti par `error` shabd kate (default 1), har Backspace par `backspace` shabd (default 0) */
+export function scoreTyping(passage: string, typed: string, seconds: number, lang: string, includePartial = true, pen: Penalty = {}): Score {
   const pw = splitWords(passage);
   const tw = splitWords(typed);
   const done = includePartial || /\s$/.test(typed) ? tw.length : Math.max(0, tw.length - 1);
@@ -27,9 +29,12 @@ export function scoreTyping(passage: string, typed: string, seconds: number, lan
   }
   const minutes = Math.max(seconds, 1) / 60;
   const gross = done / minutes;
-  const net = Math.max(0, (done - errors) / minutes);
+  const ep = Number.isFinite(pen.error) ? Math.max(0, Number(pen.error)) : 1;
+  const bp = Number.isFinite(pen.backspace) ? Math.max(0, Number(pen.backspace)) : 0;
+  const deduction = errors * ep + Math.max(0, pen.backspaces || 0) * bp;
+  const net = Math.max(0, (done - deduction) / minutes);
   const accuracy = done ? ((done - errors) / done) * 100 : 0;
-  return { typedWords: done, totalWords: pw.length, errors, correct: done - errors, gross: Math.round(gross * 10) / 10, net: Math.round(net * 10) / 10, accuracy: Math.round(accuracy * 10) / 10, mistakes };
+  return { deduction: Math.round(deduction * 100) / 100, typedWords: done, totalWords: pw.length, errors, correct: done - errors, gross: Math.round(gross * 10) / 10, net: Math.round(net * 10) / 10, accuracy: Math.round(accuracy * 10) / 10, mistakes };
 }
 
 export function qualifySpeed(pattern: string, lang: string) {

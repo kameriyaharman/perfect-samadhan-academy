@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { Layers, User } from "lucide-react";
 import { one, q } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { canTest, getAccess } from "@/lib/access";
+import { canTest, getAccess, loginHref } from "@/lib/access";
 import { initials, lines } from "@/lib/utils";
 import FocusBar from "@/components/FocusBar";
 import StartTest from "./StartTest";
@@ -12,6 +12,7 @@ export default async function Instructions({ params }: { params: { id: string } 
   if (!t) notFound();
   if (t.mode === "practice") redirect(`/test/practice/${t.id}`);
   const user = await getUser();
+  if (!user) redirect(loginHref(`/test/${t.id}`));
   const secs = await q("SELECT section, count(*)::int n FROM questions WHERE test_id=$1 GROUP BY section ORDER BY min(sort)", [t.id]);
   const total = secs.reduce((a: number, s: any) => a + s.n, 0);
   const instr = lines(t.instructions).length ? lines(t.instructions) : ["Screen ke upar-daayein kone par timer dikhega. Samay khatam hone par test apne aap submit ho jayega.", "Question palette me rang question ki sthiti batate hain.", "Kisi bhi samay Hindi / English bhasha badal sakte hain.", "\"Save & Next\" dabane par hi uttar save hoga.", "Section tabs se ek section se doosre section me ja sakte hain."];

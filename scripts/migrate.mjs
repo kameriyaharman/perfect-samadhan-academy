@@ -50,6 +50,16 @@ async function main() {
     }
   }
 
+  // v6 ek baar: login zaroori ho gaya — Free Mock Test (kind=free) aur "Free Mock" folders shuru me bina login khule rahein.
+  // Uske baad admin har test / passage / lesson / folder par "Bina login chalega" khud chalu-band karega.
+  const g = await client.query("SELECT 1 FROM settings WHERE key='guest_init_v6'");
+  if (!g.rows.length) {
+    await client.query("UPDATE mock_tests SET guest=true WHERE kind='free'");
+    await client.query("UPDATE folders SET guest=true WHERE scope='test:free'");
+    await client.query("INSERT INTO settings (key, value) VALUES ('guest_init_v6','1') ON CONFLICT (key) DO NOTHING");
+    console.log("Guest (bina login) defaults set");
+  }
+
   // Academy ke asli contact/social links — sirf tab lagenge jab setting abhi bhi demo/khaali ho (admin ke badlav overwrite nahi honge)
   const REAL = {
     youtube: "https://youtube.com/c/GsguruSk",

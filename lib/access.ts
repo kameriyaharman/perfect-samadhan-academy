@@ -24,10 +24,21 @@ export function parseIncludes(v: any): Includes {
   try { const j = typeof v === "string" ? JSON.parse(v) : v; return j && typeof j === "object" ? j : { all: true }; } catch { return { all: true }; }
 }
 
+/** Admin "student ki nazar se dekhein" chalu kare to premium/admin unlock band — lock wahi dikhenge jo student ko */
+export const PREVIEW_COOKIE = "psa_student_view";
+async function studentPreview() {
+  try { const { cookies } = await import("next/headers"); return cookies().get(PREVIEW_COOKIE)?.value === "1"; } catch { return false; }
+}
+
+/** Bina login chalne wala content: item khud ya uska folder "guest" ho */
+export const isGuest = (x: { guest?: boolean | null; folder_guest?: boolean | null } | null | undefined) => !!x && (x.guest === true || x.folder_guest === true);
+export const loginHref = (next: string) => `/login?next=${encodeURIComponent(next)}&why=test`;
+
 const NONE: Access = { premium: false, all: false, folders: new Set(), tfolders: new Set(), series: new Set(), typing: new Set(), passages: false, keywords: false, materials: false };
 
 export const getAccess = cache(async (u: SessionUser | null): Promise<Access> => {
   if (!isPremium(u)) return NONE;
+  if (u!.role === "admin" && (await studentPreview())) return NONE;
   const full: Access = { premium: true, all: true, folders: new Set(), tfolders: new Set(), series: new Set(), typing: new Set(), passages: true, keywords: true, materials: true };
   if (u!.role === "admin" || !u!.premium_plan) return full;
   const p = await one("SELECT includes FROM plans WHERE name=$1 OR slug=$1 ORDER BY id LIMIT 1", [u!.premium_plan]).catch(() => null);

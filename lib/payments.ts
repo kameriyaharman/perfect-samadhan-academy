@@ -1,7 +1,7 @@
 import { one } from "./db";
 
 /** Admin panel ke secret settings — inki value kabhi browser ko nahi bheji jaati */
-export const SECRET_SETTINGS = ["razorpay_key_secret"];
+export const SECRET_SETTINGS = ["razorpay_key_secret", "sms_api_key"];
 
 /**
  * Razorpay credentials: pehle Admin → Site Settings → Payment (Razorpay) se,
