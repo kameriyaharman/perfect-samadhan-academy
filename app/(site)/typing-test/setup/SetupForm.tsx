@@ -62,7 +62,9 @@ export default function SetupForm({ initial, passages, patterns, premium = false
 
   const list = useMemo(() => passages.filter((p) => p.language === lang), [passages, lang]);
   const examList = list.filter((p) => p.exam);
-  const latestLabel = examList[0]?.session ? `${examList[0].exam} ${examList[0].session?.split(" ")[1] || ""}` : "Exam paper";
+  const latestFull = examList[0]?.session ? `${examList[0].exam} ${examList[0].session?.split(" ")[1] || ""}`.trim() : "Exam paper";
+  // lamba exam naam "Choose" button ko bahar dhakel deta tha — chhota karke dikhayein
+  const latestLabel = latestFull.length > 22 ? latestFull.slice(0, 20).trim() + "…" : latestFull;
 
   const start = () => {
     let pid = passage;
@@ -116,13 +118,13 @@ export default function SetupForm({ initial, passages, patterns, premium = false
             </div>
             <div>
               <H n={4} t="Duration" />
-              <div className="seg">{Array.from(new Set([2, 5, 10, 15, 30, duration])).sort((a, b) => a - b).map((d) => <button key={d} className={duration === d ? "on" : ""} onClick={() => setDuration(d)}>{d} min</button>)}</div>
+              <div className="seg seg-wrap">{Array.from(new Set([2, 5, 10, 15, 30, duration])).sort((a, b) => a - b).map((d) => <button key={d} className={duration === d ? "on" : ""} onClick={() => setDuration(d)}>{d} min</button>)}</div>
             </div>
             <div>
               <H n={5} t="Passage" />
-              <div className="seg">
+              <div className="seg seg-wrap">
                 <button className={pmode === "random" ? "on" : ""} onClick={() => setPmode("random")}>Random</button>
-                <button className={pmode === "exam" ? "on" : ""} onClick={() => setPmode("exam")}>{latestLabel}</button>
+                {examList.length > 0 && <button className={pmode === "exam" ? "on" : ""} title={latestFull} onClick={() => setPmode("exam")}>{latestLabel}</button>}
                 <button className={pmode === "choose" ? "on" : ""} onClick={() => setPmode("choose")}>Choose</button>
               </div>
               {pmode === "choose" && (

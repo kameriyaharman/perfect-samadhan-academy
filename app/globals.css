@@ -30,6 +30,8 @@ h1, h2, h3, .heading { font-family: Poppins, Hind, sans-serif; letter-spacing: -
 .seg::-webkit-scrollbar { display: none; }
 .seg > button, .seg > a { @apply whitespace-nowrap flex-1 shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-muted transition text-center; }
 .seg > .on { @apply bg-white text-brand shadow-card; }
+.seg.seg-wrap { @apply flex-wrap overflow-visible; }
+.seg.seg-wrap > button { @apply min-w-[72px]; }
 .table-x { @apply w-full text-left text-sm; }
 .table-x th { @apply whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted bg-white border-b border-line; }
 .table-x td { @apply whitespace-nowrap px-4 py-3.5 border-b border-line align-middle; }
