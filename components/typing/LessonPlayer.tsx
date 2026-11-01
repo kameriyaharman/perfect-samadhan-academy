@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Delete, Info, ListChecks, RotateCcw, Timer, Trophy, PartyPopper, Keyboard } from "lucide-react";
 import KeyboardView from "./KeyboardView";
 import { playKey, type SoundKind } from "@/lib/keySound";
-import { engineBackspace, engineKey, findKey, guideNextChar, isTypingPrefix, normalizeWord, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
+import { altCodeChar, engineBackspace, engineInsert, engineKey, findKey, guideNextChar, isTypingPrefix, normalizeWord, FINGER, FINGER_NAME, LEFT_HAND, type EngineState, type Layout } from "@/lib/keyboard";
 
 const STEPS = ["Akshar pehchaan", "Ek-ek key", "Akshar jodi", "Shabd", "Mini test"];
 const TIMES = [0, 1, 2, 5, 10, 15];
@@ -75,9 +75,40 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
     if (text && !isTypingPrefix(cur, text, layout)) setErrors((e) => e + 1);
   };
 
+  // Alt + number code (jaise Alt + 063 = ?, Alt + 2384 = ॐ): Alt dabaye rakh kar number, Alt chhodte hi akshar
+  const altDigits = useRef<string | null>(null);
+  const [altBuf, setAltBuf] = useState<string | null>(null);
+  const typeChar = (base: EngineState, nextSt: EngineState) => {
+    if (!start) setStart(Date.now());
+    playKey(sound.current.k, "key", sound.current.v);
+    const k = keys + 1;
+    setKeys(k);
+    const shown = nextSt.pendingI && cur.startsWith(nextSt.text + "ि") ? nextSt.text + "ि" : nextSt.text;
+    // backspace band: galat key likhi hi nahi jayegi (error gina jayega), sahi key dabane par aage
+    if (!bs && shown && !isTypingPrefix(cur, shown, layout)) { setErrors((x) => x + 1); say("Galat key — sahi key dabayein"); setSt(base); return; }
+    setSt(nextSt);
+    apply(shown, k);
+  };
+  const onKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key !== "Alt" || altDigits.current === null) return;
+    e.preventDefault();
+    const digits = altDigits.current; altDigits.current = null; setAltBuf(null);
+    if (done || !digits) return;
+    const ch = altCodeChar(digits);
+    if (!ch) { say(`Alt + ${digits} — galat code`); return; }
+    typeChar(st, layout === "english" ? { text: st.text + ch, pendingI: false } : engineInsert(layout, st, ch));
+  };
+
   const onKey = (e: React.KeyboardEvent) => {
     if (done) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "Alt") { e.preventDefault(); if (!e.repeat) { altDigits.current = ""; setAltBuf(""); } return; }
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      const d = /^(?:Numpad|Digit)(\d)$/.exec(e.code);
+      if (d && altDigits.current !== null) { altDigits.current += d[1]; setAltBuf(altDigits.current); }
+      return;
+    }
+    if (e.ctrlKey || e.metaKey) return;
     if (!start) setStart(Date.now());
     if (e.code === "Space") { e.preventDefault(); return; }
     if (e.code === "Backspace" && !bs) { e.preventDefault(); say("Backspace band hai"); return; }
@@ -87,18 +118,12 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
     else next = engineKey(layout, st, e.code, e.shiftKey);
     if (!next) return;
     e.preventDefault();
-    playKey(sound.current.k, "key", sound.current.v);
-    const k = keys + 1;
-    setKeys(k);
-    const shown = next.pendingI && cur.startsWith(next.text + "ि") ? next.text + "ि" : next.text;
-    // backspace band: galat key likhi hi nahi jayegi (error gina jayega), sahi key dabane par aage
-    if (!bs && shown && !isTypingPrefix(cur, shown, layout)) { setErrors((x) => x + 1); say("Galat key — sahi key dabayein"); return; }
-    setSt(next);
-    apply(shown, k);
+    typeChar(st, next);
   };
 
   const nextCh = wrong || layout === "english" ? (wrong ? null : Array.from(cur.slice(st.text.length))[0]) : guideNextChar(layout, cur, st.text, st.pendingI);
   const target = wrong ? { code: "Backspace", shift: false } : nextCh ? findKey(layout, nextCh) : null;
+  const altNeed = !wrong && nextCh && nextCh !== " " && !target ? `Alt + ${nextCh.codePointAt(0)! < 256 ? "0" + String(nextCh.codePointAt(0)).padStart(2, "0") : nextCh.codePointAt(0)} (${nextCh})` : "";
   const finger = target ? FINGER[target.code] : null;
   const hand = target ? (LEFT_HAND.has(target.code) ? "bayaan haath" : "dayaan haath") : "";
   const step = Math.min(4, Math.floor((idx / Math.max(1, tokens.length)) * 5));
@@ -113,7 +138,7 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
 
   return (
     <div className="mx-auto grid max-w-[1500px] gap-5 px-3 md:px-10 py-6 lg:grid-cols-[1fr_360px]">
-      <div ref={ref} tabIndex={0} onKeyDown={onKey} className="card p-5 md:p-7 outline-none focus:ring-4 focus:ring-brand/10">
+      <div ref={ref} tabIndex={0} onKeyDown={onKey} onKeyUp={onKeyUp} onBlur={() => { altDigits.current = null; setAltBuf(null); }} className="card p-5 md:p-7 outline-none focus:ring-4 focus:ring-brand/10">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="hi text-2xl md:text-3xl font-bold text-navy">Lesson {lesson.number} — {lesson.title}</h1>
@@ -162,6 +187,8 @@ export default function LessonPlayer({ lesson, nextId }: { lesson: { id: number;
             <div className="mb-4 text-center text-[15px]">
               {flash && <div className="mb-2 font-semibold text-red-600">{flash}</div>}
               <span className="hi">Type kiya: <b className={wrong ? "text-red-600" : "text-ink"}>{st.text || "—"}</b>{st.pendingI ? " (ि …)" : ""}</span>
+              {altBuf !== null && <> · <b className="text-brand">Alt + {altBuf || "…"}</b></>}
+              {altNeed && <> · Agli key: <b>{altNeed}</b> <span className="text-xs text-muted">(Alt dabaye rakh kar number, phir Alt chhod dein)</span></>}
               {target && <> · Agli key: <b>{target.shift ? "Shift + " : ""}{target.code.replace("Key", "").replace("Digit", "")}</b>{finger && <span className="font-semibold text-green-600"> — {FINGER_NAME[finger]} ({hand})</span>}</>}
             </div>
             <KeyboardView layout={layout} target={target?.code} shift={target?.shift} fingerColors />

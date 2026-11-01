@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Check, Clock, Folder, GraduationCap, Hand, Languages, Keyboard, Lock, PlayCircle } from "lucide-react";
+import { BookOpen, Check, Clock, Folder, GraduationCap, Hand, Languages, Keyboard, Lock, PlayCircle, Sparkles } from "lucide-react";
+import { parseInstructions } from "@/lib/instructions";
 import { q } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { canLesson, getAccess } from "@/lib/access";
@@ -23,6 +24,9 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
   const prog = user ? await q(`SELECT lesson_id, accuracy FROM lesson_progress WHERE user_id=$1`, [user.id]) : [];
   const done = new Map(prog.map((p: any) => [p.lesson_id, p.accuracy]));
   const doneCount = lessons.filter((l: any) => done.has(l.id)).length;
+  // lamba folder description = instructions → side me step-by-step; chhota description folder par hi dikhe
+  const isLong = (d: string | null) => !!d && d.trim().length > 140;
+  const guides = folders.filter((f: any) => isLong(f.description)).map((f: any) => ({ f, g: parseInstructions(f.description)! })).filter((x: any) => x.g);
   return (
     <>
       <PageHero crumbs={[{ label: "Typing Test", href: "/typing-test" }, { label: "Learn Typing" }]} title="टाइपिंग सीखें —" highlight="शुरुआत से"
@@ -45,7 +49,7 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
                       <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand"><Folder className="h-5 w-5" /></span>
                       <span className="min-w-0 flex-1">
                         <b className="hi block text-navy">{f ? f.name : "Aur lessons"}</b>
-                        <span className="hi block text-sm text-muted">{f?.description || `${list.length} lessons`}</span>
+                        <span className="hi block text-sm text-muted">{f?.description && !isLong(f.description) ? f.description : `${list.length} lessons${isLong(f?.description) ? " · Niyam / instructions side me dekhein" : ""}`}</span>
                       </span>
                       {fLocked ? <span className="chip bg-orange-50 py-1.5 text-saffron-600"><Lock className="h-3.5 w-3.5" />Premium folder</span> : <span className="chip bg-canvas py-1.5 text-muted">{fDone} / {list.length} done</span>}
                     </div>
@@ -71,7 +75,8 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
               );
             })}
           </div>
-          <aside className="card self-start p-6">
+          <aside className="space-y-5 self-start">
+          <div className="card p-6">
             <div className="mb-2 flex items-center gap-2 text-lg font-bold text-navy"><Hand className="h-5 w-5" />Finger Placement Guide</div>
             <p className="text-sm text-muted">Har rang ek ungli ko darshata hai. F aur J par ubhra hua nishaan hota hai — wahi home position hai.</p>
             <ul className="mt-4 space-y-2.5">
@@ -83,6 +88,39 @@ export default async function Learn({ searchParams }: { searchParams: { layout?:
               <div className="mt-3 h-1.5 rounded-full bg-white/15"><div className="h-1.5 rounded-full bg-gold" style={{ width: `${(doneCount / Math.max(1, lessons.length)) * 100}%` }} /></div>
               {!user && <Link href="/login?next=/typing-test/learn" className="mt-3 block text-xs text-gold underline">Progress save karne ke liye login karein</Link>}
             </div>
+          </div>
+          {guides.map(({ f, g }: any) => (
+            <div key={f.id} className="card p-6">
+              <div className="mb-1 flex items-center gap-2 text-lg font-bold text-navy"><BookOpen className="h-5 w-5" />Instructions</div>
+              <div className="hi text-sm font-semibold text-brand">{g.heading || f.name}</div>
+              {g.intro && (
+                <details className="group mt-3 rounded-xl bg-canvas px-4 py-3 text-sm">
+                  <summary className="cursor-pointer list-none font-semibold text-navy"><span className="group-open:hidden">Course ke baare me ▾</span><span className="hidden group-open:inline">Band karein ▴</span></summary>
+                  <p className="hi mt-2 leading-relaxed text-muted">{g.intro}</p>
+                </details>
+              )}
+              {g.steps.length > 0 && (
+                <ol className="mt-4 space-y-3">
+                  {g.steps.map((st: any, i: number) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand">{i + 1}</span>
+                      <span className="hi min-w-0 text-sm leading-relaxed">
+                        <b className="block text-ink">{st.icon && <span className="mr-1">{st.icon}</span>}{st.title}</b>
+                        {st.body && <span className="block text-muted">{st.body}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {g.rule && (
+                <div className="hi mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                  <div className="mb-1 flex items-center gap-1.5 font-bold text-amber-800"><Sparkles className="h-4 w-4" />Golden Rule</div>
+                  {g.rule}
+                </div>
+              )}
+              {g.outro && <p className="hi mt-3 text-right text-sm font-semibold text-navy">{g.outro}</p>}
+            </div>
+          ))}
           </aside>
         </div>
         <div className="card mt-8 p-5 md:p-6">
