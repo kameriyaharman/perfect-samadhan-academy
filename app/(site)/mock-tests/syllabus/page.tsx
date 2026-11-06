@@ -16,7 +16,7 @@ export default async function Syllabus({ searchParams }: { searchParams: { exam?
   const exam = exams.some((e: any) => e.slug === searchParams.exam) ? searchParams.exam! : exams[0]?.slug || "cpct";
   const cur = exams.find((e: any) => e.slug === exam);
   const [folders, tests] = await Promise.all([foldersOf("test:syllabus", exam), testsOf("topic", exam)]);
-  const cards = folders.map((f: any) => ({ f, n: tests.filter((t: any) => t.folder_id === f.id).length })).filter((c: any) => c.n > 0);
+  const cards = folders.map((f: any) => ({ f, n: tests.filter((t: any) => t.folder_id === f.id).length }));
   const loose = tests.filter((t: any) => !folders.some((f: any) => f.id === t.folder_id));
   return (
     <>
@@ -30,7 +30,7 @@ export default async function Syllabus({ searchParams }: { searchParams: { exam?
             {exams.map((e: any) => <Link key={e.slug} href={`/mock-tests/syllabus?exam=${e.slug}`} className={`tab ${exam === e.slug ? "active" : ""}`}>{e.name}</Link>)}
           </div>
         )}
-        {!tests.length ? <Empty /> : (
+        {!tests.length && !folders.length ? <Empty /> : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map(({ f, n }: any, i: number) => {
               const c = color(f.color && f.color !== "blue" ? f.color : COLS[i % COLS.length]);
@@ -39,7 +39,7 @@ export default async function Syllabus({ searchParams }: { searchParams: { exam?
                   <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${c.bg} ${c.text}`}><Icon name={f.icon || ICONS[i % ICONS.length]} className="h-5 w-5" /></span>
                   <span className="min-w-0 flex-1">
                     <b className="hi block text-[17px] leading-snug">{f.name}</b>
-                    <span className="block text-sm text-muted">{f.description || `${n} Topic ${n === 1 ? "Test" : "Tests"} · Syllabus-wise · Hindi/English`}</span>
+                    <span className="block text-sm text-muted">{f.description || (n ? `${n} Topic ${n === 1 ? "Test" : "Tests"} · Syllabus-wise · Hindi/English` : "Tests jald aa rahe hain")}</span>
                   </span>
                   <ChevronRight className="h-5 w-5 text-muted transition group-hover:translate-x-1 group-hover:text-brand" />
                 </Link>
