@@ -11,13 +11,14 @@ type FItem = { id: number; name: string; is_free: boolean; n: number; group: str
 /** Folder bar / dropdown ke liye ek jaisi list — lesson folders ya folders table (scope) */
 function folderItems(ref: string | undefined, o: IncOpts | null | undefined): FItem[] {
   if (!o || !ref) return [];
+  if (ref === "courses") return (o.courses || []).map((c) => ({ id: c.id, name: c.name, is_free: true, n: c.n, group: "Course" }));
   if (ref === "lesson_folders") return o.folders.map((f) => ({ id: f.id, name: f.name, is_free: f.is_free, n: f.n, group: f.layout === "english" ? "English Typing" : "हिंदी Typing" }));
   return (o.cfolders || []).map((f) => ({ id: f.id, name: f.name, is_free: true, n: f.n, group: ref === "folders:passage" ? (f.language === "english" ? "English Passages" : "हिंदी Passages") : f.exam_slug ? f.exam_slug.toUpperCase() : "Sabhi exam" }));
 }
 const isTestRes = (r: Resource) => r.table === "mock_tests";
 
 const PUBLIC: Record<string, (r: any) => string> = {
-  exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, posts: (r) => `/blog/${r.slug}`,
+  exams: (r) => `/exams/${r.slug}`, materials: (r) => `/study-material/${r.slug}`, courses: (r) => `/courses/${r.slug}`, course_lessons: (r) => `/courses/lesson/${r.id}`, posts: (r) => `/blog/${r.slug}`,
   mock_tests: (r) => `/test/${r.id}`, typing_results: (r) => `/typing-test/result/${r.cert_id}`,
 };
 
@@ -327,7 +328,7 @@ function FieldInput({ f, value, onChange, opts }: { f: Field; value: any; onChan
   if (f.type === "includes") return <PlanIncludes value={value} onChange={onChange} opts={opts || null} />;
   if (f.type === "ref") return (
     <select className="input hi" value={value ?? ""} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}>
-      <option value="">— Bina folder —</option>
+      <option value="">{f.ref === "courses" ? "— Course chunein —" : "— Bina folder —"}</option>
       {folderItems(f.ref, opts).map((x) => <option key={x.id} value={x.id}>{x.group} · {x.name}{x.is_free ? "" : " 🔒"}</option>)}
     </select>
   );

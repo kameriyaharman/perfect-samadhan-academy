@@ -8,7 +8,7 @@ import { Container, Empty } from "@/components/Section";
 import ProfileForm from "./ProfileForm";
 
 export const metadata = { title: "My Account" };
-const TABS = [["profile", "Profile"], ["certificates", "Certificates"], ["tests", "My Tests"], ["purchases", "My Purchases"], ["saved", "Saved"], ["notifications", "Notifications"]];
+const TABS = [["profile", "Profile"], ["certificates", "Certificates"], ["tests", "My Tests"], ["courses", "My Courses"], ["purchases", "My Purchases"], ["saved", "Saved"], ["notifications", "Notifications"]];
 
 export default async function Account({ searchParams }: { searchParams: { tab?: string; month?: string } }) {
   const user = await getUser();
@@ -46,6 +46,7 @@ export default async function Account({ searchParams }: { searchParams: { tab?: 
           )}
           {tab === "profile" && <div className="card p-6"><h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><User className="h-5 w-5" />Profile Details</h2><ProfileForm user={{ name: user.name, mobile: user.mobile, email: user.email || "", city: user.city || "", target_exam: user.target_exam || "", exam_date: user.exam_date || "" }} exams={exams} /></div>}
           {tab === "tests" && <TestsTab uid={user.id} />}
+          {tab === "courses" && <CoursesTab uid={user.id} />}
           {tab === "purchases" && <PurchasesTab uid={user.id} />}
           {tab === "saved" && <SavedTab uid={user.id} />}
           {tab === "notifications" && <NotifTab />}
@@ -75,3 +76,10 @@ async function NotifTab() {
   return <div className="card divide-y divide-line">{rows.map((n: any) => <div key={n.id} className="p-4"><b>{n.title}</b><div className="text-xs text-muted">{n.category} · {fmtDate(n.date)}</div></div>)}</div>;
 }
 
+
+async function CoursesTab({ uid }: { uid: number }) {
+  const rows = await q(`SELECT c.id, c.slug, c.title, c.mode, (SELECT count(*)::int FROM course_lessons l WHERE l.course_id=c.id AND l.active) n
+    FROM courses c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id=$1 AND o.status='paid' AND o.item='course:' || c.slug) ORDER BY c.sort, c.id`, [uid]).catch(() => []);
+  if (!rows.length) return <div className="card p-8 text-center text-muted">Abhi koi course nahi liya. <Link href="/courses" className="font-bold text-brand">Courses dekhein</Link></div>;
+  return <div className="grid gap-3 sm:grid-cols-2">{rows.map((c: any) => <Link key={c.id} href={`/courses/${encodeURIComponent(c.slug)}?tab=content`} className="card p-5 hover:text-brand"><b className="block">{c.title}</b><span className="text-sm text-muted">{c.mode} · {c.n} lessons</span></Link>)}</div>;
+}

@@ -565,4 +565,21 @@ CREATE TABLE IF NOT EXISTS password_resets (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS password_resets_mobile ON password_resets(mobile, created_at DESC);
+-- v7 (Nov 2026): course ke andar video / PDF / notes lessons (sirf khareedne wale student ke liye)
+CREATE TABLE IF NOT EXISTS course_lessons (
+  id SERIAL PRIMARY KEY,
+  course_id INT REFERENCES courses(id) ON DELETE CASCADE,
+  section TEXT,
+  title TEXT NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'video',
+  video_url TEXT,
+  file_url TEXT,
+  notes TEXT,
+  duration TEXT,
+  is_free BOOLEAN NOT NULL DEFAULT false,
+  sort INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS course_lessons_course ON course_lessons(course_id, sort, id);
 `;

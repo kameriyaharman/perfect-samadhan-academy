@@ -8,6 +8,7 @@ export type IncOpts = {
   exams: { slug: string; name: string; n: number; locked: number }[];
   cats: { name: string; n: number; locked: number }[];
   tfolders?: { id: number; name: string; scope: string; exam_slug: string | null; n: number; locked: number }[];
+  courses?: { id: number; name: string; n: number }[];
   cfolders?: { id: number; name: string; language: string | null; exam_slug: string | null; is_free: boolean; n: number }[];
 };
 type Inc = { all?: boolean; folders?: number[]; tfolders?: number[]; series?: string[]; typing?: string[]; passages?: boolean; keywords?: boolean; materials?: boolean };

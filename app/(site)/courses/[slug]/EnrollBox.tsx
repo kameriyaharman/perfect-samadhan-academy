@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, Phone, GraduationCap, PhoneCall } from "lucide-react";
 import { rupee } from "@/lib/utils";
 
-export default function EnrollBox({ slug, title, price, mrp, offer, mode }: { slug: string; title: string; price: number; mrp: number | null; offer: string | null; mode: string }) {
+export default function EnrollBox({ slug, title, price, mrp, offer, mode, owned, firstLesson }: { owned?: boolean; firstLesson?: number; slug: string; title: string; price: number; mrp: number | null; offer: string | null; mode: string }) {
   const both = /offline/i.test(mode) && /online/i.test(mode);
   const [m, setM] = useState(/online/i.test(mode) && !/offline/i.test(mode) ? "Online" : "Offline");
   const [cb, setCb] = useState(false);
@@ -17,12 +17,20 @@ export default function EnrollBox({ slug, title, price, mrp, offer, mode }: { sl
     const j = await r.json(); setBusy(false);
     setMsg(r.ok ? "Dhanyavaad! Hamari team jald call karegi." : j.error || "Error");
   };
+  if (owned) return (
+    <div className="rounded-2xl border-2 border-green-500 bg-white p-6 shadow-lift">
+      <span className="chip bg-green-50 text-green-700 py-1.5"><GraduationCap className="h-4 w-4" />Aap is course me enrolled hain</span>
+      {firstLesson ? <Link href={`/courses/lesson/${firstLesson}`} className="btn-orange mt-4 w-full !py-3.5 text-base">Course Shuru Karein</Link>
+        : <p className="mt-3 text-sm text-muted">Course ke lessons jald yahan judenge.</p>}
+      <Link href={`/courses/${encodeURIComponent(slug)}?tab=content`} className="btn-ghost mt-2 w-full">Saare Lessons</Link>
+    </div>
+  );
   return (
     <div className="rounded-2xl border-2 border-brand bg-white p-6 shadow-lift">
       <div className="flex items-end gap-2"><span className="text-4xl font-extrabold text-navy">{rupee(price)}</span>{mrp && <span className="pb-1 text-muted line-through">{rupee(mrp)}</span>}</div>
       {offer && <span className="chip mt-2 bg-green-50 text-green-700 py-1.5">{offer}</span>}
       {both && <div className="seg mt-4"><button className={m === "Offline" ? "on" : ""} onClick={() => setM("Offline")}>Offline</button><button className={m === "Online" ? "on" : ""} onClick={() => setM("Online")}>Online</button></div>}
-      <Link href={`/checkout?item=course:${slug}&mode=${m}`} className="btn-orange mt-4 w-full !py-3.5 text-base"><GraduationCap className="h-4 w-4" />Abhi Enroll Karein</Link>
+      <Link href={`/checkout?item=${encodeURIComponent(`course:${slug}`)}&mode=${m}`} className="btn-orange mt-4 w-full !py-3.5 text-base"><GraduationCap className="h-4 w-4" />Abhi Enroll Karein</Link>
       <button onClick={() => setCb(!cb)} className="btn-ghost mt-2 w-full"><Phone className="h-4 w-4" />Call Back Request</button>
       {cb && (msg ? <p className="mt-3 rounded-xl bg-green-50 p-3 text-sm text-green-700">{msg}</p> : (
         <form onSubmit={send} className="mt-3 space-y-2">

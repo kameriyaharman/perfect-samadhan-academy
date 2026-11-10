@@ -14,5 +14,6 @@ export async function GET(req: Request) {
     out.cfolders = await q(`SELECT f.id, f.name, f.language, f.exam_slug, true AS is_free, (SELECT count(*)::int FROM ${table} x WHERE x.folder_id=f.id) n
       FROM folders f WHERE f.scope=$1 ORDER BY f.exam_slug NULLS FIRST, f.sort, f.id`, [scope]);
   }
+  out.courses = await q(`SELECT c.id, c.title AS name, (SELECT count(*)::int FROM course_lessons l WHERE l.course_id=c.id) n FROM courses c ORDER BY c.sort, c.id`).catch(() => []);
   return NextResponse.json(out);
 }

@@ -307,6 +307,23 @@ export const RESOURCES: Resource[] = [
     fields: [{ name: "name", label: "Exam", required: true, list: true }, { name: "date", label: "Date text", required: true, list: true }, { name: "sort", label: "Sort", type: "number" }],
   },
   {
+    key: "course_lessons", table: "course_lessons", label: "Course Lessons (Video / PDF)", group: "Academy", icon: "PlayCircle", order: "course_id, sort, id", search: ["title", "section"],
+    fields: [
+      { name: "course_id", label: "Course", type: "ref", ref: "courses", required: true, list: true, help: "Ye lesson kis course me dikhega — sirf us course ko khareedne wale student ko khulega" },
+      { name: "section", label: "Chapter / Section (jaise: Chapter 1 — Remington Gail Basics)", list: true, help: "Same naam wale lessons ek chapter me group ho jaate hain" },
+      { name: "title", label: "Lesson title", required: true, list: true },
+      { name: "kind", label: "Type", type: "select", options: ["video", "pdf", "notes"], list: true, help: "video = YouTube link ya video file · pdf = PDF file · notes = sirf likha hua content" },
+      { name: "video_url", label: "Video — YouTube link (Unlisted) ya video file upload", type: "file", full: true, help: "Bade video ke liye YouTube par 'Unlisted' upload karke link yahan dalein (60MB se chhoti file seedhe upload ho sakti hai)" },
+      { name: "file_url", label: "PDF / attachment (optional)", type: "file", full: true },
+      { name: "notes", label: "Notes / description (optional)", type: "textarea", full: true },
+      { name: "duration", label: "Duration (jaise 12 min)" },
+      { name: "is_free", label: "Free preview (bina khareede bhi dekh sakte hain)", type: "bool", list: true },
+      { name: "sort", label: "Sort (kram)", type: "number", list: true },
+      { name: "active", label: "Active", type: "bool", list: true },
+    ],
+    defaults: { kind: "video", active: true },
+  },
+  {
     key: "courses", table: "courses", label: "Courses & Batches", group: "Academy", icon: "School", order: "sort, id", search: ["title"],
     fields: [
       { name: "title", label: "Title", required: true, list: true }, { name: "slug", label: "URL slug", required: true },
