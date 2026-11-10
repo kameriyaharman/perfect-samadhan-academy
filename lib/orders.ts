@@ -65,3 +65,15 @@ export async function grantOrder(orderId: number) {
     await one(`UPDATE users SET premium_plan=$2, premium_till = GREATEST(COALESCE(premium_till, now()), now()) + ($3 || ' days')::interval WHERE id=$1 RETURNING id`, [o.user_id, p?.name || slug, String(days)]);
   }
 }
+
+/** Student ne kaun-kaun se PDF khareede — material id ka Set.
+ *  Order ki key "material:<slug>" se milate hain; agar baad me admin ne slug badal diya ho
+ *  to PDF ke naam (title) se bhi mila lete hain, taaki khareeda hua PDF kabhi lock na ho. */
+export async function ownedMaterialIds(userId?: number | null): Promise<Set<number>> {
+  if (!userId) return new Set();
+  const rows = await q(`SELECT m.id FROM materials m WHERE EXISTS (
+      SELECT 1 FROM orders o WHERE o.user_id=$1 AND o.status='paid' AND o.item ILIKE 'material:%'
+        AND (lower(btrim(o.item)) = lower(btrim('material:' || m.slug))
+          OR lower(btrim(regexp_replace(o.item_name, '\\s*\\([^)]*\\)\\s*$', ''))) = lower(btrim(m.title))))`, [userId]).catch(() => []);
+  return new Set(rows.map((r: any) => Number(r.id)));
+}

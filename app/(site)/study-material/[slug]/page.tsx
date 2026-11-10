@@ -10,6 +10,7 @@ import { Container } from "@/components/Section";
 import SaveButton from "@/components/SaveButton";
 import ShareButton from "@/components/ShareButton";
 import DocPreview from "./DocPreview";
+import { ownedMaterialIds } from "@/lib/orders";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const m = await one("SELECT title FROM materials WHERE slug=$1", [dec(params.slug)]);
@@ -21,7 +22,7 @@ export default async function Material({ params }: { params: { slug: string } })
   if (!m) notFound();
   const user = await getUser();
   // premium material: plan wale ya jisne yeh material khareeda hai — dono ko poora PDF
-  const unlocked = !m.is_premium || canMaterials(await getAccess(user)) || (user ? !!(await one("SELECT 1 FROM orders WHERE user_id=$1 AND item=$2 AND status='paid'", [user.id, `material:${m.slug}`])) : false);
+  const unlocked = !m.is_premium || canMaterials(await getAccess(user)) || (await ownedMaterialIds(user?.id)).has(m.id);
   const saved = user ? !!(await one("SELECT 1 FROM saved_items WHERE user_id=$1 AND kind='material' AND ref_id=$2", [user.id, m.id])) : false;
   const related = m.related_test_id ? await one("SELECT id, title FROM mock_tests WHERE id=$1", [m.related_test_id]) : await one("SELECT id, title FROM mock_tests WHERE kind='topic' AND active AND (title ILIKE $1 OR topic ILIKE $1) LIMIT 1", [`%${m.title.split(/[\s—-]+/)[1] || m.subject}%`]);
   const typeName: Record<string, string> = { notes: "Notes PDF", pyq: "Previous Papers", shortcut: "Shortcut Keys", syllabus: "Syllabus" };

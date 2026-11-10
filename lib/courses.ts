@@ -6,7 +6,9 @@ import type { SessionUser } from "./auth";
 export async function ownsCourse(u: SessionUser | null, slug: string) {
   if (!u) return false;
   if (u.role === "admin") return true;
-  return !!(await one("SELECT 1 FROM orders WHERE user_id=$1 AND item=$2 AND status='paid' LIMIT 1", [u.id, `course:${slug}`]));
+  // slug se, ya (slug badal gaya ho to) course ke naam se
+  return !!(await one(`SELECT 1 FROM orders o WHERE o.user_id=$1 AND o.status='paid' AND o.item ILIKE 'course:%'
+      AND (lower(btrim(o.item))=lower(btrim($2)) OR lower(btrim(regexp_replace(o.item_name, '\\s*\\([^)]*\\)\\s*$', ''))) = (SELECT lower(btrim(title)) FROM courses WHERE slug=$3 LIMIT 1)) LIMIT 1`, [u.id, `course:${slug}`, slug]));
 }
 
 export async function courseLessons(courseId: number) {

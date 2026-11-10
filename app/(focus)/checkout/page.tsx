@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
-import { liveOffers, resolveItem } from "@/lib/orders";
+import { liveOffers, ownedMaterialIds, resolveItem } from "@/lib/orders";
+import { ownsCourse } from "@/lib/courses";
+import { one } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import FocusBar from "@/components/FocusBar";
 import CheckoutForm from "./CheckoutForm";
@@ -13,6 +15,12 @@ export default async function Checkout({ searchParams }: { searchParams: { item?
   if (!user) redirect(`/login?next=${encodeURIComponent(`/checkout?item=${item}${searchParams.mode ? `&mode=${searchParams.mode}` : ""}`)}`);
   const it = await resolveItem(item);
   if (!it) redirect("/plans");
+  // pehle se khareeda hai to dobara payment nahi — seedha kholo
+  if (it.kind === "material") {
+    const m = await one("SELECT id FROM materials WHERE slug=$1", [it.slug]);
+    if (m && (await ownedMaterialIds(user!.id)).has(m.id)) redirect(`/study-material/${encodeURIComponent(it.slug)}`);
+  }
+  if (it.kind === "course" && user!.role !== "admin" && (await ownsCourse(user, it.slug))) redirect(`/courses/${encodeURIComponent(it.slug)}?tab=content`);
   const s = await getSettings();
   const offers = it.showCoupon ? await liveOffers(it.kind) : [];
   return (

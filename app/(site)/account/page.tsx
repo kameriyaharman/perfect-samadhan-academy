@@ -64,7 +64,12 @@ async function TestsTab({ uid }: { uid: number }) {
 async function PurchasesTab({ uid }: { uid: number }) {
   const rows = await q("SELECT * FROM orders WHERE user_id=$1 ORDER BY id DESC", [uid]);
   if (!rows.length) return <Empty text="Koi purchase nahi. Premium plans dekhein." />;
-  return <div className="card overflow-x-auto"><table className="table-x min-w-[600px]"><thead><tr><th>Order</th><th>Item</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{rows.map((o: any) => <tr key={o.id}><td>#{o.id}</td><td className="font-bold">{o.item_name}</td><td>{rupee(o.amount)}</td><td><span className={`chip ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "failed" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{o.status}</span></td><td>{fmtDate(o.created_at)}</td></tr>)}</tbody></table></div>;
+  return <div className="card overflow-x-auto"><table className="table-x min-w-[600px]"><thead><tr><th>Order</th><th>Item</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>{rows.map((o: any) => <tr key={o.id}><td>#{o.id}</td><td className="font-bold">{o.item_name}</td><td>{rupee(o.amount)}</td><td><span className={`chip ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "failed" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{o.status}</span></td><td>{fmtDate(o.created_at)}</td><td>{o.status === "paid" && openHref(o.item) && <Link href={openHref(o.item)!} className="btn-primary btn-sm whitespace-nowrap">Kholein</Link>}</td></tr>)}</tbody></table></div>;
+}
+function openHref(item?: string | null) {
+  const i = String(item || ""); const k = i.indexOf(":"); if (k < 0) return null;
+  const kind = i.slice(0, k), slug = encodeURIComponent(i.slice(k + 1));
+  return kind === "material" ? `/study-material/${slug}` : kind === "course" ? `/courses/${slug}?tab=content` : kind === "plan" ? "/mock-tests" : null;
 }
 async function SavedTab({ uid }: { uid: number }) {
   const rows = await q("SELECT m.* FROM saved_items s JOIN materials m ON m.id=s.ref_id AND s.kind='material' WHERE s.user_id=$1 ORDER BY s.id DESC", [uid]);

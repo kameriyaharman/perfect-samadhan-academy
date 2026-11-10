@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Check, Download, Eye, Filter, Lock, PlayCircle, Search, Star } from "lucide-react";
 import { q } from "@/lib/db";
+import { getUser } from "@/lib/auth";
+import { canMaterials, getAccess } from "@/lib/access";
+import { ownedMaterialIds } from "@/lib/orders";
 import { kfmt } from "@/lib/utils";
 import { Container, Empty } from "@/components/Section";
 import Cover from "@/components/Cover";
@@ -24,6 +27,9 @@ export default async function StudyMaterial({ searchParams: sp }: { searchParams
   if (sp.lang) add("(language = ? OR language='bilingual')", sp.lang);
   const order = sp.sort === "new" ? "updated_at DESC" : "downloads DESC";
   const rows = await q(`SELECT * FROM materials WHERE ${where.join(" AND ")} ORDER BY popular DESC, ${order} LIMIT 60`, args);
+  const user = await getUser();
+  const allPdf = canMaterials(await getAccess(user));
+  const owned = await ownedMaterialIds(user?.id);
   const counts = await q(`SELECT type, count(*)::int n FROM materials WHERE active GROUP BY type`);
   const link = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams(); const m = { ...sp, ...patch };
@@ -78,8 +84,8 @@ export default async function StudyMaterial({ searchParams: sp }: { searchParams
                       <Link href={`/study-material/${m.slug}`} className="mt-2 block font-bold leading-snug hover:text-brand">{m.title}</Link>
                       <div className="mt-1 text-xs text-muted">{m.pages ? `${m.pages} pages · ` : ""}{m.size_mb ? `${m.size_mb} MB · ` : ""}<Download className="inline h-3 w-3" /> {kfmt(m.downloads)}</div>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {m.is_premium ? <Link href={`/checkout?item=material:${m.slug}`} className="btn-orange btn-sm !py-1.5"><Lock className="h-3.5 w-3.5" />Unlock ₹{m.price || 99}</Link> : <a href={`/api/download/material/${m.slug}`} className="btn-primary btn-sm"><Download className="h-3.5 w-3.5" />Download</a>}
-                        {m.type === "pyq" && !m.is_premium ? <Link href="/mock-tests/pyq" className="btn-soft btn-sm"><PlayCircle className="h-3.5 w-3.5" />Online Test</Link> : <Link href={`/study-material/${m.slug}`} className="btn-soft btn-sm"><Eye className="h-3.5 w-3.5" />{m.is_premium ? "Sample" : "Preview"}</Link>}
+                        {m.is_premium && !allPdf && !owned.has(m.id) ? <Link href={`/checkout?item=${encodeURIComponent(`material:${m.slug}`)}`} className="btn-orange btn-sm !py-1.5"><Lock className="h-3.5 w-3.5" />Unlock ₹{m.price || 99}</Link> : <a href={`/api/download/material/${encodeURIComponent(m.slug)}`} className="btn-primary btn-sm"><Download className="h-3.5 w-3.5" />Download</a>}
+                        {m.type === "pyq" && !m.is_premium ? <Link href="/mock-tests/pyq" className="btn-soft btn-sm"><PlayCircle className="h-3.5 w-3.5" />Online Test</Link> : <Link href={`/study-material/${m.slug}`} className="btn-soft btn-sm"><Eye className="h-3.5 w-3.5" />{m.is_premium && !allPdf && !owned.has(m.id) ? "Sample" : m.is_premium ? "Kholein" : "Preview"}</Link>}
                         {!m.is_premium && m.type !== "pyq" && <SaveButton kind="material" id={m.id} />}
                       </div>
                     </div>
