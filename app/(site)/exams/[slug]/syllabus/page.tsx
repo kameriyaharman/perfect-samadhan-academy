@@ -1,3 +1,4 @@
+import { dec } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import { one } from "@/lib/db";
@@ -6,7 +7,7 @@ import { Container } from "@/components/Section";
 import SyllabusGrid from "../SyllabusGrid";
 
 export default async function Syllabus({ params }: { params: { slug: string } }) {
-  const e = await one("SELECT * FROM exams WHERE slug=$1", [params.slug]);
+  const e = await one("SELECT * FROM exams WHERE slug=$1", [dec(params.slug)]);
   if (!e) notFound();
   const pdf = await one("SELECT slug FROM materials WHERE type='syllabus' AND exam ILIKE $1 AND active LIMIT 1", [e.code]);
   return (

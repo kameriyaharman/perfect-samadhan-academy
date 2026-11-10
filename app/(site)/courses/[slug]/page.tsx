@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookOpen, CalendarDays, CheckCircle2, Clock, ListChecks, MapPin, Users } from "lucide-react";
 import { one, q } from "@/lib/db";
-import { initials, lines, md, pipeRows, rupee } from "@/lib/utils";
+import { initials, lines, md, pipeRows, rupee, dec } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import EnrollBox from "./EnrollBox";
@@ -10,13 +10,13 @@ import CouponOffers from "@/components/CouponOffers";
 import { liveOffers } from "@/lib/orders";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const c = await one("SELECT title FROM courses WHERE slug=$1", [params.slug]);
+  const c = await one("SELECT title FROM courses WHERE slug=$1", [dec(params.slug)]);
   return { title: c?.title || "Course" };
 }
 const TABS = [["overview", "Overview"], ["syllabus", "Syllabus"], ["faculty", "Faculty"], ["reviews", "Reviews"]];
 
 export default async function Course({ params, searchParams }: { params: { slug: string }; searchParams: { tab?: string } }) {
-  const c = await one("SELECT * FROM courses WHERE slug=$1 AND active", [params.slug]);
+  const c = await one("SELECT * FROM courses WHERE slug=$1 AND active", [dec(params.slug)]);
   if (!c) notFound();
   const tab = TABS.some(([k]) => k === searchParams.tab) ? searchParams.tab : "overview";
   const fac = c.faculty ? await one("SELECT * FROM faculty WHERE name=$1", [c.faculty]) : null;

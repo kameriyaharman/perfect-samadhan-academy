@@ -2,17 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, Keyboard, List, Newspaper } from "lucide-react";
 import { one, q } from "@/lib/db";
-import { color, fmtDate, headings, initials, md } from "@/lib/utils";
+import { color, fmtDate, headings, initials, md, dec } from "@/lib/utils";
 import { Container } from "@/components/Section";
 import AdSlot from "@/components/ads/AdSlot";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const p = await one("SELECT title, excerpt FROM posts WHERE slug=$1", [params.slug]);
+  const p = await one("SELECT title, excerpt FROM posts WHERE slug=$1", [dec(params.slug)]);
   return { title: p?.title || "Blog", description: p?.excerpt };
 }
 
 export default async function Post({ params }: { params: { slug: string } }) {
-  const p = await one("SELECT * FROM posts WHERE slug=$1 AND published", [params.slug]);
+  const p = await one("SELECT * FROM posts WHERE slug=$1 AND published", [dec(params.slug)]);
   if (!p) notFound();
   const related = await q("SELECT slug, title FROM posts WHERE published AND id<>$1 ORDER BY (category=$2) DESC, date DESC LIMIT 3", [p.id, p.category]);
   const toc = headings(p.content);

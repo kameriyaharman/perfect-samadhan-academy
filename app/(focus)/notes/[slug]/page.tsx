@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { Download, ArrowLeft } from "lucide-react";
 import { one } from "@/lib/db";
-import { lines } from "@/lib/utils";
+import { lines, dec } from "@/lib/utils";
 import PrintButton from "@/components/PrintButton";
 
 export default async function Notes({ params }: { params: { slug: string } }) {
-  const m = await one("SELECT * FROM materials WHERE slug=$1 AND active AND NOT is_premium", [params.slug]);
+  const m = await one("SELECT * FROM materials WHERE slug=$1 AND active AND NOT is_premium", [dec(params.slug)]);
   if (!m) notFound();
   return (
     <div className="min-h-screen bg-canvas py-6">

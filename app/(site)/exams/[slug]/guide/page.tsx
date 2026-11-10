@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { Check, Download, Target } from "lucide-react";
 import { one } from "@/lib/db";
-import { sections, pipeRows } from "@/lib/utils";
+import { sections, pipeRows, dec } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import PrintButton from "@/components/PrintButton";
 
 export default async function Guide({ params }: { params: { slug: string } }) {
-  const e = await one("SELECT * FROM exams WHERE slug=$1", [params.slug]);
+  const e = await one("SELECT * FROM exams WHERE slug=$1", [dec(params.slug)]);
   if (!e) notFound();
   const weeks = sections(e.guide);
   const typing = pipeRows(e.pattern).filter((r) => /typing/i.test(r[0]));

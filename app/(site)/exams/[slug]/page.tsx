@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, ChevronRight, Globe, Info, Layers, ListChecks, ShieldCheck, Ticket, Zap, Award, FileText } from "lucide-react";
 import { one, q } from "@/lib/db";
-import { pipeRows, md } from "@/lib/utils";
+import { pipeRows, md, dec } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import SyllabusGrid from "./SyllabusGrid";
@@ -10,12 +10,12 @@ import SyllabusGrid from "./SyllabusGrid";
 const TABS = [["overview", "Overview"], ["pattern", "Exam Pattern"], ["syllabus", "Syllabus"], ["eligibility", "Eligibility"], ["apply", "How to Apply"], ["admit", "Admit Card"], ["result", "Result"]];
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const e = await one("SELECT name FROM exams WHERE slug=$1", [params.slug]);
+  const e = await one("SELECT name FROM exams WHERE slug=$1", [dec(params.slug)]);
   return { title: e ? `${e.name} — Poori Jaankari` : "Exam" };
 }
 
 export default async function Exam({ params, searchParams }: { params: { slug: string }; searchParams: { tab?: string } }) {
-  const e = await one("SELECT * FROM exams WHERE slug=$1 AND active", [params.slug]);
+  const e = await one("SELECT * FROM exams WHERE slug=$1 AND active", [dec(params.slug)]);
   if (!e) notFound();
   const tab = TABS.some(([k]) => k === searchParams.tab) ? searchParams.tab! : "overview";
   const notices = await q("SELECT * FROM notices WHERE active AND exam ILIKE $1 ORDER BY date DESC LIMIT 4", [e.code]);

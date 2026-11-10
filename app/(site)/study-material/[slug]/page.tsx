@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Download, FileText, Languages, List, Lock, PlayCircle, Star } from "lucide-react";
 import { one } from "@/lib/db";
 import { getUser } from "@/lib/auth";
-import { fmtDate, lines } from "@/lib/utils";
+import { canMaterials, getAccess } from "@/lib/access";
+import { fmtDate, lines, dec } from "@/lib/utils";
 import PageHero from "@/components/PageHero";
 import { Container } from "@/components/Section";
 import SaveButton from "@/components/SaveButton";
@@ -11,14 +12,16 @@ import ShareButton from "@/components/ShareButton";
 import DocPreview from "./DocPreview";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const m = await one("SELECT title FROM materials WHERE slug=$1", [params.slug]);
+  const m = await one("SELECT title FROM materials WHERE slug=$1", [dec(params.slug)]);
   return { title: m?.title || "Study Material" };
 }
 
 export default async function Material({ params }: { params: { slug: string } }) {
-  const m = await one("SELECT * FROM materials WHERE slug=$1 AND active", [params.slug]);
+  const m = await one("SELECT * FROM materials WHERE slug=$1 AND active", [dec(params.slug)]);
   if (!m) notFound();
   const user = await getUser();
+  // premium material: plan wale ya jisne yeh material khareeda hai — dono ko poora PDF
+  const unlocked = !m.is_premium || canMaterials(await getAccess(user)) || (user ? !!(await one("SELECT 1 FROM orders WHERE user_id=$1 AND item=$2 AND status='paid'", [user.id, `material:${m.slug}`])) : false);
   const saved = user ? !!(await one("SELECT 1 FROM saved_items WHERE user_id=$1 AND kind='material' AND ref_id=$2", [user.id, m.id])) : false;
   const related = m.related_test_id ? await one("SELECT id, title FROM mock_tests WHERE id=$1", [m.related_test_id]) : await one("SELECT id, title FROM mock_tests WHERE kind='topic' AND active AND (title ILIKE $1 OR topic ILIKE $1) LIMIT 1", [`%${m.title.split(/[\s—-]+/)[1] || m.subject}%`]);
   const typeName: Record<string, string> = { notes: "Notes PDF", pyq: "Previous Papers", shortcut: "Shortcut Keys", syllabus: "Syllabus" };
@@ -35,16 +38,16 @@ export default async function Material({ params }: { params: { slug: string } })
       <Container className="py-10">
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="min-w-0">
-            {isPdf && !m.is_premium ? (
-              <div className="card overflow-hidden"><div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm"><FileText className="h-4 w-4" />PDF Preview</div><iframe src={m.file_url} className="h-[75vh] w-full" title={m.title} /></div>
+            {isPdf && unlocked ? (
+              <div className="card overflow-hidden"><div className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm"><FileText className="h-4 w-4" />PDF Preview</div><iframe src={`${m.file_url}#toolbar=0`} className="h-[75vh] w-full" title={m.title} /></div>
             ) : (
-              <DocPreview title={m.title} pages={m.pages} html={m.preview_html} contents={lines(m.contents)} premium={m.is_premium} slug={m.slug} />
+              <DocPreview title={m.title} pages={m.pages} html={m.preview_html} contents={lines(m.contents)} premium={!unlocked} slug={m.slug} />
             )}
           </div>
           <aside className="space-y-4">
             <div className="card p-5">
-              {m.is_premium ? <Link href={`/checkout?item=material:${m.slug}`} className="btn-orange w-full !py-3.5 text-base"><Lock className="h-5 w-5" />Unlock ₹{m.price || 99}</Link>
-                : <a href={`/api/download/material/${m.slug}`} className="btn-orange w-full !py-3.5 text-base"><Download className="h-5 w-5" />Free Download{m.size_mb ? ` (${m.size_mb} MB)` : ""}</a>}
+              {!unlocked ? <Link href={`/checkout?item=${encodeURIComponent(`material:${m.slug}`)}`} className="btn-orange w-full !py-3.5 text-base"><Lock className="h-5 w-5" />Unlock ₹{m.price || 99}</Link>
+                : <a href={`/api/download/material/${encodeURIComponent(m.slug)}`} className="btn-orange w-full !py-3.5 text-base"><Download className="h-5 w-5" />{m.is_premium ? "Download" : "Free Download"}{m.size_mb ? ` (${m.size_mb} MB)` : ""}</a>}
               <div className="mt-3 grid grid-cols-2 gap-2"><SaveButton kind="material" id={m.id} big initial={saved} /><ShareButton title={m.title} /></div>
               <dl className="mt-4 space-y-2.5 text-sm">
                 {[["Exam", m.exam], ["Subject", m.subject], ["Language", langName[m.language]], ["Pages", m.pages], ["Updated", fmtDate(m.updated_at)]].filter(([, v]) => v).map(([k, v]) => <div key={k as string} className="flex justify-between"><dt className="text-muted">{k}</dt><dd className="font-bold">{v}</dd></div>)}

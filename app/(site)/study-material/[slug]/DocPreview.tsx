@@ -20,8 +20,8 @@ export default function DocPreview({ title, pages, html, contents, premium, slug
           <div className="flex items-center justify-between border-b-2 border-brand pb-3"><span className="hi text-lg font-bold text-brand">परफेक्ट समाधान एकेडमी</span><span className="text-xs text-muted">{title.split("—")[0]}</span></div>
           <div className="doc hi mt-6 text-[15px]" dangerouslySetInnerHTML={{ __html: body }} />
           <div className="mt-10 text-center">
-            {premium ? <a href={`/checkout?item=material:${slug}`} className="btn-orange"><Lock className="h-4 w-4" />Poora PDF Unlock Karein</a>
-              : <a href={`/api/download/material/${slug}`} className="btn-primary"><Download className="h-4 w-4" />Poora PDF Download Karein</a>}
+            {premium ? <a href={`/checkout?item=${encodeURIComponent(`material:${slug}`)}`} className="btn-orange"><Lock className="h-4 w-4" />Poora PDF Unlock Karein</a>
+              : <a href={`/api/download/material/${encodeURIComponent(slug)}`} className="btn-primary"><Download className="h-4 w-4" />Poora PDF Download Karein</a>}
           </div>
         </div>
       </div>

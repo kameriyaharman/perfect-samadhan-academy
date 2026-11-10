@@ -92,3 +92,8 @@ export function md(src?: string | null) {
 export function headings(src?: string | null) {
   return (src || "").split("\n").filter((l) => l.trim().startsWith("## ")).map((l) => l.trim().slice(3));
 }
+/** URL ke [slug] ko decode karein — Next 14 me "%20" / Hindi akshar encoded hi aate hain */
+export function dec(s?: string | null): string {
+  if (!s) return "";
+  try { return decodeURIComponent(s); } catch { return s; }
+}
